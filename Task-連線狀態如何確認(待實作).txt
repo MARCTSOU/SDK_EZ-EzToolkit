@@ -1,0 +1,109 @@
+========================================================
+Task: DVB連線狀態的三層驗證 (規劃保留, 尚未實作)
+記錄日期: 2026-09-03
+========================================================
+
+【背景 / 問題】
+目前程式判斷"有沒有連上DVB"這件事，幾乎全部依賴 serialPort1.IsOpen 一個布林值
+(全專案超過 40 處直接檢查這個)。但 IsOpen 只代表「作業系統成功開啟這個COM Port的
+handle」，不代表對面真的接了一台會正確回應的ER4100 DVB板子 —— 開到一個沒接東西的
+埠、或接錯裝置，IsOpen 一樣是 true。
+
+DVB Tester分頁(PACKET TX/RX/CONTINUOUS WAVE/STATE CTRL)、REG TABLE的
+Read/Write DVB Register、PARAMETER分頁的 DVBBandCombo，這些功能本質上都需要「真的
+有ER4100存在」才有意義，但現在只是用 IsOpen 這個很粗糙的信號在把關。
+
+【使用者提出的三層連線狀態模型】
+1. COM Port連上   —— 連上DVB板子上的 FT232 (USB轉序列埠橋接晶片)
+2. DVB連上        —— FT232 - MCU (DVB板子上的微控制器)
+3. ER4100存在     —— FT232 - MCU - ER4100 (真正的RF晶片)
+
+三層是遞進關係: Layer1成立不代表Layer2成立, Layer2成立不代表Layer3成立。
+現在的程式邏輯只有做到接近Layer1的檢查, Layer2/Layer3幾乎沒有真正驗證。
+
+--------------------------------------------------------
+【現況逐層盤點】
+--------------------------------------------------------
+
+◆ Layer 1: COM Port連上 (PC <-> FT232)
+  - 對應 serialPort1.IsOpen, 由 ConnectWithIRQ() 設定
+    (TESTTOOL/PacketRXTest.cs:554-579)
+  - 開 port 用 serialPort1.Open(), 失敗會記 log "connect failed" 並回傳 false,
+    連線流程 (connectComToolStripMenuItem_Click) 看到 false 就整個中止。
+  - 這一層目前驗證得算確實 (Open() 丟例外會被 catch 到)。
+
+◆ Layer 2: DVB連上 (FT232 <-> MCU)
+  - 目前【沒有明確驗證】。
+  - 連線流程 (TESTTOOL/View/MainForm.cs:2301 connectComToolStripMenuItem_Click)
+    開完 port 後送了兩個握手指令:
+      serialPort1.Write("\r");            // 空白喚醒
+      serialPort1.Write("settestst 1\r"); // 進測試模式
+    兩次都呼叫 serialPort1.ReadExisting() 把回應存進 stmp,
+    但【沒有檢查 stmp 內容】(沒判斷是不是空字串、格式對不對) 就繼續往下執行。
+  - 也就是說如果 FT232 有接上但 DVB 板子上的 MCU 沒開機/韌體掛掉/沒接電,
+    這兩行目前不會攔下來, 流程照樣往下跑去做 Layer 3 的檢查。
+
+◆ Layer 3: ER4100存在 (FT232 <-> MCU <-> ER4100)
+  - 目前【只有部分驗證, 而且驗證失敗不會真的擋下功能】。
+  - CheckICPowerType() (TESTTOOL/View/MainForm.cs:256-272):
+      送 "rr 0xf104\r", 用 ReadICTypeAndAnalysis() 解析回應,
+      取 rdData[3] 的 bit1 當作 highlowICType (0=低功率IC/1=高功率IC)。
+      解析失敗 -> highlowICType = -1。
+  - 連線流程裡 highlowICType == -1 時的處理
+    (MainForm.cs:2332-2341 與 2366-2374 兩處, 目前是同一套邏輯):
+      只是跳訊息 "Cannot read IC setting value" + "Please select PA CONFIG manually",
+      把 PAConfigCombo/DVBBandCombo 重新開放給使用者手動選, 然後 return。
+      *** 注意: 這裡並沒有把 serialPort1 關掉, 也沒有設任何"連線失敗"的旗標 ***
+      所以即使 Layer 3 驗證失敗, DVB Tester分頁、REG TABLE的Read/Write DVB
+      Register 等其他所有靠 serialPort1.IsOpen 判斷的功能, 依然會被當成"可用"。
+  - 使用者這次提到: 送 "rr 0xf100" 可以讀到 IC 的 Product ID。
+      TESTTOOL/EzCodeGen/RegAddrNameMap.cs:349 已經把 0xF100 命名為
+      "PRODUCT_ID_REG", 表示晶片設計端本來就預留這顆當ID讀回用 —— 但目前
+      【整個程式碼庫沒有任何地方真的送出 rr 0xf100】, 只有 0xf104 被讀來判斷
+      低/高功率, 兩者是不同用途, 0xf104 不能拿來確認"這真的是ER4100"。
+
+--------------------------------------------------------
+【可重用的既有工具】
+--------------------------------------------------------
+- ReadICTypeAndAnalysis(string cmd, out byte[] rdData)
+  已經是通用的「送rr指令 -> 解析4 byte回應」函式, CheckICPowerType() 就是拿它讀
+  0xf104。要加 0xf100(PRODUCT_ID_REG) 的檢查, 技術上直接照抄 CheckICPowerType()
+  的寫法換個位址跟位元解讀規則即可, 不用另外造輪子。
+
+- 全專案 serialPort1.IsOpen 的出現位置 (待分類哪些屬於"真的需要驗證到哪一層"):
+  ER41xxParaSet/ParameterSet.cs: 59, 292, 314, 395
+  RXSetupProcess.cs: 136
+  View/CodeGenProcess.cs: 147, 165
+  View/MainForm.cs: 1208, 1213, 1502, 1867, 2014, 2072, 2307, 2314, 2441, 2468,
+                     2569, 2575, 2586, 2617, 2994, 2999, 3071, 3152, 3482, 3487,
+                     3517, 3567, 3572, 3578, 3681, 3758, 3819, 3900
+  View/RegDumpProcess.cs: 1117, 1161, 1230
+  (行號為 2026-09-03 記錄當下的行號, 之後改動可能會位移, 要重新 grep 確認)
+
+--------------------------------------------------------
+【後續實作方向 (討論但尚未拍板的草案)】
+--------------------------------------------------------
+1. 加一個明確的連線狀態, 例如:
+     enum DvbConnectionLevel { PortOnly, DvbAlive, Er4100Verified }
+   連線流程依序驗證三層, 每層成功才往下一層走, 並把結果存起來 (不是只跳訊息了事)。
+
+2. Layer 2 (DVB連上) 的驗證: 檢查 "\r" / "settestst 1\r" 的回應是否非空/格式合理,
+   不合理就判定卡在 Layer 1 (只有Port開了, DVB沒回應), 提前中止並給明確訊息。
+
+3. Layer 3 (ER4100存在) 的驗證: 用 "rr 0xf100" 讀 PRODUCT_ID_REG, 比對預期的
+   ID值 (需要先知道 ER4100 實際燒進晶片的 Product ID 數值是多少, 這部分待確認
+   規格) 來確定"這真的是ER4100", 而不是像現在只看 0xf104 一個bit 能不能解析。
+   readICPowerType 判斷IC種類這件事應該要在確認Er4100Verified之後才有意義,
+   現在的順序/耦合要一併檢視。
+
+4. 拿新的 DvbConnectionLevel 換掉上面列出的 serialPort1.IsOpen 清單裡,
+   真正代表"需要ER4100存在才有意義"的檢查點 —— 預期主要是:
+   DVB Tester分頁(PACKET TX/RX/CONTINUOUS WAVE/STATE CTRL)、
+   REG TABLE的 Read/Write DVB Register、
+   PARAMETER分頁的 DVBBandCombo/PAConfigCombo 的EEPROM讀取邏輯。
+   其餘單純判斷"COM Port能不能開/關"的地方 (例如連線按鈕本身的開關流程、
+   UI元件的Enabled切換) 維持看 IsOpen 即可, 不用全部換掉。
+
+5. 斷線/連線失敗時, DvbConnectionLevel 要重置回 PortOnly 或更低, 呼應現有的
+   CloseComPortProcess() 已經在做的各控制項重置邏輯 (可以參考 DVBBandCombo
+   最近的處理方式: SetDVBBandComboDisconnected())。

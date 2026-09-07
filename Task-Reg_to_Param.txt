@@ -1,0 +1,177 @@
+========================================================
+Task: Reg Table -> RF PARAM 反向同步 (規劃保留, 尚未實作)
+記錄日期: 2026-08-26
+========================================================
+
+【背景 / 計畫】
+1. Reg Table 上的 READ / WRITE 按鈕改移到左下角分頁區(PACKET TX/RX/CONTINUOUS WAVE/STATE CTRL
+   同一群)，因為這兩個按鈕本質上都是透過 Com Port 對 DVB 做暫存器讀寫，跟左上角的參數設定
+   (純本地運算，改參數 -> 反映到 Reg Table 數值) 是不同性質的功能，放在一起會混淆。
+
+2. 左上角參數變更 -> 右側 Reg Table 是目前已存在的單向流程 (正向: 參數轉暫存器)。
+
+3. 目標: 當使用者按下 READ 從 DVB 讀回實際暫存器值時，左上角的參數欄位也應該要能對應
+   反映出 DVB 當下的實際設定 (即 "暫存器 -> 參數" 的反向流程)。此方向本質上比正向困難，
+   因為許多參數 (尤其 Frequency, Data Rate, Deviation, Power) 在正向計算時會被拆分/查表
+   映射到多顆暫存器，不是簡單的 1:1 對應，甚至有些資訊在正向轉換過程中就已經遺失
+   (無法從暫存器值百分之百還原回原始參數)。
+
+--------------------------------------------------------
+【現況架構 (探查結果)】
+--------------------------------------------------------
+
+- 右側 Reg Table 顯示的數值，其實不是獨立算出來的，而是「借用」Generate 引擎的輸出：
+  - 正向計算核心: TESTTOOL/View/CodeGenProcess.cs -> GenerateTxt() (line 781)
+    由 btnGen_Click (line 1030, 按鈕 "Generate") 觸發。
+  - Reg Table 即時刷新: TESTTOOL/View/RegDumpProcess.cs
+    HookParameterChangeEvents() (line 401) 監聽所有左上角參數控制項的
+    Leave / SelectionChangeCommitted / CheckedChanged 事件
+    -> RefreshRegisterListFromUi() -> ApplyUiValuesToRegisterList() (line 449)
+    -> BuildRegistersFromUi() (line 476)
+    這個函式**不是重新實作一套公式**，而是呼叫 GenerateTxt("V4.04") (安靜/32-bit 模式)
+    產生文字後，用 ParseGeneratedRegisters() (line 519) 正則解析回 addr -> value 字典。
+  - 換句話說：GenerateTxt() 才是唯一的「參數 -> 暫存器」真理來源。
+
+- 暫存器清單與分類:
+  - TESTTOOL/ER41xxReg/RegTableItems.cs (75 顆固定暫存器，含名稱/位址/預設值)
+  - TESTTOOL/ER41xxReg/RegCategories.cs (位址 -> 分類:
+    PA SETTING, TX SETTING, RX SETTING, SYNTHESIZER, POWER CONFIG, CAP VALUE,
+    PCRMU, INTERRUPT MODE, PREAMBLE SETTING, TX PAYLOAD FORMAT, TX SYNCWORD,
+    RX SYNCWORD, RX SYNCWORD ERROR BIT, PAYLOAD ORDER, OTHER)
+  - 個別暫存器 bit-field 定義: TESTTOOL/ER41xxReg/RegBitFields.cs
+
+- READ 按鈕目前行為 (不會同步回參數):
+  - Handler: btnRegDump_Click (TESTTOOL/View/RegDumpProcess.cs:573)
+  - 流程: 送 "rdump\r" -> ReadRegisterDump() (line 678) -> ReadUntil(RDUMP_END,...)
+    -> ParseRegisterDump(raw) (line 744) -> ShowRegisterDump(regs) (line 793)
+    只更新 Reg Table 的 ListView (regDumpView)，**完全不會寫回任何左上角參數控制項**
+    (xtalCombo, txFreqText, freqDev, txDRCombo, pwrlvl 等)。
+  - WRITE 按鈕: btnRegTableWrite_Click (line 617)，把目前 Reg Table 顯示的值透過
+    "wr <addr> <value>" 寫回板子。
+  - 另有 bit-field 內嵌編輯器 BeginEditField/CommitFieldEdit (line 896-999)，
+    可直接在展開列手動改單一 bit field 的值 (有針對 GPIO_1_CFG_REG 的特殊保護，
+    以及針對 SYNTH_CAL_CONFIG_2 若新 DataRate 不在合法離散清單內的軟性警告，
+    使用同一個 TryGetLegalDataRateKbps 輔助函式)。
+
+- 現有的「反向」程式碼 (唯一一個):
+  - TryGetLegalDataRateKbps() (CodeGenProcess.cs:87-101)
+    給一個原始 0x1988 值，算出 kbps = (raw & 0xFFFFFF)/1000.0，
+    再比對是否存在 drList/drList384 (依當前 xtal 決定的合法離散 DataRate 清單) 中。
+    目前用於: GenerateTxt() 內部驗證、以及 CommitFieldEdit() 手動編輯時的合法性警告。
+    這個「取出原始值 -> 比對同一份正向查表」的模式，可以當作日後做更廣泛
+    reg -> UI 反向映射的可重用範本。
+
+--------------------------------------------------------
+【逐參數 正向映射 / 逆算難易度盤點】
+--------------------------------------------------------
+
+◆ 容易逆算 (乾淨 1:1 / 線性公式，理論上可精確還原):
+
+  - Frequency  <- 0x1980 (SYNTH_CAL_CONFIG_0，原始 Hz 整數，直接 /1e6)
+  - Cap IO     <- 0x1580 (XO_CONFIG_1) bits[14:8] 與 bits[21:15]
+                  (7-bit 值被寫入兩處，理論上應相同，可互相驗證一致性)
+  - Data Rate  <- 0x1988 (SYNTH_CAL_CONFIG_2，原始 Hz)
+                  已有 TryGetLegalDataRateKbps() 可重用
+  - Deviation  <- 0x1984 (SYNTH_CAL_CONFIG_1) / 2
+                  (註: 正向寫入時是 2*devValue，是歷史上的一個已知系數，
+                  RegTableItems.cs 註解有提到)
+  - Power LV   <- 0x1E1C (ANCTL_CONFIG_7) 或 0x10A8 (ASARADC_CONFIG_11)
+                  bits[31:25]，兩處理論上應相同
+                  (注意: 正向寫入時依函式不同會被 clamp 到 <=27 或 <=127，
+                  若原始請求超過上限則此路徑本身已經是有損的)
+  - Preamble   <- 0xA02C: len = (reg & 0xFF) + 1, content = (reg >> 8) & 0xFF
+  - Syncword   <- 0xA038 (TX) / 0xB100 (RX)，原始 hex 直接複製
+                  (但 "invert/LSB first" 勾選狀態無法單獨從 reg 還原，
+                  因為 invert 是在寫入前用 hexReverse() 處理過)
+  - Payload Order <- 0xA0A8: bit0 (1=MSB, 0=LSB)
+  - Bit Error  <- 0xB104 (RX_SYNCWORD ERROR BIT) 低 2 bits
+                  **注意風險**: UI 驗證允許輸入 0-7，但正向寫入時 clrBit=0x03
+                  只清除/寫入低 2 bits，所以若合法值域真的到 7(0b101~0b111)，
+                  高位可能遺失或殘留 — 逆算前要先確認實際 bit 寬度定義。
+
+◆ 困難 / 有損 / 需查表比對 (無法保證精確還原):
+
+  - PA Config(dBm) + Band:
+    由 Frequency 決定 band bucket (TxPowerLv.GetCurrBand()，5 個頻率區間)，
+    再依 (band, dBm) 走 ~13 種硬編碼組合函式 (TRx_PAxxxMHzYYdBm_FSK()，TxPowerLv.cs)，
+    寫入 0x1480/0x1484/0x1488/0x1E60 (PA1G_CONFIG) + 0x1204/0x1E5C (DCDC)。
+    這些是「常數表」而非公式，逆算只能用「精確比對值是否等於某一組已知常數 tuple」，
+    若使用者手動改過 Reg Table 導致值不在任何一組合內，就完全無法逆算。
+
+  - Data Rate / Deviation 的細節暫存器:
+    BBP_CH_FILT0-11 (FIR 係數表)、BBP_RXLPF_1M_0-2、RX_GAIN_FILTSET、
+    BBP_AGC24/43、MODEM_CLK_REG (0x0004)
+    這些是依 H = 2*Deviation/DataRate 落在哪個區間 (每個 DataRate 有各自的
+    2-4 個 H 分段) 去查一張硬編碼表，原始精確的 Deviation 一旦轉成這些暫存器
+    就已經量化遺失，無法精確逆算，只能知道「H 落在某區間」。
+
+  - FREQSYNT PLL 分頻暫存器 (僅 38.4MHz xtal 時才會重新計算):
+    0x1994/0x1998/0x199C/0x19A0 (SYNTH_CAL_CONFIG_4/5/6/7)
+    DIV_INT/DIV_FRAC 由 (channelFreq*multiplier)/(38.4*2) - 32 算出，
+    multiplier 是 5 個頻率窗口的查表值，且有 truncation (取整數部分) 造成精度損失，
+    又與 DataRate/H 的 channel 偏移糾纏在一起。
+    在 xtal=40MHz 時，這些暫存器根本不會被重新計算，只保留預設值，
+    此時無法從這些暫存器判斷原本用的是哪個 xtal。
+
+  - 0x1380/0x13A0 (SetTx.TxCondition_1):
+    只有在 (Frequency, DataRate, H) 剛好符合 4 種硬編碼精確匹配組合之一時
+    才會寫入特定值，本質上是二元查表，逆算意義不大。
+
+  - Modulation (txModCombo):
+    **目前根本沒有正向映射到任何暫存器** — isGFSK 在 CodeGenProcess.cs:800
+    被寫死為 true，不論 UI 選了 GFSK 或 FSK。也就是說即使逆算 0x13AC 的
+    bit[29:28] 能分辨 GFSK/FSK，也不會反映使用者原本在左上角選的 Modulation，
+    因為正向本來就沒有尊重這個選項 (可能是既有 bug，需要另外確認/決定是否修正)。
+
+  - Band (freqBandCombo):
+    沒有任何暫存器直接存放 Band，且 freqBandCombo 本身也不參與正向計算
+    (只用來限制 PAConfigCombo 選項、寫入 log 註解)。逆算 Band 只能靠還原出
+    Frequency 後重新跑一次 GetCurrBand() 邏輯去猜，本質上是"重新推導"而非"讀取"。
+
+--------------------------------------------------------
+【建議的分階段做法 (尚未實作，供未來參考)】
+--------------------------------------------------------
+
+1. UI 搬移: 把 READ / WRITE 按鈕移到左下角分頁群組 (與 PACKET TX/RX/
+   CONTINUOUS WAVE/STATE CTRL 同一區塊)，理由是三者都是透過 Com Port
+   對 DVB 的即時操作，左上角只做本地參數/Generate 計算。
+
+2. READ 之後的參數回填，建議分兩層:
+   a. 第一階段 (高信心，可直接做): Frequency, Cap IO, Data Rate, Deviation,
+      Power LV, Preamble, Syncword(不含 invert 狀態), Payload Order, Bit Error
+      這些從對應暫存器可以乾淨、可靠地算回參數值。
+   b. 第二階段 (需查表比對，且要有「無法辨識」的容錯 UI): PA Config(dBm)/Band,
+      Modulation。這類找不到精確匹配時，UI 上應明確顯示「無法辨識/自訂值」，
+      而不是硬塞一個可能錯誤的猜測值。
+
+3. Modulation 目前正向邏輯本身有問題 (isGFSK 寫死 true)，若要做逆算，
+   建議先確認/修正正向邏輯是否該尊重 txModCombo 的選擇，否則逆算出來的
+   結果會跟 UI 顯示的原始選項對不上，造成混淆。
+
+4. Bit Error (0xB104) 的 bit 寬度定義建議先重新確認，避免 UI 允許 0-7
+   但實際只有 2 bits 生效造成逆算/正算不一致。
+
+--------------------------------------------------------
+【相關檔案清單】
+--------------------------------------------------------
+- TESTTOOL/View/MainForm.Designer.cs        左上角 RF PARAM 控制項定義
+- TESTTOOL/View/CodeGenProcess.cs           正向核心 GenerateTxt(), 各參數計算邏輯
+- TESTTOOL/View/RegDumpProcess.cs           Reg Table 即時刷新 / READ / WRITE / 欄位編輯
+- TESTTOOL/ER41xxReg/RegTableItems.cs       75 顆暫存器清單 (名稱/位址/預設值)
+- TESTTOOL/ER41xxReg/RegCategories.cs       位址 -> 分類群組
+- TESTTOOL/ER41xxReg/RegBitFields.cs        個別暫存器 bit-field 定義
+- EzCodeGen/WriteCapValue.cs                Cap IO 計算
+- EzCodeGen/FREQSET.cs                      38.4MHz PLL 分頻計算 (0x1994/1998/199C/19A0)
+- EzCodeGen/TxPowerLv.cs                    PA Config/Power Band 查表
+- EzCodeGen/SetTx.cs                        0x13AC/0xA030/0x1380/0x13A0 相關計算
+- EzCodeGen/Preamble.cs                     Preamble 計算 (0xA02C)
+- EzCodeGen/Syncword.cs                     Syncword/BitError 計算 (0xA034/0xA038/0xB100/0xB104)
+- EzCodeGen/PayloadOrder.cs                 Payload Order 計算 (0xA0A8)
+- EzCodeGen/FirTable.cs, RxDRSetup/RXDRxxx.cs   Data Rate/Deviation 相關 FIR/AGC/LPF 查表
+- TESTTOOL/RXSetupProcess.cs, RxDRSetup/RxRegisterProcess.cs
+  Path B: RX 測試用的獨立即時暫存器寫入流程 (透過 COM port wr 指令，非 Generate 路徑)
+  (註: TESTTOOL/RxSetup/*.cs 為未編譯進 .csproj 的重複/廢棄程式碼，非目前生效路徑)
+
+========================================================
+狀態: 保留規劃，尚未開始實作
+========================================================
