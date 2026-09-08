@@ -55,31 +55,48 @@ namespace ER41xxTestTool
             this.autoSendcbx = new System.Windows.Forms.CheckBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.packetTxPage = new System.Windows.Forms.TabPage();
-            this.label29 = new System.Windows.Forms.Label();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.addSeqLevel = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.pktTxSyncwordLenLabel = new System.Windows.Forms.Label();
+            this.pktTxSyncwordLabel = new System.Windows.Forms.Label();
+            this.pktTxCrcLenLabel = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.pktTxCrcLabel = new System.Windows.Forms.Label();
+            this.pktTxPaylaodeLenLabel = new System.Windows.Forms.Label();
+            this.pktTxPaylaodeLabel = new System.Windows.Forms.Label();
+            this.pktTxSeqNumLenLabel = new System.Windows.Forms.Label();
+            this.pktTxSeqNumLabel = new System.Windows.Forms.Label();
+            this.pktTxLengthLenLabel = new System.Windows.Forms.Label();
+            this.pktTxLengthLabel = new System.Windows.Forms.Label();
+            this.pktTxPreambleLenLabel = new System.Windows.Forms.Label();
+            this.pktTxPreambleLabel = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.numOfPkt = new System.Windows.Forms.TextBox();
+            this.infiniteCheckbox = new System.Windows.Forms.CheckBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.randomLenLable = new System.Windows.Forms.Label();
             this.txCrcPolyLabel = new System.Windows.Forms.Label();
+            this.randomCheckbox = new System.Windows.Forms.CheckBox();
+            this.randomLen = new System.Windows.Forms.TextBox();
             this.crcSelectCombo = new System.Windows.Forms.ComboBox();
             this.addSeqCheckbox = new System.Windows.Forms.CheckBox();
+            this.btnSendStop = new System.Windows.Forms.Button();
             this.lenOfHex = new System.Windows.Forms.TextBox();
             this.lenOfTxtLable = new System.Windows.Forms.Label();
+            this.btnSendStart = new System.Windows.Forms.Button();
             this.dataTxt = new System.Windows.Forms.TextBox();
+            this.label29 = new System.Windows.Forms.Label();
             this.label28 = new System.Windows.Forms.Label();
             this.btnCalCrc = new System.Windows.Forms.Button();
             this.continusTxPage = new System.Windows.Forms.TabPage();
-            this.continueTxGrp = new System.Windows.Forms.GroupBox();
+            this.btnCWOff = new System.Windows.Forms.Button();
             this.patternGrp = new System.Windows.Forms.GroupBox();
             this.prbs9Radio = new System.Windows.Forms.RadioButton();
             this.pr55Radio = new System.Windows.Forms.RadioButton();
+            this.btnCWOn = new System.Windows.Forms.Button();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.modulationRadio = new System.Windows.Forms.RadioButton();
             this.singleToneRadio = new System.Windows.Forms.RadioButton();
-            this.btnCWOff = new System.Windows.Forms.Button();
-            this.btnCWOn = new System.Windows.Forms.Button();
             this.packetRxPage = new System.Windows.Forms.TabPage();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.rssiValue = new System.Windows.Forms.TextBox();
             this.rssiLabel = new System.Windows.Forms.Label();
             this.btnPayloadClear = new System.Windows.Forms.Button();
@@ -105,15 +122,6 @@ namespace ER41xxTestTool
             this.shutdownRadioBtn = new System.Windows.Forms.RadioButton();
             this.deepSleepRadioBtn = new System.Windows.Forms.RadioButton();
             this.idleRadioBtn = new System.Windows.Forms.RadioButton();
-            this.randomLen = new System.Windows.Forms.TextBox();
-            this.randomLenLable = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label11 = new System.Windows.Forms.Label();
-            this.numOfPkt = new System.Windows.Forms.TextBox();
-            this.infiniteCheckbox = new System.Windows.Forms.CheckBox();
-            this.randomCheckbox = new System.Windows.Forms.CheckBox();
-            this.btnSendStop = new System.Windows.Forms.Button();
-            this.btnSendStart = new System.Windows.Forms.Button();
             this.regWrPage = new System.Windows.Forms.TabPage();
             this.grpFreqTable = new System.Windows.Forms.GroupBox();
             this.inFreq = new System.Windows.Forms.TextBox();
@@ -126,11 +134,11 @@ namespace ER41xxTestTool
             this.lblCgLen = new System.Windows.Forms.Label();
             this.preambleLen = new System.Windows.Forms.TextBox();
             this.lblTxSync = new System.Windows.Forms.Label();
-            this.lblTxBitOrder = new System.Windows.Forms.Label();
+            this.lblActualTxSyncword = new System.Windows.Forms.Label();
             this.lblRxSync = new System.Windows.Forms.Label();
             this.rxSyncword = new System.Windows.Forms.TextBox();
             this.rxsyncInvertCheckbox = new System.Windows.Forms.CheckBox();
-            this.rxBitOrder = new System.Windows.Forms.Label();
+            this.lblActualRxSyncword = new System.Windows.Forms.Label();
             this.allowBitError = new System.Windows.Forms.TextBox();
             this.lblCgAbe = new System.Windows.Forms.Label();
             this.grpPayloadOrder = new System.Windows.Forms.GroupBox();
@@ -234,6 +242,7 @@ namespace ER41xxTestTool
             this.grpModAndDR = new System.Windows.Forms.GroupBox();
             this.btnDevComment = new System.Windows.Forms.Button();
             this.grpFreqAndPwr = new System.Windows.Forms.GroupBox();
+            this.rfParamFreqPwrHelpBtn = new System.Windows.Forms.Button();
             this.xtalCombo = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.DVBBandCombo = new System.Windows.Forms.ComboBox();
@@ -259,20 +268,16 @@ namespace ER41xxTestTool
             this.panel6.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.packetTxPage.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.groupBox1.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.continusTxPage.SuspendLayout();
-            this.continueTxGrp.SuspendLayout();
             this.patternGrp.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.packetRxPage.SuspendLayout();
-            this.groupBox2.SuspendLayout();
             this.packetCountGroup.SuspendLayout();
             this.packetParserGroup.SuspendLayout();
             this.statePage.SuspendLayout();
             this.groupBox10.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.grpFreqTable.SuspendLayout();
             this.grpPayloadOrder.SuspendLayout();
             this.grpTxPayloadFmt.SuspendLayout();
@@ -545,8 +550,27 @@ namespace ER41xxTestTool
             // packetTxPage
             // 
             this.packetTxPage.BackColor = System.Drawing.Color.White;
+            this.packetTxPage.Controls.Add(this.pktTxSyncwordLenLabel);
+            this.packetTxPage.Controls.Add(this.pktTxSyncwordLabel);
+            this.packetTxPage.Controls.Add(this.pktTxCrcLenLabel);
+            this.packetTxPage.Controls.Add(this.label7);
+            this.packetTxPage.Controls.Add(this.pktTxCrcLabel);
+            this.packetTxPage.Controls.Add(this.pktTxPaylaodeLenLabel);
+            this.packetTxPage.Controls.Add(this.pktTxPaylaodeLabel);
+            this.packetTxPage.Controls.Add(this.pktTxSeqNumLenLabel);
+            this.packetTxPage.Controls.Add(this.pktTxSeqNumLabel);
+            this.packetTxPage.Controls.Add(this.pktTxLengthLenLabel);
+            this.packetTxPage.Controls.Add(this.pktTxLengthLabel);
+            this.packetTxPage.Controls.Add(this.pktTxPreambleLenLabel);
+            this.packetTxPage.Controls.Add(this.pktTxPreambleLabel);
+            this.packetTxPage.Controls.Add(this.groupBox1);
+            this.packetTxPage.Controls.Add(this.groupBox4);
+            this.packetTxPage.Controls.Add(this.btnSendStop);
+            this.packetTxPage.Controls.Add(this.lenOfHex);
+            this.packetTxPage.Controls.Add(this.lenOfTxtLable);
+            this.packetTxPage.Controls.Add(this.btnSendStart);
+            this.packetTxPage.Controls.Add(this.dataTxt);
             this.packetTxPage.Controls.Add(this.label29);
-            this.packetTxPage.Controls.Add(this.groupBox3);
             this.packetTxPage.Controls.Add(this.label28);
             this.packetTxPage.Controls.Add(this.btnCalCrc);
             this.packetTxPage.ImeMode = System.Windows.Forms.ImeMode.Off;
@@ -558,652 +582,153 @@ namespace ER41xxTestTool
             this.packetTxPage.TabIndex = 0;
             this.packetTxPage.Text = "PACKET TX";
             // 
-            // label29
-            // 
-            this.label29.AutoSize = true;
-            this.label29.Location = new System.Drawing.Point(225, 301);
-            this.label29.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(195, 17);
-            this.label29.TabIndex = 45;
-            this.label29.Text = "Max Payload (with Seq) = 123";
-            this.label29.Visible = false;
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.BackColor = System.Drawing.Color.Transparent;
-            this.groupBox3.Controls.Add(this.pictureBox1);
-            this.groupBox3.Controls.Add(this.groupBox1);
-            this.groupBox3.Controls.Add(this.groupBox4);
-            this.groupBox3.Controls.Add(this.btnSendStop);
-            this.groupBox3.Controls.Add(this.lenOfHex);
-            this.groupBox3.Controls.Add(this.lenOfTxtLable);
-            this.groupBox3.Controls.Add(this.btnSendStart);
-            this.groupBox3.Controls.Add(this.dataTxt);
-            this.groupBox3.Location = new System.Drawing.Point(6, 6);
-            this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox3.Size = new System.Drawing.Size(848, 293);
-            this.groupBox3.TabIndex = 32;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Payload (Hex)";
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.InitialImage = null;
-            this.pictureBox1.Location = new System.Drawing.Point(8, 22);
-            this.pictureBox1.Margin = new System.Windows.Forms.Padding(2);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(784, 68);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox1.TabIndex = 43;
-            this.pictureBox1.TabStop = false;
-            // 
-            // groupBox4
-            // 
-            this.groupBox4.Controls.Add(this.randomLenLable);
-            this.groupBox4.Controls.Add(this.txCrcPolyLabel);
-            this.groupBox4.Controls.Add(this.randomCheckbox);
-            this.groupBox4.Controls.Add(this.randomLen);
-            this.groupBox4.Controls.Add(this.crcSelectCombo);
-            this.groupBox4.Controls.Add(this.addSeqCheckbox);
-            this.groupBox4.Controls.Add(this.addSeqLevel);
-            this.groupBox4.Location = new System.Drawing.Point(418, 98);
-            this.groupBox4.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox4.Size = new System.Drawing.Size(319, 122);
-            this.groupBox4.TabIndex = 30;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Packet Content";
-            // 
-            // txCrcPolyLabel
-            // 
-            this.txCrcPolyLabel.AutoSize = true;
-            this.txCrcPolyLabel.Location = new System.Drawing.Point(14, 23);
-            this.txCrcPolyLabel.Name = "txCrcPolyLabel";
-            this.txCrcPolyLabel.Size = new System.Drawing.Size(108, 17);
-            this.txCrcPolyLabel.TabIndex = 44;
-            this.txCrcPolyLabel.Text = "CRC Polynomial";
-            // 
-            // crcSelectCombo
-            // 
-            this.crcSelectCombo.FormattingEnabled = true;
-            this.crcSelectCombo.Location = new System.Drawing.Point(127, 20);
-            this.crcSelectCombo.Margin = new System.Windows.Forms.Padding(2);
-            this.crcSelectCombo.Name = "crcSelectCombo";
-            this.crcSelectCombo.Size = new System.Drawing.Size(88, 24);
-            this.crcSelectCombo.TabIndex = 0;
-            this.crcSelectCombo.SelectedIndexChanged += new System.EventHandler(this.crcSelectCombo_SelectedIndexChanged);
-            // 
-            // addSeqCheckbox
-            // 
-            this.addSeqCheckbox.Location = new System.Drawing.Point(17, 44);
-            this.addSeqCheckbox.Margin = new System.Windows.Forms.Padding(4);
-            this.addSeqCheckbox.Name = "addSeqCheckbox";
-            this.addSeqCheckbox.Size = new System.Drawing.Size(235, 40);
-            this.addSeqCheckbox.TabIndex = 26;
-            this.addSeqCheckbox.Text = "Prepend Seq Num (+2 bytes)";
-            this.addSeqCheckbox.UseVisualStyleBackColor = true;
-            this.addSeqCheckbox.CheckedChanged += new System.EventHandler(this.addSeqCheckbox_CheckedChanged);
-            //
-            // addSeqLevel
-            //
-            this.addSeqLevel.AutoSize = true;
-            this.addSeqLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F);
-            this.addSeqLevel.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.addSeqLevel.Location = new System.Drawing.Point(17, 86);
-            this.addSeqLevel.Name = "addSeqLevel";
-            this.addSeqLevel.Size = new System.Drawing.Size(200, 12);
-            this.addSeqLevel.TabIndex = 27;
-            this.addSeqLevel.Text = "Seq: adds 2 bytes to the front of payload";
-            this.addSeqLevel.Visible = false;
-            // 
-            // lenOfHex
-            // 
-            this.lenOfHex.BackColor = System.Drawing.Color.Silver;
-            this.lenOfHex.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lenOfHex.Enabled = false;
-            this.lenOfHex.Location = new System.Drawing.Point(8, 100);
-            this.lenOfHex.Margin = new System.Windows.Forms.Padding(4);
-            this.lenOfHex.Name = "lenOfHex";
-            this.lenOfHex.ReadOnly = true;
-            this.lenOfHex.Size = new System.Drawing.Size(55, 23);
-            this.lenOfHex.TabIndex = 28;
-            this.lenOfHex.Text = "0";
-            // 
-            // lenOfTxtLable
-            // 
-            this.lenOfTxtLable.AutoSize = true;
-            this.lenOfTxtLable.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.lenOfTxtLable.Location = new System.Drawing.Point(69, 102);
-            this.lenOfTxtLable.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.lenOfTxtLable.Name = "lenOfTxtLable";
-            this.lenOfTxtLable.Size = new System.Drawing.Size(301, 17);
-            this.lenOfTxtLable.TabIndex = 27;
-            this.lenOfTxtLable.Text = "-Bytes payload has been filled in following box.";
-            // 
-            // dataTxt
-            // 
-            this.dataTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.dataTxt.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.dataTxt.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
-            this.dataTxt.Location = new System.Drawing.Point(8, 131);
-            this.dataTxt.Margin = new System.Windows.Forms.Padding(4);
-            this.dataTxt.Multiline = true;
-            this.dataTxt.Name = "dataTxt";
-            this.dataTxt.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.dataTxt.Size = new System.Drawing.Size(401, 145);
-            this.dataTxt.TabIndex = 18;
-            this.dataTxt.TextChanged += new System.EventHandler(this.dataTxt_TextChanged);
-            // 
-            // label28
-            // 
-            this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(15, 301);
-            this.label28.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(187, 17);
-            this.label28.TabIndex = 44;
-            this.label28.Text = "Max Payload (no Seq) = 125";
-            this.label28.Visible = false;
-            // 
-            // btnCalCrc
-            // 
-            this.btnCalCrc.Location = new System.Drawing.Point(703, 299);
-            this.btnCalCrc.Margin = new System.Windows.Forms.Padding(4);
-            this.btnCalCrc.Name = "btnCalCrc";
-            this.btnCalCrc.Size = new System.Drawing.Size(114, 20);
-            this.btnCalCrc.TabIndex = 19;
-            this.btnCalCrc.Text = "Crc";
-            this.btnCalCrc.UseVisualStyleBackColor = true;
-            this.btnCalCrc.Visible = false;
-            this.btnCalCrc.Click += new System.EventHandler(this.btnCalCrc_Click);
-            // 
-            // continusTxPage
-            // 
-            this.continusTxPage.AutoScroll = true;
-            this.continusTxPage.BackColor = System.Drawing.Color.Transparent;
-            this.continusTxPage.Controls.Add(this.continueTxGrp);
-            this.continusTxPage.Location = new System.Drawing.Point(4, 28);
-            this.continusTxPage.Margin = new System.Windows.Forms.Padding(2);
-            this.continusTxPage.Name = "continusTxPage";
-            this.continusTxPage.Padding = new System.Windows.Forms.Padding(2);
-            this.continusTxPage.Size = new System.Drawing.Size(860, 328);
-            this.continusTxPage.TabIndex = 1;
-            this.continusTxPage.Text = "CONTINOUS WAVE";
-            // 
-            // continueTxGrp
-            // 
-            this.continueTxGrp.Controls.Add(this.patternGrp);
-            this.continueTxGrp.Controls.Add(this.groupBox6);
-            this.continueTxGrp.Controls.Add(this.btnCWOff);
-            this.continueTxGrp.Controls.Add(this.btnCWOn);
-            this.continueTxGrp.Location = new System.Drawing.Point(38, 16);
-            this.continueTxGrp.Margin = new System.Windows.Forms.Padding(2);
-            this.continueTxGrp.Name = "continueTxGrp";
-            this.continueTxGrp.Padding = new System.Windows.Forms.Padding(2);
-            this.continueTxGrp.Size = new System.Drawing.Size(711, 198);
-            this.continueTxGrp.TabIndex = 0;
-            this.continueTxGrp.TabStop = false;
-            // 
-            // patternGrp
-            // 
-            this.patternGrp.Controls.Add(this.prbs9Radio);
-            this.patternGrp.Controls.Add(this.pr55Radio);
-            this.patternGrp.Location = new System.Drawing.Point(514, 26);
-            this.patternGrp.Margin = new System.Windows.Forms.Padding(2);
-            this.patternGrp.Name = "patternGrp";
-            this.patternGrp.Padding = new System.Windows.Forms.Padding(2);
-            this.patternGrp.Size = new System.Drawing.Size(158, 132);
-            this.patternGrp.TabIndex = 5;
-            this.patternGrp.TabStop = false;
-            this.patternGrp.Text = "Pattern";
-            // 
-            // prbs9Radio
-            // 
-            this.prbs9Radio.AutoSize = true;
-            this.prbs9Radio.Location = new System.Drawing.Point(12, 66);
-            this.prbs9Radio.Margin = new System.Windows.Forms.Padding(2);
-            this.prbs9Radio.Name = "prbs9Radio";
-            this.prbs9Radio.Size = new System.Drawing.Size(66, 21);
-            this.prbs9Radio.TabIndex = 1;
-            this.prbs9Radio.Text = "Prbs9";
-            this.prbs9Radio.UseVisualStyleBackColor = true;
-            // 
-            // pr55Radio
-            // 
-            this.pr55Radio.AutoSize = true;
-            this.pr55Radio.Checked = true;
-            this.pr55Radio.Location = new System.Drawing.Point(12, 35);
-            this.pr55Radio.Margin = new System.Windows.Forms.Padding(2);
-            this.pr55Radio.Name = "pr55Radio";
-            this.pr55Radio.Size = new System.Drawing.Size(117, 21);
-            this.pr55Radio.TabIndex = 0;
-            this.pr55Radio.TabStop = true;
-            this.pr55Radio.Text = "Bit_01010101";
-            this.pr55Radio.UseVisualStyleBackColor = true;
-            // 
-            // groupBox6
-            // 
-            this.groupBox6.Controls.Add(this.modulationRadio);
-            this.groupBox6.Controls.Add(this.singleToneRadio);
-            this.groupBox6.Location = new System.Drawing.Point(348, 26);
-            this.groupBox6.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox6.Size = new System.Drawing.Size(161, 132);
-            this.groupBox6.TabIndex = 4;
-            this.groupBox6.TabStop = false;
-            this.groupBox6.Text = "Mode";
-            // 
-            // modulationRadio
-            // 
-            this.modulationRadio.AutoSize = true;
-            this.modulationRadio.Location = new System.Drawing.Point(32, 66);
-            this.modulationRadio.Margin = new System.Windows.Forms.Padding(2);
-            this.modulationRadio.Name = "modulationRadio";
-            this.modulationRadio.Size = new System.Drawing.Size(75, 21);
-            this.modulationRadio.TabIndex = 1;
-            this.modulationRadio.Text = "Pattern";
-            this.modulationRadio.UseVisualStyleBackColor = true;
-            this.modulationRadio.CheckedChanged += new System.EventHandler(this.modulationRadio_CheckedChanged);
-            // 
-            // singleToneRadio
-            // 
-            this.singleToneRadio.AutoSize = true;
-            this.singleToneRadio.Checked = true;
-            this.singleToneRadio.Location = new System.Drawing.Point(32, 35);
-            this.singleToneRadio.Margin = new System.Windows.Forms.Padding(2);
-            this.singleToneRadio.Name = "singleToneRadio";
-            this.singleToneRadio.Size = new System.Drawing.Size(101, 21);
-            this.singleToneRadio.TabIndex = 0;
-            this.singleToneRadio.TabStop = true;
-            this.singleToneRadio.Text = "SingleTone";
-            this.singleToneRadio.UseVisualStyleBackColor = true;
-            this.singleToneRadio.CheckedChanged += new System.EventHandler(this.singleToneRadio_CheckedChanged);
-            // 
-            // btnCWOff
-            // 
-            this.btnCWOff.Location = new System.Drawing.Point(175, 26);
-            this.btnCWOff.Margin = new System.Windows.Forms.Padding(2);
-            this.btnCWOff.Name = "btnCWOff";
-            this.btnCWOff.Size = new System.Drawing.Size(160, 78);
-            this.btnCWOff.TabIndex = 3;
-            this.btnCWOff.Text = "Cw Off";
-            this.btnCWOff.UseVisualStyleBackColor = true;
-            this.btnCWOff.Click += new System.EventHandler(this.btnCWOff_Click);
-            // 
-            // btnCWOn
-            // 
-            this.btnCWOn.Location = new System.Drawing.Point(26, 26);
-            this.btnCWOn.Margin = new System.Windows.Forms.Padding(2);
-            this.btnCWOn.Name = "btnCWOn";
-            this.btnCWOn.Size = new System.Drawing.Size(142, 78);
-            this.btnCWOn.TabIndex = 2;
-            this.btnCWOn.Text = "Cw On";
-            this.btnCWOn.UseVisualStyleBackColor = true;
-            this.btnCWOn.Click += new System.EventHandler(this.btnCWOn_Click);
-            // 
-            // packetRxPage
-            // 
-            this.packetRxPage.Controls.Add(this.groupBox2);
-            this.packetRxPage.Location = new System.Drawing.Point(4, 28);
-            this.packetRxPage.Margin = new System.Windows.Forms.Padding(4);
-            this.packetRxPage.Name = "packetRxPage";
-            this.packetRxPage.Size = new System.Drawing.Size(860, 328);
-            this.packetRxPage.TabIndex = 2;
-            this.packetRxPage.Text = "PACKET RX";
-            this.packetRxPage.UseVisualStyleBackColor = true;
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.BackColor = System.Drawing.Color.Transparent;
-            this.groupBox2.Controls.Add(this.rssiValue);
-            this.groupBox2.Controls.Add(this.rssiLabel);
-            this.groupBox2.Controls.Add(this.btnPayloadClear);
-            this.groupBox2.Controls.Add(this.btnScanStart);
-            this.groupBox2.Controls.Add(this.btnSetPayload);
-            this.groupBox2.Controls.Add(this.packetCountGroup);
-            this.groupBox2.Controls.Add(this.packetParserGroup);
-            this.groupBox2.Controls.Add(this.label20);
-            this.groupBox2.Controls.Add(this.rcvErrText);
-            this.groupBox2.Controls.Add(this.rxResult);
-            this.groupBox2.Controls.Add(this.btnRxStart);
-            this.groupBox2.Controls.Add(this.label10);
-            this.groupBox2.Controls.Add(this.rcvOkText);
-            this.groupBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox2.Location = new System.Drawing.Point(1, 2);
-            this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox2.Size = new System.Drawing.Size(855, 340);
-            this.groupBox2.TabIndex = 15;
-            this.groupBox2.TabStop = false;
-            // 
-            // rssiValue
-            // 
-            this.rssiValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rssiValue.Location = new System.Drawing.Point(744, 185);
-            this.rssiValue.Margin = new System.Windows.Forms.Padding(4);
-            this.rssiValue.Name = "rssiValue";
-            this.rssiValue.Size = new System.Drawing.Size(99, 23);
-            this.rssiValue.TabIndex = 21;
-            // 
-            // rssiLabel
-            // 
-            this.rssiLabel.AutoSize = true;
-            this.rssiLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rssiLabel.Location = new System.Drawing.Point(744, 161);
-            this.rssiLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.rssiLabel.Name = "rssiLabel";
-            this.rssiLabel.Size = new System.Drawing.Size(67, 17);
-            this.rssiLabel.TabIndex = 22;
-            this.rssiLabel.Text = "Avg RSSI";
-            // 
-            // btnPayloadClear
-            // 
-            this.btnPayloadClear.Location = new System.Drawing.Point(637, 33);
-            this.btnPayloadClear.Margin = new System.Windows.Forms.Padding(2);
-            this.btnPayloadClear.Name = "btnPayloadClear";
-            this.btnPayloadClear.Size = new System.Drawing.Size(77, 35);
-            this.btnPayloadClear.TabIndex = 35;
-            this.btnPayloadClear.Text = "Clear";
-            this.btnPayloadClear.UseVisualStyleBackColor = true;
-            this.btnPayloadClear.Click += new System.EventHandler(this.btnPayloadClear_Click);
-            // 
-            // btnScanStart
-            // 
-            this.btnScanStart.Location = new System.Drawing.Point(741, 225);
-            this.btnScanStart.Margin = new System.Windows.Forms.Padding(2);
-            this.btnScanStart.Name = "btnScanStart";
-            this.btnScanStart.Size = new System.Drawing.Size(99, 35);
-            this.btnScanStart.TabIndex = 34;
-            this.btnScanStart.Text = "Scan RSSI";
-            this.btnScanStart.UseVisualStyleBackColor = true;
-            this.btnScanStart.Click += new System.EventHandler(this.btnScanRssi_Click);
-            // 
-            // btnSetPayload
-            // 
-            this.btnSetPayload.Location = new System.Drawing.Point(532, 33);
-            this.btnSetPayload.Margin = new System.Windows.Forms.Padding(4);
-            this.btnSetPayload.Name = "btnSetPayload";
-            this.btnSetPayload.Size = new System.Drawing.Size(99, 35);
-            this.btnSetPayload.TabIndex = 16;
-            this.btnSetPayload.Text = "Set Payload";
-            this.btnSetPayload.UseVisualStyleBackColor = true;
-            this.btnSetPayload.Visible = false;
-            this.btnSetPayload.Click += new System.EventHandler(this.btnSetPayload_Click);
-            // 
-            // packetCountGroup
-            // 
-            this.packetCountGroup.Controls.Add(this.packetRxLimitRadio);
-            this.packetCountGroup.Controls.Add(this.packetRxNum);
-            this.packetCountGroup.Controls.Add(this.packetRxNoLimitRadio);
-            this.packetCountGroup.Location = new System.Drawing.Point(10, 3);
-            this.packetCountGroup.Margin = new System.Windows.Forms.Padding(2);
-            this.packetCountGroup.Name = "packetCountGroup";
-            this.packetCountGroup.Padding = new System.Windows.Forms.Padding(2);
-            this.packetCountGroup.Size = new System.Drawing.Size(230, 95);
-            this.packetCountGroup.TabIndex = 36;
-            this.packetCountGroup.TabStop = false;
-            this.packetCountGroup.Text = "Packet Count";
-            // 
-            // packetRxLimitRadio
-            // 
-            this.packetRxLimitRadio.AutoSize = true;
-            this.packetRxLimitRadio.Location = new System.Drawing.Point(10, 22);
-            this.packetRxLimitRadio.Margin = new System.Windows.Forms.Padding(2);
-            this.packetRxLimitRadio.Name = "packetRxLimitRadio";
-            this.packetRxLimitRadio.Size = new System.Drawing.Size(142, 21);
-            this.packetRxLimitRadio.TabIndex = 31;
-            this.packetRxLimitRadio.Text = "Max Packet Count";
-            this.packetRxLimitRadio.UseVisualStyleBackColor = true;
-            this.packetRxLimitRadio.CheckedChanged += new System.EventHandler(this.packetRxCountMode_CheckedChanged);
-            // 
-            // packetRxNum
-            // 
-            this.packetRxNum.Enabled = false;
-            this.packetRxNum.Location = new System.Drawing.Point(135, 20);
-            this.packetRxNum.Margin = new System.Windows.Forms.Padding(2);
-            this.packetRxNum.Name = "packetRxNum";
-            this.packetRxNum.Size = new System.Drawing.Size(76, 23);
-            this.packetRxNum.TabIndex = 32;
-            this.packetRxNum.Text = "100";
-            // 
-            // packetRxNoLimitRadio
-            // 
-            this.packetRxNoLimitRadio.AutoSize = true;
-            this.packetRxNoLimitRadio.Checked = true;
-            this.packetRxNoLimitRadio.Location = new System.Drawing.Point(10, 55);
-            this.packetRxNoLimitRadio.Margin = new System.Windows.Forms.Padding(2);
-            this.packetRxNoLimitRadio.Name = "packetRxNoLimitRadio";
-            this.packetRxNoLimitRadio.Size = new System.Drawing.Size(106, 21);
-            this.packetRxNoLimitRadio.TabIndex = 33;
-            this.packetRxNoLimitRadio.TabStop = true;
-            this.packetRxNoLimitRadio.Text = "No limitation";
-            this.packetRxNoLimitRadio.UseVisualStyleBackColor = true;
-            this.packetRxNoLimitRadio.CheckedChanged += new System.EventHandler(this.packetRxCountMode_CheckedChanged);
-            // 
-            // packetParserGroup
-            // 
-            this.packetParserGroup.Controls.Add(this.rxParseSeq);
-            this.packetParserGroup.Controls.Add(this.crcLabel);
-            this.packetParserGroup.Controls.Add(this.packetRxCrcCombo);
-            this.packetParserGroup.Location = new System.Drawing.Point(248, 3);
-            this.packetParserGroup.Margin = new System.Windows.Forms.Padding(2);
-            this.packetParserGroup.Name = "packetParserGroup";
-            this.packetParserGroup.Padding = new System.Windows.Forms.Padding(2);
-            this.packetParserGroup.Size = new System.Drawing.Size(270, 95);
-            this.packetParserGroup.TabIndex = 37;
-            this.packetParserGroup.TabStop = false;
-            this.packetParserGroup.Text = "Packet Parser";
-            // 
-            // rxParseSeq
-            // 
-            this.rxParseSeq.AutoSize = true;
-            this.rxParseSeq.Location = new System.Drawing.Point(10, 22);
-            this.rxParseSeq.Margin = new System.Windows.Forms.Padding(2);
-            this.rxParseSeq.Name = "rxParseSeq";
-            this.rxParseSeq.Size = new System.Drawing.Size(185, 21);
-            this.rxParseSeq.TabIndex = 28;
-            this.rxParseSeq.Text = "Packet Has Seq Number";
-            this.rxParseSeq.UseVisualStyleBackColor = true;
-            // 
-            // crcLabel
-            // 
-            this.crcLabel.AutoSize = true;
-            this.crcLabel.Location = new System.Drawing.Point(10, 57);
-            this.crcLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.crcLabel.Name = "crcLabel";
-            this.crcLabel.Size = new System.Drawing.Size(108, 17);
-            this.crcLabel.TabIndex = 29;
-            this.crcLabel.Text = "CRC Polynomial";
-            // 
-            // packetRxCrcCombo
-            // 
-            this.packetRxCrcCombo.FormattingEnabled = true;
-            this.packetRxCrcCombo.Location = new System.Drawing.Point(130, 54);
-            this.packetRxCrcCombo.Margin = new System.Windows.Forms.Padding(2);
-            this.packetRxCrcCombo.Name = "packetRxCrcCombo";
-            this.packetRxCrcCombo.Size = new System.Drawing.Size(109, 24);
-            this.packetRxCrcCombo.TabIndex = 30;
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label20.Location = new System.Drawing.Point(741, 107);
-            this.label20.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(76, 17);
-            this.label20.TabIndex = 27;
-            this.label20.Text = "Rcvd Error";
-            // 
-            // rcvErrText
-            // 
-            this.rcvErrText.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rcvErrText.Location = new System.Drawing.Point(741, 131);
-            this.rcvErrText.Margin = new System.Windows.Forms.Padding(2);
-            this.rcvErrText.Name = "rcvErrText";
-            this.rcvErrText.Size = new System.Drawing.Size(99, 23);
-            this.rcvErrText.TabIndex = 26;
-            // 
-            // rxResult
-            // 
-            this.rxResult.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rxResult.Location = new System.Drawing.Point(6, 105);
-            this.rxResult.Margin = new System.Windows.Forms.Padding(2);
-            this.rxResult.Multiline = true;
-            this.rxResult.Name = "rxResult";
-            this.rxResult.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.rxResult.Size = new System.Drawing.Size(708, 203);
-            this.rxResult.TabIndex = 23;
-            this.rxResult.WordWrap = false;
-            // 
-            // btnRxStart
-            // 
-            this.btnRxStart.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
-            this.btnRxStart.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.btnRxStart.Location = new System.Drawing.Point(741, 273);
-            this.btnRxStart.Margin = new System.Windows.Forms.Padding(2);
-            this.btnRxStart.Name = "btnRxStart";
-            this.btnRxStart.Size = new System.Drawing.Size(99, 35);
-            this.btnRxStart.TabIndex = 16;
-            this.btnRxStart.Text = "Start RX";
-            this.btnRxStart.UseVisualStyleBackColor = false;
-            this.btnRxStart.Click += new System.EventHandler(this.btnRxStart_Click_1);
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(741, 53);
-            this.label10.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(64, 17);
-            this.label10.TabIndex = 12;
-            this.label10.Text = "Rcvd OK";
-            // 
-            // rcvOkText
-            // 
-            this.rcvOkText.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rcvOkText.Location = new System.Drawing.Point(741, 77);
-            this.rcvOkText.Margin = new System.Windows.Forms.Padding(2);
-            this.rcvOkText.Name = "rcvOkText";
-            this.rcvOkText.Size = new System.Drawing.Size(99, 23);
-            this.rcvOkText.TabIndex = 9;
-            // 
-            // statePage
-            // 
-            this.statePage.Controls.Add(this.btnStateSet);
-            this.statePage.Controls.Add(this.groupBox10);
-            this.statePage.Location = new System.Drawing.Point(4, 28);
-            this.statePage.Margin = new System.Windows.Forms.Padding(2);
-            this.statePage.Name = "statePage";
-            this.statePage.Size = new System.Drawing.Size(860, 328);
-            this.statePage.TabIndex = 3;
-            this.statePage.Text = "STATE CTRL";
-            this.statePage.UseVisualStyleBackColor = true;
-            // 
-            // btnStateSet
-            // 
-            this.btnStateSet.Location = new System.Drawing.Point(368, 68);
-            this.btnStateSet.Margin = new System.Windows.Forms.Padding(2);
-            this.btnStateSet.Name = "btnStateSet";
-            this.btnStateSet.Size = new System.Drawing.Size(182, 71);
-            this.btnStateSet.TabIndex = 1;
-            this.btnStateSet.Text = "Set";
-            this.btnStateSet.UseVisualStyleBackColor = true;
-            this.btnStateSet.Click += new System.EventHandler(this.btnStateSet_Click);
-            // 
-            // groupBox10
-            // 
-            this.groupBox10.Controls.Add(this.shutdownRadioBtn);
-            this.groupBox10.Controls.Add(this.deepSleepRadioBtn);
-            this.groupBox10.Controls.Add(this.idleRadioBtn);
-            this.groupBox10.Location = new System.Drawing.Point(65, 51);
-            this.groupBox10.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox10.Size = new System.Drawing.Size(261, 229);
-            this.groupBox10.TabIndex = 0;
-            this.groupBox10.TabStop = false;
-            this.groupBox10.Text = "State";
-            // 
-            // shutdownRadioBtn
-            // 
-            this.shutdownRadioBtn.AutoSize = true;
-            this.shutdownRadioBtn.Location = new System.Drawing.Point(38, 138);
-            this.shutdownRadioBtn.Margin = new System.Windows.Forms.Padding(2);
-            this.shutdownRadioBtn.Name = "shutdownRadioBtn";
-            this.shutdownRadioBtn.Size = new System.Drawing.Size(91, 21);
-            this.shutdownRadioBtn.TabIndex = 2;
-            this.shutdownRadioBtn.TabStop = true;
-            this.shutdownRadioBtn.Text = "Shutdown";
-            this.shutdownRadioBtn.UseVisualStyleBackColor = true;
-            // 
-            // deepSleepRadioBtn
-            // 
-            this.deepSleepRadioBtn.AutoSize = true;
-            this.deepSleepRadioBtn.Location = new System.Drawing.Point(38, 92);
-            this.deepSleepRadioBtn.Margin = new System.Windows.Forms.Padding(2);
-            this.deepSleepRadioBtn.Name = "deepSleepRadioBtn";
-            this.deepSleepRadioBtn.Size = new System.Drawing.Size(103, 21);
-            this.deepSleepRadioBtn.TabIndex = 1;
-            this.deepSleepRadioBtn.TabStop = true;
-            this.deepSleepRadioBtn.Text = "Deep Sleep";
-            this.deepSleepRadioBtn.UseVisualStyleBackColor = true;
-            // 
-            // idleRadioBtn
-            // 
-            this.idleRadioBtn.AutoSize = true;
-            this.idleRadioBtn.Checked = true;
-            this.idleRadioBtn.Location = new System.Drawing.Point(38, 48);
-            this.idleRadioBtn.Margin = new System.Windows.Forms.Padding(2);
-            this.idleRadioBtn.Name = "idleRadioBtn";
-            this.idleRadioBtn.Size = new System.Drawing.Size(51, 21);
-            this.idleRadioBtn.TabIndex = 0;
-            this.idleRadioBtn.TabStop = true;
-            this.idleRadioBtn.Text = "idle";
-            this.idleRadioBtn.UseVisualStyleBackColor = true;
-            // 
-            // randomLen
-            // 
-            this.randomLen.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.randomLen.Enabled = false;
-            this.randomLen.Location = new System.Drawing.Point(216, 81);
-            this.randomLen.Margin = new System.Windows.Forms.Padding(4);
-            this.randomLen.Name = "randomLen";
-            this.randomLen.Size = new System.Drawing.Size(36, 23);
-            this.randomLen.TabIndex = 0;
-            this.randomLen.Text = "5";
-            this.randomLen.Leave += new System.EventHandler(this.randomLen_Leave);
-            // 
-            // randomLenLable
-            // 
-            this.randomLenLable.AutoSize = true;
-            this.randomLenLable.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.randomLenLable.Location = new System.Drawing.Point(258, 84);
-            this.randomLenLable.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.randomLenLable.Name = "randomLenLable";
-            this.randomLenLable.Size = new System.Drawing.Size(43, 17);
-            this.randomLenLable.TabIndex = 13;
-            this.randomLenLable.Text = "Bytes";
+            // pktTxSyncwordLenLabel
+            // 
+            this.pktTxSyncwordLenLabel.ForeColor = System.Drawing.Color.Gray;
+            this.pktTxSyncwordLenLabel.Location = new System.Drawing.Point(192, 78);
+            this.pktTxSyncwordLenLabel.Name = "pktTxSyncwordLenLabel";
+            this.pktTxSyncwordLenLabel.Size = new System.Drawing.Size(111, 17);
+            this.pktTxSyncwordLenLabel.TabIndex = 53;
+            this.pktTxSyncwordLenLabel.Text = "4Bytes";
+            this.pktTxSyncwordLenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxSyncwordLabel
+            // 
+            this.pktTxSyncwordLabel.BackColor = System.Drawing.Color.Gainsboro;
+            this.pktTxSyncwordLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pktTxSyncwordLabel.Location = new System.Drawing.Point(192, 45);
+            this.pktTxSyncwordLabel.Name = "pktTxSyncwordLabel";
+            this.pktTxSyncwordLabel.Size = new System.Drawing.Size(111, 27);
+            this.pktTxSyncwordLabel.TabIndex = 53;
+            this.pktTxSyncwordLabel.Text = "Syncword";
+            this.pktTxSyncwordLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxCrcLenLabel
+            // 
+            this.pktTxCrcLenLabel.ForeColor = System.Drawing.Color.Gray;
+            this.pktTxCrcLenLabel.Location = new System.Drawing.Point(652, 78);
+            this.pktTxCrcLenLabel.Name = "pktTxCrcLenLabel";
+            this.pktTxCrcLenLabel.Size = new System.Drawing.Size(111, 17);
+            this.pktTxCrcLenLabel.TabIndex = 53;
+            this.pktTxCrcLenLabel.Text = "2Bytes";
+            this.pktTxCrcLenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label7
+            // 
+            this.label7.BackColor = System.Drawing.Color.LightBlue;
+            this.label7.Location = new System.Drawing.Point(307, 10);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(456, 27);
+            this.label7.TabIndex = 53;
+            this.label7.Text = "FIFO Data (Max 128 Bytes)";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxCrcLabel
+            // 
+            this.pktTxCrcLabel.BackColor = System.Drawing.Color.LightBlue;
+            this.pktTxCrcLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pktTxCrcLabel.Location = new System.Drawing.Point(652, 45);
+            this.pktTxCrcLabel.Name = "pktTxCrcLabel";
+            this.pktTxCrcLabel.Size = new System.Drawing.Size(111, 27);
+            this.pktTxCrcLabel.TabIndex = 53;
+            this.pktTxCrcLabel.Text = "CRC";
+            this.pktTxCrcLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxPaylaodeLenLabel
+            // 
+            this.pktTxPaylaodeLenLabel.ForeColor = System.Drawing.Color.Gray;
+            this.pktTxPaylaodeLenLabel.Location = new System.Drawing.Point(537, 78);
+            this.pktTxPaylaodeLenLabel.Name = "pktTxPaylaodeLenLabel";
+            this.pktTxPaylaodeLenLabel.Size = new System.Drawing.Size(111, 17);
+            this.pktTxPaylaodeLenLabel.TabIndex = 53;
+            this.pktTxPaylaodeLenLabel.Text = "Max 125 Bytes";
+            this.pktTxPaylaodeLenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxPaylaodeLabel
+            // 
+            this.pktTxPaylaodeLabel.BackColor = System.Drawing.Color.LightBlue;
+            this.pktTxPaylaodeLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pktTxPaylaodeLabel.Location = new System.Drawing.Point(537, 45);
+            this.pktTxPaylaodeLabel.Name = "pktTxPaylaodeLabel";
+            this.pktTxPaylaodeLabel.Size = new System.Drawing.Size(111, 27);
+            this.pktTxPaylaodeLabel.TabIndex = 53;
+            this.pktTxPaylaodeLabel.Text = "Payload";
+            this.pktTxPaylaodeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxSeqNumLenLabel
+            // 
+            this.pktTxSeqNumLenLabel.ForeColor = System.Drawing.Color.Gray;
+            this.pktTxSeqNumLenLabel.Location = new System.Drawing.Point(422, 78);
+            this.pktTxSeqNumLenLabel.Name = "pktTxSeqNumLenLabel";
+            this.pktTxSeqNumLenLabel.Size = new System.Drawing.Size(111, 17);
+            this.pktTxSeqNumLenLabel.TabIndex = 53;
+            this.pktTxSeqNumLenLabel.Text = "2Bytes";
+            this.pktTxSeqNumLenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxSeqNumLabel
+            // 
+            this.pktTxSeqNumLabel.BackColor = System.Drawing.Color.LightBlue;
+            this.pktTxSeqNumLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pktTxSeqNumLabel.Location = new System.Drawing.Point(422, 45);
+            this.pktTxSeqNumLabel.Name = "pktTxSeqNumLabel";
+            this.pktTxSeqNumLabel.Size = new System.Drawing.Size(111, 27);
+            this.pktTxSeqNumLabel.TabIndex = 53;
+            this.pktTxSeqNumLabel.Text = "Seq Number";
+            this.pktTxSeqNumLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxLengthLenLabel
+            // 
+            this.pktTxLengthLenLabel.ForeColor = System.Drawing.Color.Gray;
+            this.pktTxLengthLenLabel.Location = new System.Drawing.Point(307, 78);
+            this.pktTxLengthLenLabel.Name = "pktTxLengthLenLabel";
+            this.pktTxLengthLenLabel.Size = new System.Drawing.Size(111, 17);
+            this.pktTxLengthLenLabel.TabIndex = 53;
+            this.pktTxLengthLenLabel.Text = "1Bytes";
+            this.pktTxLengthLenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxLengthLabel
+            // 
+            this.pktTxLengthLabel.BackColor = System.Drawing.Color.LightBlue;
+            this.pktTxLengthLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pktTxLengthLabel.Location = new System.Drawing.Point(307, 45);
+            this.pktTxLengthLabel.Name = "pktTxLengthLabel";
+            this.pktTxLengthLabel.Size = new System.Drawing.Size(111, 27);
+            this.pktTxLengthLabel.TabIndex = 53;
+            this.pktTxLengthLabel.Text = "Length";
+            this.pktTxLengthLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxPreambleLenLabel
+            // 
+            this.pktTxPreambleLenLabel.ForeColor = System.Drawing.Color.Gray;
+            this.pktTxPreambleLenLabel.Location = new System.Drawing.Point(77, 78);
+            this.pktTxPreambleLenLabel.Name = "pktTxPreambleLenLabel";
+            this.pktTxPreambleLenLabel.Size = new System.Drawing.Size(111, 17);
+            this.pktTxPreambleLenLabel.TabIndex = 53;
+            this.pktTxPreambleLenLabel.Text = "4Bytes";
+            this.pktTxPreambleLenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // pktTxPreambleLabel
+            // 
+            this.pktTxPreambleLabel.BackColor = System.Drawing.Color.Gainsboro;
+            this.pktTxPreambleLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pktTxPreambleLabel.Location = new System.Drawing.Point(77, 45);
+            this.pktTxPreambleLabel.Name = "pktTxPreambleLabel";
+            this.pktTxPreambleLabel.Size = new System.Drawing.Size(111, 27);
+            this.pktTxPreambleLabel.TabIndex = 53;
+            this.pktTxPreambleLabel.Text = "Preamble";
+            this.pktTxPreambleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.label11);
             this.groupBox1.Controls.Add(this.numOfPkt);
             this.groupBox1.Controls.Add(this.infiniteCheckbox);
-            this.groupBox1.Location = new System.Drawing.Point(418, 226);
+            this.groupBox1.Location = new System.Drawing.Point(474, 229);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Size = new System.Drawing.Size(319, 61);
-            this.groupBox1.TabIndex = 29;
+            this.groupBox1.Size = new System.Drawing.Size(268, 61);
+            this.groupBox1.TabIndex = 51;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Target Packet Count";
             // 
@@ -1240,40 +765,610 @@ namespace ER41xxTestTool
             this.infiniteCheckbox.UseVisualStyleBackColor = true;
             this.infiniteCheckbox.CheckedChanged += new System.EventHandler(this.infiniteCheckbox_CheckedChanged);
             // 
+            // groupBox4
+            // 
+            this.groupBox4.Controls.Add(this.randomLenLable);
+            this.groupBox4.Controls.Add(this.txCrcPolyLabel);
+            this.groupBox4.Controls.Add(this.randomCheckbox);
+            this.groupBox4.Controls.Add(this.randomLen);
+            this.groupBox4.Controls.Add(this.crcSelectCombo);
+            this.groupBox4.Controls.Add(this.addSeqCheckbox);
+            this.groupBox4.Location = new System.Drawing.Point(474, 108);
+            this.groupBox4.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox4.Size = new System.Drawing.Size(268, 120);
+            this.groupBox4.TabIndex = 52;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "Packet Content";
+            // 
+            // randomLenLable
+            // 
+            this.randomLenLable.AutoSize = true;
+            this.randomLenLable.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.randomLenLable.Location = new System.Drawing.Point(211, 85);
+            this.randomLenLable.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.randomLenLable.Name = "randomLenLable";
+            this.randomLenLable.Size = new System.Drawing.Size(43, 17);
+            this.randomLenLable.TabIndex = 13;
+            this.randomLenLable.Text = "Bytes";
+            // 
+            // txCrcPolyLabel
+            // 
+            this.txCrcPolyLabel.AutoSize = true;
+            this.txCrcPolyLabel.Location = new System.Drawing.Point(14, 23);
+            this.txCrcPolyLabel.Name = "txCrcPolyLabel";
+            this.txCrcPolyLabel.Size = new System.Drawing.Size(108, 17);
+            this.txCrcPolyLabel.TabIndex = 44;
+            this.txCrcPolyLabel.Text = "CRC Polynomial";
+            // 
             // randomCheckbox
             // 
             this.randomCheckbox.AutoSize = true;
             this.randomCheckbox.Location = new System.Drawing.Point(17, 83);
             this.randomCheckbox.Margin = new System.Windows.Forms.Padding(4);
             this.randomCheckbox.Name = "randomCheckbox";
-            this.randomCheckbox.Size = new System.Drawing.Size(202, 21);
+            this.randomCheckbox.Size = new System.Drawing.Size(138, 21);
             this.randomCheckbox.TabIndex = 23;
-            this.randomCheckbox.Text = "Generate Random Payload";
+            this.randomCheckbox.Text = "Random Payload";
             this.randomCheckbox.UseVisualStyleBackColor = true;
             this.randomCheckbox.CheckedChanged += new System.EventHandler(this.randomCheckbox_CheckedChanged);
+            // 
+            // randomLen
+            // 
+            this.randomLen.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.randomLen.Enabled = false;
+            this.randomLen.Location = new System.Drawing.Point(163, 82);
+            this.randomLen.Margin = new System.Windows.Forms.Padding(4);
+            this.randomLen.Name = "randomLen";
+            this.randomLen.Size = new System.Drawing.Size(36, 23);
+            this.randomLen.TabIndex = 0;
+            this.randomLen.Text = "5";
+            this.randomLen.KeyDown += new System.Windows.Forms.KeyEventHandler(this.randomLen_KeyDown);
+            this.randomLen.Leave += new System.EventHandler(this.randomLen_Leave);
+            // 
+            // crcSelectCombo
+            // 
+            this.crcSelectCombo.FormattingEnabled = true;
+            this.crcSelectCombo.Location = new System.Drawing.Point(127, 20);
+            this.crcSelectCombo.Margin = new System.Windows.Forms.Padding(2);
+            this.crcSelectCombo.Name = "crcSelectCombo";
+            this.crcSelectCombo.Size = new System.Drawing.Size(88, 24);
+            this.crcSelectCombo.TabIndex = 0;
+            this.crcSelectCombo.SelectedIndexChanged += new System.EventHandler(this.crcSelectCombo_SelectedIndexChanged);
+            // 
+            // addSeqCheckbox
+            // 
+            this.addSeqCheckbox.Location = new System.Drawing.Point(17, 44);
+            this.addSeqCheckbox.Margin = new System.Windows.Forms.Padding(4);
+            this.addSeqCheckbox.Name = "addSeqCheckbox";
+            this.addSeqCheckbox.Size = new System.Drawing.Size(235, 40);
+            this.addSeqCheckbox.TabIndex = 26;
+            this.addSeqCheckbox.Text = "Prepend Seq Num (+2 bytes)";
+            this.addSeqCheckbox.UseVisualStyleBackColor = true;
+            this.addSeqCheckbox.CheckedChanged += new System.EventHandler(this.addSeqCheckbox_CheckedChanged);
             // 
             // btnSendStop
             // 
             this.btnSendStop.Enabled = false;
-            this.btnSendStop.Location = new System.Drawing.Point(743, 246);
+            this.btnSendStop.Location = new System.Drawing.Point(753, 262);
             this.btnSendStop.Margin = new System.Windows.Forms.Padding(4);
             this.btnSendStop.Name = "btnSendStop";
             this.btnSendStop.Size = new System.Drawing.Size(90, 31);
-            this.btnSendStop.TabIndex = 25;
+            this.btnSendStop.TabIndex = 48;
             this.btnSendStop.Text = "Stop";
             this.btnSendStop.UseVisualStyleBackColor = true;
             this.btnSendStop.Click += new System.EventHandler(this.btnSendStop_Click);
             // 
+            // lenOfHex
+            // 
+            this.lenOfHex.BackColor = System.Drawing.Color.Silver;
+            this.lenOfHex.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lenOfHex.Enabled = false;
+            this.lenOfHex.Location = new System.Drawing.Point(22, 107);
+            this.lenOfHex.Margin = new System.Windows.Forms.Padding(4);
+            this.lenOfHex.Name = "lenOfHex";
+            this.lenOfHex.ReadOnly = true;
+            this.lenOfHex.Size = new System.Drawing.Size(55, 23);
+            this.lenOfHex.TabIndex = 50;
+            this.lenOfHex.Text = "0";
+            // 
+            // lenOfTxtLable
+            // 
+            this.lenOfTxtLable.AutoSize = true;
+            this.lenOfTxtLable.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.lenOfTxtLable.Location = new System.Drawing.Point(89, 109);
+            this.lenOfTxtLable.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lenOfTxtLable.Name = "lenOfTxtLable";
+            this.lenOfTxtLable.Size = new System.Drawing.Size(301, 17);
+            this.lenOfTxtLable.TabIndex = 49;
+            this.lenOfTxtLable.Text = "-Bytes payload has been filled in following box.";
+            // 
             // btnSendStart
             // 
-            this.btnSendStart.Location = new System.Drawing.Point(743, 207);
+            this.btnSendStart.Location = new System.Drawing.Point(753, 223);
             this.btnSendStart.Margin = new System.Windows.Forms.Padding(4);
             this.btnSendStart.Name = "btnSendStart";
             this.btnSendStart.Size = new System.Drawing.Size(90, 31);
-            this.btnSendStart.TabIndex = 22;
+            this.btnSendStart.TabIndex = 47;
             this.btnSendStart.Text = "Start";
             this.btnSendStart.UseVisualStyleBackColor = true;
             this.btnSendStart.Click += new System.EventHandler(this.btnSendStart_Click);
+            // 
+            // dataTxt
+            // 
+            this.dataTxt.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.dataTxt.Font = new System.Drawing.Font("Consolas", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.dataTxt.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
+            this.dataTxt.Location = new System.Drawing.Point(18, 138);
+            this.dataTxt.Margin = new System.Windows.Forms.Padding(4);
+            this.dataTxt.Multiline = true;
+            this.dataTxt.Name = "dataTxt";
+            this.dataTxt.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.dataTxt.Size = new System.Drawing.Size(450, 152);
+            this.dataTxt.TabIndex = 46;
+            this.dataTxt.TextChanged += new System.EventHandler(this.dataTxt_TextChanged);
+            // 
+            // label29
+            // 
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(225, 301);
+            this.label29.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(195, 17);
+            this.label29.TabIndex = 45;
+            this.label29.Text = "Max Payload (with Seq) = 123";
+            this.label29.Visible = false;
+            // 
+            // label28
+            // 
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(15, 301);
+            this.label28.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(187, 17);
+            this.label28.TabIndex = 44;
+            this.label28.Text = "Max Payload (no Seq) = 125";
+            this.label28.Visible = false;
+            // 
+            // btnCalCrc
+            // 
+            this.btnCalCrc.Location = new System.Drawing.Point(703, 299);
+            this.btnCalCrc.Margin = new System.Windows.Forms.Padding(4);
+            this.btnCalCrc.Name = "btnCalCrc";
+            this.btnCalCrc.Size = new System.Drawing.Size(114, 20);
+            this.btnCalCrc.TabIndex = 19;
+            this.btnCalCrc.Text = "Crc";
+            this.btnCalCrc.UseVisualStyleBackColor = true;
+            this.btnCalCrc.Visible = false;
+            this.btnCalCrc.Click += new System.EventHandler(this.btnCalCrc_Click);
+            // 
+            // continusTxPage
+            // 
+            this.continusTxPage.AutoScroll = true;
+            this.continusTxPage.BackColor = System.Drawing.Color.Transparent;
+            this.continusTxPage.Controls.Add(this.btnCWOff);
+            this.continusTxPage.Controls.Add(this.patternGrp);
+            this.continusTxPage.Controls.Add(this.btnCWOn);
+            this.continusTxPage.Controls.Add(this.groupBox6);
+            this.continusTxPage.Location = new System.Drawing.Point(4, 28);
+            this.continusTxPage.Margin = new System.Windows.Forms.Padding(2);
+            this.continusTxPage.Name = "continusTxPage";
+            this.continusTxPage.Padding = new System.Windows.Forms.Padding(2);
+            this.continusTxPage.Size = new System.Drawing.Size(860, 328);
+            this.continusTxPage.TabIndex = 1;
+            this.continusTxPage.Text = "CONTINUOUS TX";
+            // 
+            // btnCWOff
+            // 
+            this.btnCWOff.Location = new System.Drawing.Point(18, 73);
+            this.btnCWOff.Margin = new System.Windows.Forms.Padding(2);
+            this.btnCWOff.Name = "btnCWOff";
+            this.btnCWOff.Size = new System.Drawing.Size(128, 48);
+            this.btnCWOff.TabIndex = 3;
+            this.btnCWOff.Text = "Stop";
+            this.btnCWOff.UseVisualStyleBackColor = true;
+            this.btnCWOff.Click += new System.EventHandler(this.btnCWOff_Click);
+            // 
+            // patternGrp
+            // 
+            this.patternGrp.Controls.Add(this.prbs9Radio);
+            this.patternGrp.Controls.Add(this.pr55Radio);
+            this.patternGrp.Location = new System.Drawing.Point(314, 12);
+            this.patternGrp.Margin = new System.Windows.Forms.Padding(2);
+            this.patternGrp.Name = "patternGrp";
+            this.patternGrp.Padding = new System.Windows.Forms.Padding(2);
+            this.patternGrp.Size = new System.Drawing.Size(139, 104);
+            this.patternGrp.TabIndex = 5;
+            this.patternGrp.TabStop = false;
+            this.patternGrp.Text = "Pattern";
+            // 
+            // prbs9Radio
+            // 
+            this.prbs9Radio.AutoSize = true;
+            this.prbs9Radio.Location = new System.Drawing.Point(12, 66);
+            this.prbs9Radio.Margin = new System.Windows.Forms.Padding(2);
+            this.prbs9Radio.Name = "prbs9Radio";
+            this.prbs9Radio.Size = new System.Drawing.Size(74, 21);
+            this.prbs9Radio.TabIndex = 1;
+            this.prbs9Radio.Text = "PRBS9";
+            this.prbs9Radio.UseVisualStyleBackColor = true;
+            // 
+            // pr55Radio
+            // 
+            this.pr55Radio.AutoSize = true;
+            this.pr55Radio.Checked = true;
+            this.pr55Radio.Location = new System.Drawing.Point(12, 35);
+            this.pr55Radio.Margin = new System.Windows.Forms.Padding(2);
+            this.pr55Radio.Name = "pr55Radio";
+            this.pr55Radio.Size = new System.Drawing.Size(117, 21);
+            this.pr55Radio.TabIndex = 0;
+            this.pr55Radio.TabStop = true;
+            this.pr55Radio.Text = "Bit_01010101";
+            this.pr55Radio.UseVisualStyleBackColor = true;
+            // 
+            // btnCWOn
+            // 
+            this.btnCWOn.Location = new System.Drawing.Point(18, 16);
+            this.btnCWOn.Margin = new System.Windows.Forms.Padding(2);
+            this.btnCWOn.Name = "btnCWOn";
+            this.btnCWOn.Size = new System.Drawing.Size(128, 48);
+            this.btnCWOn.TabIndex = 2;
+            this.btnCWOn.Text = "Start";
+            this.btnCWOn.UseVisualStyleBackColor = true;
+            this.btnCWOn.Click += new System.EventHandler(this.btnCWOn_Click);
+            // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.modulationRadio);
+            this.groupBox6.Controls.Add(this.singleToneRadio);
+            this.groupBox6.Location = new System.Drawing.Point(162, 12);
+            this.groupBox6.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox6.Size = new System.Drawing.Size(139, 104);
+            this.groupBox6.TabIndex = 4;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "Transfer Mode";
+            // 
+            // modulationRadio
+            // 
+            this.modulationRadio.AutoSize = true;
+            this.modulationRadio.Location = new System.Drawing.Point(15, 66);
+            this.modulationRadio.Margin = new System.Windows.Forms.Padding(2);
+            this.modulationRadio.Name = "modulationRadio";
+            this.modulationRadio.Size = new System.Drawing.Size(75, 21);
+            this.modulationRadio.TabIndex = 1;
+            this.modulationRadio.Text = "Pattern";
+            this.modulationRadio.UseVisualStyleBackColor = true;
+            this.modulationRadio.CheckedChanged += new System.EventHandler(this.modulationRadio_CheckedChanged);
+            // 
+            // singleToneRadio
+            // 
+            this.singleToneRadio.AutoSize = true;
+            this.singleToneRadio.Checked = true;
+            this.singleToneRadio.Location = new System.Drawing.Point(15, 35);
+            this.singleToneRadio.Margin = new System.Windows.Forms.Padding(2);
+            this.singleToneRadio.Name = "singleToneRadio";
+            this.singleToneRadio.Size = new System.Drawing.Size(101, 21);
+            this.singleToneRadio.TabIndex = 0;
+            this.singleToneRadio.TabStop = true;
+            this.singleToneRadio.Text = "SingleTone";
+            this.singleToneRadio.UseVisualStyleBackColor = true;
+            this.singleToneRadio.CheckedChanged += new System.EventHandler(this.singleToneRadio_CheckedChanged);
+            // 
+            // packetRxPage
+            // 
+            this.packetRxPage.Controls.Add(this.rssiValue);
+            this.packetRxPage.Controls.Add(this.rssiLabel);
+            this.packetRxPage.Controls.Add(this.btnPayloadClear);
+            this.packetRxPage.Controls.Add(this.btnScanStart);
+            this.packetRxPage.Controls.Add(this.btnSetPayload);
+            this.packetRxPage.Controls.Add(this.packetCountGroup);
+            this.packetRxPage.Controls.Add(this.packetParserGroup);
+            this.packetRxPage.Controls.Add(this.label20);
+            this.packetRxPage.Controls.Add(this.rcvErrText);
+            this.packetRxPage.Controls.Add(this.rxResult);
+            this.packetRxPage.Controls.Add(this.btnRxStart);
+            this.packetRxPage.Controls.Add(this.label10);
+            this.packetRxPage.Controls.Add(this.rcvOkText);
+            this.packetRxPage.Location = new System.Drawing.Point(4, 28);
+            this.packetRxPage.Margin = new System.Windows.Forms.Padding(4);
+            this.packetRxPage.Name = "packetRxPage";
+            this.packetRxPage.Size = new System.Drawing.Size(860, 328);
+            this.packetRxPage.TabIndex = 2;
+            this.packetRxPage.Text = "PACKET RX";
+            this.packetRxPage.UseVisualStyleBackColor = true;
+            // 
+            // rssiValue
+            // 
+            this.rssiValue.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rssiValue.ForeColor = System.Drawing.Color.Red;
+            this.rssiValue.Location = new System.Drawing.Point(747, 186);
+            this.rssiValue.Margin = new System.Windows.Forms.Padding(4);
+            this.rssiValue.Name = "rssiValue";
+            this.rssiValue.Size = new System.Drawing.Size(99, 26);
+            this.rssiValue.TabIndex = 42;
+            // 
+            // rssiLabel
+            // 
+            this.rssiLabel.AutoSize = true;
+            this.rssiLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rssiLabel.Location = new System.Drawing.Point(747, 162);
+            this.rssiLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.rssiLabel.Name = "rssiLabel";
+            this.rssiLabel.Size = new System.Drawing.Size(67, 17);
+            this.rssiLabel.TabIndex = 43;
+            this.rssiLabel.Text = "Avg RSSI";
+            // 
+            // btnPayloadClear
+            // 
+            this.btnPayloadClear.Location = new System.Drawing.Point(639, 76);
+            this.btnPayloadClear.Margin = new System.Windows.Forms.Padding(2);
+            this.btnPayloadClear.Name = "btnPayloadClear";
+            this.btnPayloadClear.Size = new System.Drawing.Size(77, 35);
+            this.btnPayloadClear.TabIndex = 48;
+            this.btnPayloadClear.Text = "Clear";
+            this.btnPayloadClear.UseVisualStyleBackColor = true;
+            this.btnPayloadClear.Click += new System.EventHandler(this.btnPayloadClear_Click);
+            // 
+            // btnScanStart
+            // 
+            this.btnScanStart.Location = new System.Drawing.Point(747, 226);
+            this.btnScanStart.Margin = new System.Windows.Forms.Padding(2);
+            this.btnScanStart.Name = "btnScanStart";
+            this.btnScanStart.Size = new System.Drawing.Size(99, 35);
+            this.btnScanStart.TabIndex = 47;
+            this.btnScanStart.Text = "Scan RSSI";
+            this.btnScanStart.UseVisualStyleBackColor = true;
+            this.btnScanStart.Click += new System.EventHandler(this.btnScanRssi_Click);
+            // 
+            // btnSetPayload
+            // 
+            this.btnSetPayload.Location = new System.Drawing.Point(534, 76);
+            this.btnSetPayload.Margin = new System.Windows.Forms.Padding(4);
+            this.btnSetPayload.Name = "btnSetPayload";
+            this.btnSetPayload.Size = new System.Drawing.Size(99, 35);
+            this.btnSetPayload.TabIndex = 40;
+            this.btnSetPayload.Text = "Set Payload";
+            this.btnSetPayload.UseVisualStyleBackColor = true;
+            this.btnSetPayload.Visible = false;
+            this.btnSetPayload.Click += new System.EventHandler(this.btnSetPayload_Click);
+            // 
+            // packetCountGroup
+            // 
+            this.packetCountGroup.Controls.Add(this.packetRxLimitRadio);
+            this.packetCountGroup.Controls.Add(this.packetRxNum);
+            this.packetCountGroup.Controls.Add(this.packetRxNoLimitRadio);
+            this.packetCountGroup.Location = new System.Drawing.Point(12, 19);
+            this.packetCountGroup.Margin = new System.Windows.Forms.Padding(2);
+            this.packetCountGroup.Name = "packetCountGroup";
+            this.packetCountGroup.Padding = new System.Windows.Forms.Padding(2);
+            this.packetCountGroup.Size = new System.Drawing.Size(230, 95);
+            this.packetCountGroup.TabIndex = 49;
+            this.packetCountGroup.TabStop = false;
+            this.packetCountGroup.Text = "Target Packet Count";
+            // 
+            // packetRxLimitRadio
+            // 
+            this.packetRxLimitRadio.AutoSize = true;
+            this.packetRxLimitRadio.Location = new System.Drawing.Point(11, 31);
+            this.packetRxLimitRadio.Margin = new System.Windows.Forms.Padding(2);
+            this.packetRxLimitRadio.Name = "packetRxLimitRadio";
+            this.packetRxLimitRadio.Size = new System.Drawing.Size(142, 21);
+            this.packetRxLimitRadio.TabIndex = 31;
+            this.packetRxLimitRadio.Text = "Max Packet Count";
+            this.packetRxLimitRadio.UseVisualStyleBackColor = true;
+            this.packetRxLimitRadio.CheckedChanged += new System.EventHandler(this.packetRxCountMode_CheckedChanged);
+            // 
+            // packetRxNum
+            // 
+            this.packetRxNum.Enabled = false;
+            this.packetRxNum.Location = new System.Drawing.Point(136, 29);
+            this.packetRxNum.Margin = new System.Windows.Forms.Padding(2);
+            this.packetRxNum.Name = "packetRxNum";
+            this.packetRxNum.Size = new System.Drawing.Size(76, 23);
+            this.packetRxNum.TabIndex = 32;
+            this.packetRxNum.Text = "100";
+            // 
+            // packetRxNoLimitRadio
+            // 
+            this.packetRxNoLimitRadio.AutoSize = true;
+            this.packetRxNoLimitRadio.Checked = true;
+            this.packetRxNoLimitRadio.Location = new System.Drawing.Point(11, 64);
+            this.packetRxNoLimitRadio.Margin = new System.Windows.Forms.Padding(2);
+            this.packetRxNoLimitRadio.Name = "packetRxNoLimitRadio";
+            this.packetRxNoLimitRadio.Size = new System.Drawing.Size(106, 21);
+            this.packetRxNoLimitRadio.TabIndex = 33;
+            this.packetRxNoLimitRadio.TabStop = true;
+            this.packetRxNoLimitRadio.Text = "No limitation";
+            this.packetRxNoLimitRadio.UseVisualStyleBackColor = true;
+            this.packetRxNoLimitRadio.CheckedChanged += new System.EventHandler(this.packetRxCountMode_CheckedChanged);
+            // 
+            // packetParserGroup
+            // 
+            this.packetParserGroup.Controls.Add(this.rxParseSeq);
+            this.packetParserGroup.Controls.Add(this.crcLabel);
+            this.packetParserGroup.Controls.Add(this.packetRxCrcCombo);
+            this.packetParserGroup.Location = new System.Drawing.Point(250, 19);
+            this.packetParserGroup.Margin = new System.Windows.Forms.Padding(2);
+            this.packetParserGroup.Name = "packetParserGroup";
+            this.packetParserGroup.Padding = new System.Windows.Forms.Padding(2);
+            this.packetParserGroup.Size = new System.Drawing.Size(270, 95);
+            this.packetParserGroup.TabIndex = 50;
+            this.packetParserGroup.TabStop = false;
+            this.packetParserGroup.Text = "Packet Parser";
+            // 
+            // rxParseSeq
+            // 
+            this.rxParseSeq.AutoSize = true;
+            this.rxParseSeq.Location = new System.Drawing.Point(15, 31);
+            this.rxParseSeq.Margin = new System.Windows.Forms.Padding(2);
+            this.rxParseSeq.Name = "rxParseSeq";
+            this.rxParseSeq.Size = new System.Drawing.Size(185, 21);
+            this.rxParseSeq.TabIndex = 28;
+            this.rxParseSeq.Text = "Packet Has Seq Number";
+            this.rxParseSeq.UseVisualStyleBackColor = true;
+            // 
+            // crcLabel
+            // 
+            this.crcLabel.AutoSize = true;
+            this.crcLabel.Location = new System.Drawing.Point(15, 66);
+            this.crcLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.crcLabel.Name = "crcLabel";
+            this.crcLabel.Size = new System.Drawing.Size(108, 17);
+            this.crcLabel.TabIndex = 29;
+            this.crcLabel.Text = "CRC Polynomial";
+            // 
+            // packetRxCrcCombo
+            // 
+            this.packetRxCrcCombo.FormattingEnabled = true;
+            this.packetRxCrcCombo.Location = new System.Drawing.Point(135, 63);
+            this.packetRxCrcCombo.Margin = new System.Windows.Forms.Padding(2);
+            this.packetRxCrcCombo.Name = "packetRxCrcCombo";
+            this.packetRxCrcCombo.Size = new System.Drawing.Size(109, 24);
+            this.packetRxCrcCombo.TabIndex = 30;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label20.Location = new System.Drawing.Point(747, 108);
+            this.label20.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(76, 17);
+            this.label20.TabIndex = 46;
+            this.label20.Text = "Rcvd Error";
+            // 
+            // rcvErrText
+            // 
+            this.rcvErrText.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rcvErrText.Location = new System.Drawing.Point(747, 132);
+            this.rcvErrText.Margin = new System.Windows.Forms.Padding(2);
+            this.rcvErrText.Name = "rcvErrText";
+            this.rcvErrText.Size = new System.Drawing.Size(99, 23);
+            this.rcvErrText.TabIndex = 45;
+            // 
+            // rxResult
+            // 
+            this.rxResult.BackColor = System.Drawing.Color.Black;
+            this.rxResult.Font = new System.Drawing.Font("Consolas", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rxResult.ForeColor = System.Drawing.Color.White;
+            this.rxResult.Location = new System.Drawing.Point(12, 118);
+            this.rxResult.Margin = new System.Windows.Forms.Padding(2);
+            this.rxResult.Multiline = true;
+            this.rxResult.Name = "rxResult";
+            this.rxResult.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.rxResult.Size = new System.Drawing.Size(718, 191);
+            this.rxResult.TabIndex = 44;
+            this.rxResult.WordWrap = false;
+            // 
+            // btnRxStart
+            // 
+            this.btnRxStart.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
+            this.btnRxStart.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.btnRxStart.Location = new System.Drawing.Point(747, 274);
+            this.btnRxStart.Margin = new System.Windows.Forms.Padding(2);
+            this.btnRxStart.Name = "btnRxStart";
+            this.btnRxStart.Size = new System.Drawing.Size(99, 35);
+            this.btnRxStart.TabIndex = 41;
+            this.btnRxStart.Text = "Start RX";
+            this.btnRxStart.UseVisualStyleBackColor = false;
+            this.btnRxStart.Click += new System.EventHandler(this.btnRxStart_Click_1);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label10.Location = new System.Drawing.Point(747, 54);
+            this.label10.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(64, 17);
+            this.label10.TabIndex = 39;
+            this.label10.Text = "Rcvd OK";
+            // 
+            // rcvOkText
+            // 
+            this.rcvOkText.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rcvOkText.Location = new System.Drawing.Point(747, 78);
+            this.rcvOkText.Margin = new System.Windows.Forms.Padding(2);
+            this.rcvOkText.Name = "rcvOkText";
+            this.rcvOkText.Size = new System.Drawing.Size(99, 23);
+            this.rcvOkText.TabIndex = 38;
+            // 
+            // statePage
+            // 
+            this.statePage.Controls.Add(this.btnStateSet);
+            this.statePage.Controls.Add(this.groupBox10);
+            this.statePage.Location = new System.Drawing.Point(4, 28);
+            this.statePage.Margin = new System.Windows.Forms.Padding(2);
+            this.statePage.Name = "statePage";
+            this.statePage.Size = new System.Drawing.Size(860, 328);
+            this.statePage.TabIndex = 3;
+            this.statePage.Text = "STATE CTRL";
+            this.statePage.UseVisualStyleBackColor = true;
+            // 
+            // btnStateSet
+            // 
+            this.btnStateSet.Location = new System.Drawing.Point(21, 201);
+            this.btnStateSet.Margin = new System.Windows.Forms.Padding(2);
+            this.btnStateSet.Name = "btnStateSet";
+            this.btnStateSet.Size = new System.Drawing.Size(141, 33);
+            this.btnStateSet.TabIndex = 1;
+            this.btnStateSet.Text = "Set";
+            this.btnStateSet.UseVisualStyleBackColor = true;
+            this.btnStateSet.Click += new System.EventHandler(this.btnStateSet_Click);
+            // 
+            // groupBox10
+            // 
+            this.groupBox10.Controls.Add(this.shutdownRadioBtn);
+            this.groupBox10.Controls.Add(this.deepSleepRadioBtn);
+            this.groupBox10.Controls.Add(this.idleRadioBtn);
+            this.groupBox10.Location = new System.Drawing.Point(21, 24);
+            this.groupBox10.Margin = new System.Windows.Forms.Padding(2);
+            this.groupBox10.Name = "groupBox10";
+            this.groupBox10.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox10.Size = new System.Drawing.Size(141, 173);
+            this.groupBox10.TabIndex = 0;
+            this.groupBox10.TabStop = false;
+            this.groupBox10.Text = "State";
+            // 
+            // shutdownRadioBtn
+            // 
+            this.shutdownRadioBtn.AutoSize = true;
+            this.shutdownRadioBtn.Location = new System.Drawing.Point(25, 125);
+            this.shutdownRadioBtn.Margin = new System.Windows.Forms.Padding(2);
+            this.shutdownRadioBtn.Name = "shutdownRadioBtn";
+            this.shutdownRadioBtn.Size = new System.Drawing.Size(91, 21);
+            this.shutdownRadioBtn.TabIndex = 2;
+            this.shutdownRadioBtn.TabStop = true;
+            this.shutdownRadioBtn.Text = "Shutdown";
+            this.shutdownRadioBtn.UseVisualStyleBackColor = true;
+            // 
+            // deepSleepRadioBtn
+            // 
+            this.deepSleepRadioBtn.AutoSize = true;
+            this.deepSleepRadioBtn.Location = new System.Drawing.Point(25, 79);
+            this.deepSleepRadioBtn.Margin = new System.Windows.Forms.Padding(2);
+            this.deepSleepRadioBtn.Name = "deepSleepRadioBtn";
+            this.deepSleepRadioBtn.Size = new System.Drawing.Size(103, 21);
+            this.deepSleepRadioBtn.TabIndex = 1;
+            this.deepSleepRadioBtn.TabStop = true;
+            this.deepSleepRadioBtn.Text = "Deep Sleep";
+            this.deepSleepRadioBtn.UseVisualStyleBackColor = true;
+            // 
+            // idleRadioBtn
+            // 
+            this.idleRadioBtn.AutoSize = true;
+            this.idleRadioBtn.Checked = true;
+            this.idleRadioBtn.Location = new System.Drawing.Point(25, 35);
+            this.idleRadioBtn.Margin = new System.Windows.Forms.Padding(2);
+            this.idleRadioBtn.Name = "idleRadioBtn";
+            this.idleRadioBtn.Size = new System.Drawing.Size(51, 21);
+            this.idleRadioBtn.TabIndex = 0;
+            this.idleRadioBtn.TabStop = true;
+            this.idleRadioBtn.Text = "idle";
+            this.idleRadioBtn.UseVisualStyleBackColor = true;
             // 
             // regWrPage
             // 
@@ -1418,6 +1513,7 @@ namespace ER41xxTestTool
             this.preambleLen.Size = new System.Drawing.Size(34, 22);
             this.preambleLen.TabIndex = 1;
             this.preambleLen.Text = "4";
+            this.preambleLen.TextChanged += new System.EventHandler(this.preambleLen_TextChanged);
             this.preambleLen.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.preambleLen_KeyPress);
             this.preambleLen.Validating += new System.ComponentModel.CancelEventHandler(this.preambleLen_Validating);
             // 
@@ -1432,17 +1528,17 @@ namespace ER41xxTestTool
             this.lblTxSync.TabIndex = 19;
             this.lblTxSync.Text = "TX: 0x";
             // 
-            // lblTxBitOrder
+            // lblActualTxSyncword
             // 
-            this.lblTxBitOrder.AutoSize = true;
-            this.lblTxBitOrder.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblTxBitOrder.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.lblTxBitOrder.Location = new System.Drawing.Point(255, 31);
-            this.lblTxBitOrder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblTxBitOrder.Name = "lblTxBitOrder";
-            this.lblTxBitOrder.Size = new System.Drawing.Size(128, 15);
-            this.lblTxBitOrder.TabIndex = 22;
-            this.lblTxBitOrder.Text = "Transfer : 5A 0F BE 66";
+            this.lblActualTxSyncword.AutoSize = true;
+            this.lblActualTxSyncword.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblActualTxSyncword.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.lblActualTxSyncword.Location = new System.Drawing.Point(255, 31);
+            this.lblActualTxSyncword.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblActualTxSyncword.Name = "lblActualTxSyncword";
+            this.lblActualTxSyncword.Size = new System.Drawing.Size(128, 15);
+            this.lblActualTxSyncword.TabIndex = 22;
+            this.lblActualTxSyncword.Text = "Transfer : 5A 0F BE 66";
             // 
             // lblRxSync
             // 
@@ -1483,17 +1579,17 @@ namespace ER41xxTestTool
             this.rxsyncInvertCheckbox.UseVisualStyleBackColor = true;
             this.rxsyncInvertCheckbox.CheckedChanged += new System.EventHandler(this.rxsyncInvertCheckbox_CheckedChanged);
             // 
-            // rxBitOrder
+            // lblActualRxSyncword
             // 
-            this.rxBitOrder.AutoSize = true;
-            this.rxBitOrder.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.rxBitOrder.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.rxBitOrder.Location = new System.Drawing.Point(255, 62);
-            this.rxBitOrder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.rxBitOrder.Name = "rxBitOrder";
-            this.rxBitOrder.Size = new System.Drawing.Size(118, 15);
-            this.rxBitOrder.TabIndex = 25;
-            this.rxBitOrder.Text = "Detect : 5A 0F BE 66";
+            this.lblActualRxSyncword.AutoSize = true;
+            this.lblActualRxSyncword.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblActualRxSyncword.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.lblActualRxSyncword.Location = new System.Drawing.Point(255, 62);
+            this.lblActualRxSyncword.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblActualRxSyncword.Name = "lblActualRxSyncword";
+            this.lblActualRxSyncword.Size = new System.Drawing.Size(118, 15);
+            this.lblActualRxSyncword.TabIndex = 25;
+            this.lblActualRxSyncword.Text = "Detect : 5A 0F BE 66";
             // 
             // allowBitError
             // 
@@ -1896,6 +1992,7 @@ namespace ER41xxTestTool
             // 
             // txResult
             // 
+            this.txResult.BackColor = System.Drawing.SystemColors.Info;
             this.txResult.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
             this.txResult.Location = new System.Drawing.Point(10, 715);
             this.txResult.Margin = new System.Windows.Forms.Padding(4);
@@ -2237,7 +2334,7 @@ namespace ER41xxTestTool
             this.tableCombobox.FormattingEnabled = true;
             this.tableCombobox.Location = new System.Drawing.Point(6, 90);
             this.tableCombobox.Name = "tableCombobox";
-            this.tableCombobox.Size = new System.Drawing.Size(146, 25);
+            this.tableCombobox.Size = new System.Drawing.Size(146, 26);
             this.tableCombobox.TabIndex = 27;
             // 
             // btnWriteAll
@@ -2589,10 +2686,10 @@ namespace ER41xxTestTool
             this.grpSyncword.Controls.Add(this.lblRxSync);
             this.grpSyncword.Controls.Add(this.lblCgAbe);
             this.grpSyncword.Controls.Add(this.syncLSBCheckbox);
-            this.grpSyncword.Controls.Add(this.rxBitOrder);
+            this.grpSyncword.Controls.Add(this.lblActualRxSyncword);
             this.grpSyncword.Controls.Add(this.lblTxSync);
             this.grpSyncword.Controls.Add(this.rxsyncInvertCheckbox);
-            this.grpSyncword.Controls.Add(this.lblTxBitOrder);
+            this.grpSyncword.Controls.Add(this.lblActualTxSyncword);
             this.grpSyncword.Controls.Add(this.rxSyncword);
             this.grpSyncword.Controls.Add(this.txSyncword);
             this.grpSyncword.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -2663,6 +2760,7 @@ namespace ER41xxTestTool
             // 
             // grpFreqAndPwr
             // 
+            this.grpFreqAndPwr.Controls.Add(this.rfParamFreqPwrHelpBtn);
             this.grpFreqAndPwr.Controls.Add(this.capioStr);
             this.grpFreqAndPwr.Controls.Add(this.xtalCombo);
             this.grpFreqAndPwr.Controls.Add(this.label4);
@@ -2685,6 +2783,19 @@ namespace ER41xxTestTool
             this.grpFreqAndPwr.TabIndex = 35;
             this.grpFreqAndPwr.TabStop = false;
             this.grpFreqAndPwr.Text = "Frequency and Power";
+            // 
+            // rfParamFreqPwrHelpBtn
+            // 
+            this.rfParamFreqPwrHelpBtn.BackColor = System.Drawing.Color.White;
+            this.rfParamFreqPwrHelpBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rfParamFreqPwrHelpBtn.ForeColor = System.Drawing.Color.Black;
+            this.rfParamFreqPwrHelpBtn.Location = new System.Drawing.Point(172, -2);
+            this.rfParamFreqPwrHelpBtn.Name = "rfParamFreqPwrHelpBtn";
+            this.rfParamFreqPwrHelpBtn.Size = new System.Drawing.Size(28, 23);
+            this.rfParamFreqPwrHelpBtn.TabIndex = 35;
+            this.rfParamFreqPwrHelpBtn.Text = "?";
+            this.rfParamFreqPwrHelpBtn.UseVisualStyleBackColor = false;
+            this.rfParamFreqPwrHelpBtn.Click += new System.EventHandler(this.rfParamFreqPwrHelpBtn_Click);
             // 
             // xtalCombo
             // 
@@ -2853,9 +2964,9 @@ namespace ER41xxTestTool
             this.LabelTopicDVB.ForeColor = System.Drawing.Color.CornflowerBlue;
             this.LabelTopicDVB.Location = new System.Drawing.Point(11, 322);
             this.LabelTopicDVB.Name = "LabelTopicDVB";
-            this.LabelTopicDVB.Size = new System.Drawing.Size(108, 20);
+            this.LabelTopicDVB.Size = new System.Drawing.Size(525, 20);
             this.LabelTopicDVB.TabIndex = 48;
-            this.LabelTopicDVB.Text = "DVB Tester";
+            this.LabelTopicDVB.Text = "DVB Tester(Only support FIFO mode : Transparent+Presync)";
             // 
             // LabelTopicPRAM
             // 
@@ -2944,20 +3055,17 @@ namespace ER41xxTestTool
             this.tabControl1.ResumeLayout(false);
             this.packetTxPage.ResumeLayout(false);
             this.packetTxPage.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             this.continusTxPage.ResumeLayout(false);
-            this.continueTxGrp.ResumeLayout(false);
             this.patternGrp.ResumeLayout(false);
             this.patternGrp.PerformLayout();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
             this.packetRxPage.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
+            this.packetRxPage.PerformLayout();
             this.packetCountGroup.ResumeLayout(false);
             this.packetCountGroup.PerformLayout();
             this.packetParserGroup.ResumeLayout(false);
@@ -2965,8 +3073,6 @@ namespace ER41xxTestTool
             this.statePage.ResumeLayout(false);
             this.groupBox10.ResumeLayout(false);
             this.groupBox10.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
             this.grpFreqTable.ResumeLayout(false);
             this.grpFreqTable.PerformLayout();
             this.grpPayloadOrder.ResumeLayout(false);
@@ -3093,39 +3199,13 @@ namespace ER41xxTestTool
         private System.IO.Ports.SerialPort serialPort2;
         private System.Windows.Forms.ComboBox txDRCombo;
         private System.IO.Ports.SerialPort serialPort3;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.TextBox randomLen;
-        private System.Windows.Forms.TextBox numOfPkt;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.Label randomLenLable;
-        private System.Windows.Forms.Button btnSetPayload;
         private System.Windows.Forms.TabPage packetRxPage;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Label rssiLabel;
-        private System.Windows.Forms.TextBox rssiValue;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox rcvOkText;
         private System.Windows.Forms.Label PwrLvLabel;
-        private System.Windows.Forms.TextBox dataTxt;
         private System.Windows.Forms.TextBox freqDev;
         private System.Windows.Forms.Button btnCalCrc;
-        private System.Windows.Forms.CheckBox infiniteCheckbox;
-        private System.Windows.Forms.Button btnSendStart;
-        private System.Windows.Forms.CheckBox randomCheckbox;
-        private System.Windows.Forms.Button btnSendStop;
-        private System.Windows.Forms.CheckBox addSeqCheckbox;
-        private System.Windows.Forms.Label addSeqLevel;
-        private System.Windows.Forms.TextBox lenOfHex;
-        private System.Windows.Forms.Label lenOfTxtLable;
         private System.Windows.Forms.Label maxPwrSelLabel;
         private System.Windows.Forms.ComboBox PAConfigCombo;
         private System.Windows.Forms.Button btnClearInsLog;
-        private System.Windows.Forms.GroupBox continueTxGrp;
-        private System.Windows.Forms.Button btnCWOn;
-        private System.Windows.Forms.Button btnCWOff;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.GroupBox groupBox4;
-        private System.Windows.Forms.ComboBox crcSelectCombo;
         private System.Windows.Forms.TabControl paramTab;
         private System.Windows.Forms.TabPage pageParameter;
         private System.Windows.Forms.TabPage pageFreqTable;
@@ -3138,38 +3218,17 @@ namespace ER41xxTestTool
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox xtalCombo;
         private System.Windows.Forms.TextBox pwrlvl;
-        private System.Windows.Forms.Button btnRxStart;
-        private System.Windows.Forms.TextBox rxResult;
-        private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.TextBox rcvErrText;
-        private System.Windows.Forms.GroupBox packetParserGroup;
-        private System.Windows.Forms.CheckBox rxParseSeq;
-        private System.Windows.Forms.Label crcLabel;
-        private System.Windows.Forms.ComboBox packetRxCrcCombo;
-        private System.Windows.Forms.GroupBox packetCountGroup;
-        private System.Windows.Forms.RadioButton packetRxLimitRadio;
-        private System.Windows.Forms.TextBox packetRxNum;
-        private System.Windows.Forms.RadioButton packetRxNoLimitRadio;
-        private System.Windows.Forms.GroupBox groupBox6;
-        private System.Windows.Forms.RadioButton modulationRadio;
-        private System.Windows.Forms.RadioButton singleToneRadio;
         private System.Windows.Forms.TextBox capioStr;
         private System.Windows.Forms.Label label25;
-        private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label label28;
         private System.Windows.Forms.Label label29;
         private System.Windows.Forms.CheckBox syncLSBCheckbox;
-        private System.Windows.Forms.GroupBox patternGrp;
-        private System.Windows.Forms.RadioButton prbs9Radio;
-        private System.Windows.Forms.RadioButton pr55Radio;
         private System.Windows.Forms.TabPage statePage;
         private System.Windows.Forms.GroupBox groupBox10;
         private System.Windows.Forms.Button btnStateSet;
         private System.Windows.Forms.RadioButton deepSleepRadioBtn;
         private System.Windows.Forms.RadioButton idleRadioBtn;
-        private System.Windows.Forms.Button btnScanStart;
         private System.Windows.Forms.RadioButton shutdownRadioBtn;
-        private System.Windows.Forms.Button btnPayloadClear;
         private System.Windows.Forms.Button btnGen;
         private System.Windows.Forms.ToolStripMenuItem loadParameterToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveParameterToolStripMenuItem;
@@ -3185,11 +3244,11 @@ namespace ER41xxTestTool
         private System.Windows.Forms.Label lblCgLen;
         private System.Windows.Forms.TextBox preambleLen;
         private System.Windows.Forms.Label lblTxSync;
-        private System.Windows.Forms.Label lblTxBitOrder;
+        private System.Windows.Forms.Label lblActualTxSyncword;
         private System.Windows.Forms.Label lblRxSync;
         private System.Windows.Forms.TextBox rxSyncword;
         private System.Windows.Forms.CheckBox rxsyncInvertCheckbox;
-        private System.Windows.Forms.Label rxBitOrder;
+        private System.Windows.Forms.Label lblActualRxSyncword;
         private System.Windows.Forms.Label lblCgAbe;
         private System.Windows.Forms.TextBox allowBitError;
         private System.Windows.Forms.GroupBox grpPayloadOrder;
@@ -3234,7 +3293,63 @@ namespace ER41xxTestTool
         private System.Windows.Forms.Button btnWriteDVB;
         private System.Windows.Forms.CheckBox IncludeInitArrayCheckBox;
         private System.Windows.Forms.Button btnDevComment;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.TextBox numOfPkt;
+        private System.Windows.Forms.CheckBox infiniteCheckbox;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.Label randomLenLable;
         private System.Windows.Forms.Label txCrcPolyLabel;
+        private System.Windows.Forms.CheckBox randomCheckbox;
+        private System.Windows.Forms.TextBox randomLen;
+        private System.Windows.Forms.ComboBox crcSelectCombo;
+        private System.Windows.Forms.CheckBox addSeqCheckbox;
+        private System.Windows.Forms.Button btnSendStop;
+        private System.Windows.Forms.TextBox lenOfHex;
+        private System.Windows.Forms.Label lenOfTxtLable;
+        private System.Windows.Forms.Button btnSendStart;
+        private System.Windows.Forms.TextBox dataTxt;
+        private System.Windows.Forms.Label pktTxSyncwordLabel;
+        private System.Windows.Forms.Label pktTxCrcLabel;
+        private System.Windows.Forms.Label pktTxPaylaodeLabel;
+        private System.Windows.Forms.Label pktTxSeqNumLabel;
+        private System.Windows.Forms.Label pktTxLengthLabel;
+        private System.Windows.Forms.Label pktTxPreambleLabel;
+        private System.Windows.Forms.Label pktTxSyncwordLenLabel;
+        private System.Windows.Forms.Label pktTxCrcLenLabel;
+        private System.Windows.Forms.Label pktTxPaylaodeLenLabel;
+        private System.Windows.Forms.Label pktTxSeqNumLenLabel;
+        private System.Windows.Forms.Label pktTxLengthLenLabel;
+        private System.Windows.Forms.Label pktTxPreambleLenLabel;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.GroupBox patternGrp;
+        private System.Windows.Forms.RadioButton prbs9Radio;
+        private System.Windows.Forms.RadioButton pr55Radio;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.RadioButton modulationRadio;
+        private System.Windows.Forms.RadioButton singleToneRadio;
+        private System.Windows.Forms.Button btnCWOff;
+        private System.Windows.Forms.Button btnCWOn;
+        private System.Windows.Forms.TextBox rssiValue;
+        private System.Windows.Forms.Label rssiLabel;
+        private System.Windows.Forms.Button btnPayloadClear;
+        private System.Windows.Forms.Button btnScanStart;
+        private System.Windows.Forms.Button btnSetPayload;
+        private System.Windows.Forms.GroupBox packetCountGroup;
+        private System.Windows.Forms.RadioButton packetRxLimitRadio;
+        private System.Windows.Forms.TextBox packetRxNum;
+        private System.Windows.Forms.RadioButton packetRxNoLimitRadio;
+        private System.Windows.Forms.GroupBox packetParserGroup;
+        private System.Windows.Forms.CheckBox rxParseSeq;
+        private System.Windows.Forms.Label crcLabel;
+        private System.Windows.Forms.ComboBox packetRxCrcCombo;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.TextBox rcvErrText;
+        private System.Windows.Forms.TextBox rxResult;
+        private System.Windows.Forms.Button btnRxStart;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox rcvOkText;
+        private System.Windows.Forms.Button rfParamFreqPwrHelpBtn;
     }
 }
 

@@ -65,7 +65,8 @@ namespace ER41xxTestTool
             { 0x1F30, PaSetting }, { 0x1F34, PaSetting }, { 0x1F38, PaSetting },
 
             // ====== BELOW IS TX SETTING ======
-            { 0x13AC, TxSetting }, { 0xA030, TxSetting },  { 0x1E04, TxSetting },
+            { 0x13AC, TxSetting }, { 0xA030, TxSetting }, { 0x1380, TxSetting },
+            { 0x13A0, TxSetting }, 
 
             // ====== BELOW IS RX SETTING ======
             { 0x0004, RxSetting }, { 0xB304, RxSetting }, { 0xB1B4, RxSetting }, { 0x1604, RxSetting },
@@ -80,9 +81,9 @@ namespace ER41xxTestTool
             // ====== Set Synthesizer ====== (含 channel_pll_table 的 reg_1994/1998/199C/19A0)
 
             { 0x1980, Synthesizer }, { 0x1984, Synthesizer }, { 0x1988, Synthesizer }, { 0x1990, Synthesizer },
-            
-            
-            { 0x1380, Synthesizer }, { 0x13A0, Synthesizer }, { 0x1998, Synthesizer }, { 0x199C, Synthesizer }, 
+            { 0x1E04, Synthesizer },
+
+            { 0x1998, Synthesizer }, { 0x199C, Synthesizer }, 
             { 0x19A0, Synthesizer }, { 0x1994, Synthesizer },
 
             // ====== POWER CONFIG ======

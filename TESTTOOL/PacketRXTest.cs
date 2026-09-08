@@ -98,7 +98,7 @@ namespace ER41xxTestTool
                     string payloadStr = string.Join(" ", payload.Select(b => b.ToString("X2")));
 
                     // 3️) 組成輸出字串：加入序號
-                    output = $"{timestamp} :{status}: {length}: {seqText}: {payloadStr}\r\n";
+                    output = $"{timestamp} :{status}: LEN[{length}]: SEQ[{seqText}]: {payloadStr}\r\n";
                 }
                 else
                 {
@@ -107,7 +107,7 @@ namespace ER41xxTestTool
                     //byte[] payload = packet.Skip(1).Take(packet.Length - 3).ToArray();
                     string payloadStr = string.Join(" ", payload.Select(b => b.ToString("X2")));
 
-                    output = $"{timestamp} :{status}: {length}: {payloadStr}\r\n";
+                    output = $"{timestamp} :{status}: LEN[{length}]: {payloadStr}\r\n";
                 }
 
                 // === 顯示封包 ===

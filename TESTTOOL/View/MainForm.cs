@@ -159,6 +159,7 @@ namespace ER41xxTestTool
         public string[] xtalArray = { "40", "38.4" };   // v1.19L: 與 EzCodeGen 相同, 支援 38.4MHz
         public const int NO_CRC_LEN_NO_SEQ = 127;
         public const int CRC_LEN_NO_SEQ = 125;
+        public const int FIFO_MAX_LEN = 128;   // Length(1) + SeqNum(0/2) + Payload + CRC(0/2)
         public int highlowICType = -1;
         //TreeNode myTreeNode;
         public MainForm()
@@ -990,6 +991,8 @@ namespace ER41xxTestTool
             ApplyUiValuesToRegisterList();
             // 之後參數一有變動就自動重算 (掛完才會把 bRegAutoRefreshReady 打開)
             HookParameterChangeEvents();
+
+            RefreshPacketFormatDiagram();
 
             //SetStateButton(btnRxStart, true);
         }
@@ -3069,6 +3072,7 @@ namespace ER41xxTestTool
                 MessageBox.Show("Com Port is not connected", "Error");
                 return;
             }
+            ConfirmRewriteIfRegTableDirty();
             int lenOfHexTxt = Convert.ToInt32(lenOfHex.Text);
             int lenOfRandomTxt = Convert.ToInt32(randomLen.Text);
             int crcChoose = crcSelectCombo.SelectedIndex;
@@ -3285,6 +3289,18 @@ namespace ER41xxTestTool
                 GenerateRandomPayload();
         }
 
+        // 焦點還在 randomLen 裡直接按 Enter 也重新產生一次, 不用先點別的地方讓焦點離開觸發 Leave。
+        // SuppressKeyPress 擋掉 Enter 在單行 TextBox 上預設的警示音。
+        private void randomLen_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                if (randomCheckbox.Checked)
+                    GenerateRandomPayload();
+            }
+        }
+
         /// <summary>依 randomLen 目前的長度重新產生一次隨機payload, 存進 tmpArray; randomCheckbox沒勾時不做事。原本是獨立的"Apply"按鈕(btnRandomGenerate)才會觸發, 現在勾選/改長度時直接呼叫。</summary>
         private void GenerateRandomPayload()
         {
@@ -3483,6 +3499,7 @@ namespace ER41xxTestTool
                 MessageBox.Show("Com Port no connected", "Error");
                 return;
             }
+            ConfirmRewriteIfRegTableDirty();
             if (serialPort1.IsOpen)
             {
                 // 2026-09-03 暫時關閉: 見 btnSendStart_Click 同樣的說明, 改成使用者自己先按
@@ -3675,6 +3692,7 @@ namespace ER41xxTestTool
 
             if (btnRxStart.Text == "Start RX")
             {
+                ConfirmRewriteIfRegTableDirty();
                 this.BeginInvoke((MethodInvoker)(() =>
                 {
                     //rxsyncInvertCheckbox.Enabled = false;
@@ -3730,23 +3748,49 @@ namespace ER41xxTestTool
 
         private void addSeqCheckbox_CheckedChanged(object sender, EventArgs e)
         {
-            addSeqLevel.Visible = addSeqCheckbox.Checked;
+            //addSeqLevel.Visible = addSeqCheckbox.Checked;
+            RefreshPacketFormatDiagram();
         }
 
         private void crcSelectCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            int crcChoose = crcSelectCombo.SelectedIndex;
-            switch (crcChoose)
-            {
-                case 0:
-                case 1:
-                    pictureBox1.Image = Properties.Resources.FIFO_CRC;
-                    break;
-                case 2:
-                    pictureBox1.Image = Properties.Resources.FIFO_noCRC2;
-                    break;
+            RefreshPacketFormatDiagram();
+        }
 
-            }
+        private void preambleLen_TextChanged(object sender, EventArgs e)
+        {
+            RefreshPacketFormatDiagram();
+        }
+
+        private void SetFifoSegmentState(Label box, Label lenLabel, bool active, string activeLenText)
+        {
+            box.BackColor = active ? Color.LightBlue : Color.White;
+            box.ForeColor = active ? Color.Black : Color.Gray;
+            lenLabel.Text = active ? activeLenText : "0Bytes";
+        }
+
+        private void RefreshPacketFormatDiagram()
+        {
+            int preambleBytes;
+            if (!int.TryParse(preambleLen.Text.Trim(), out preambleBytes))
+                preambleBytes = 0;
+            pktTxPreambleLenLabel.Text = preambleBytes + "Bytes";
+
+            // lblActualTxSyncword.Text 是 "Transfer :5A 0F BE 66" 這種格式 (前綴 + 冒號 + 空白分隔的hex byte),
+            // 取冒號後面的hex字元數 /2 就是實際的syncword bytes數, 這樣invert切換/沒打完整都跟著真實狀態走
+            string syncHexPart = Regex.Replace(lblActualTxSyncword.Text, @"^[^:]*:", "");
+            string syncHexOnly = Regex.Replace(syncHexPart, "[^0-9A-Fa-f]", "");
+            pktTxSyncwordLenLabel.Text = (syncHexOnly.Length / 2) + "Bytes";
+
+            bool hasSeq = addSeqCheckbox.Checked;
+            SetFifoSegmentState(pktTxSeqNumLabel, pktTxSeqNumLenLabel, hasSeq, "2Bytes");
+
+            bool hasCrc = crcSelectCombo.SelectedIndex != 2;   // 2 = "No CRC"
+            SetFifoSegmentState(pktTxCrcLabel, pktTxCrcLenLabel, hasCrc, "2Bytes");
+
+            // Length(1) + SeqNum(0/2) + Payload + CRC(0/2) = FIFO_MAX_LEN(128)
+            int maxPayload = FIFO_MAX_LEN - 1 - (hasSeq ? 2 : 0) - (hasCrc ? 2 : 0);
+            pktTxPaylaodeLenLabel.Text = "Max " + maxPayload + " Bytes";
         }
 
         private void btnStateSet_Click(object sender, EventArgs e)
@@ -3756,6 +3800,7 @@ namespace ER41xxTestTool
                 MessageBox.Show("Com port not connected", "Warning");
                 return;
             }
+            ConfirmRewriteIfRegTableDirty();
             string cmd = "";
             if (idleRadioBtn.Checked)
             {
@@ -3809,6 +3854,8 @@ namespace ER41xxTestTool
             {
                 rssiValue.Text = rssi.ToString();
             }));
+            string timestamp = DateTime.Now.ToString("HH:mm:ss:fff");
+            ShowRxPacket(timestamp + " RSSI : " + rssi + "dBm\r\n");
         }
         private void OnTimedScanFreqProcess(Object source, ElapsedEventArgs e)
         {
@@ -3906,7 +3953,8 @@ namespace ER41xxTestTool
                 return;
             }
             if (btnScanStart != null && btnScanStart.Text == "Scan RSSI")
-            {               
+            {
+                ConfirmRewriteIfRegTableDirty();
                 ScanStart();
             }
             else

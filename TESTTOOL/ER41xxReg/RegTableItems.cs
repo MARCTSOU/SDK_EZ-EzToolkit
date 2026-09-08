@@ -72,7 +72,8 @@ namespace ER41xxTestTool
             
             new RegTableItem("TPM_DMI_CONFIG_1", 0x13AC, 0x30300028, "DataRate", "TX bit rate divider value (low 20 bits), formula = ref_clk/(DataRate*10); high 12 bits (modulation setting) are read back and preserved before writing"),
             new RegTableItem("MAC_TX_DATDLV", 0xA030, 0x00140000, "DataRate",  "TX FIFO delivery timing, formula = (ref_clk/20/DataRate)<<16"),
-            new RegTableItem("ANCTL_CONFIG_1", 0x1E04, 0x00800060, "DataRate", "mainly the TX modulation mode setting, but bit23 is additionally set to 1 when DataRate >= 100000"),
+            new RegTableItem("FREQSYNTH_CONFIG_1", 0x1380, 0x0014A785, "Freq/DataRate/Dev", "synthesizer constant selected by frequency band; determined together with 0x13A0 (FREQSYNTH_TPMCAL_CONFIG_3) from 4 special-case combinations of frequency band, DataRate, and h"),
+            new RegTableItem("FREQSYNTH_TPMCAL_CONFIG_3", 0x13A0, 0x00708708, "Freq/DataRate/Dev", "TPM modulation calibration value (PGMH/PGML); determined together with 0x1380 from 4 special-case combinations of frequency band, DataRate, and h"),
 
             new RegTableItem("BBP_CORE52", 0xB304, 0x00000000, "DataRate", "RX core setting, selected by DataRate range (one value for 2Mbps, another for the rest)"),
             new RegTableItem("BBP_AGC24", 0xB1B4, 0x0000FEE8, "DataRate", "RX AGC setting, value selected by DataRate range"),
@@ -107,9 +108,7 @@ namespace ER41xxTestTool
             new RegTableItem("SYNTH_CAL_CONFIG_1", 0x1984, 0x0000BB80, "Dev", "raw frequency deviation (Hz) * 2, written directly from u32gTRx_FreqDev (the written value is 2x the actual Deviation)"),
             new RegTableItem("SYNTH_CAL_CONFIG_2", 0x1988, 0x00017700, "DataRate", "raw data rate (bps), written directly from u32gTRx_DataRate (bit24 is additionally OR'd in if > 960000)"),
             new RegTableItem("SYNTH_CAL_TRIG", 0x1990, 0x00000001, "Freq", "writing 1 triggers the synth to recalculate and lock frequency based on 0x1980 (freq)/0x1984 (dev)/0x1988 (data rate)"),
-            
-            new RegTableItem("FREQSYNTH_CONFIG_1", 0x1380, 0x0014A785, "Freq/DataRate/Dev", "synthesizer constant selected by frequency band; determined together with 0x13A0 (FREQSYNTH_TPMCAL_CONFIG_3) from 4 special-case combinations of frequency band, DataRate, and h"),
-            new RegTableItem("FREQSYNTH_TPMCAL_CONFIG_3", 0x13A0, 0x00708708, "Freq/DataRate/Dev", "TPM modulation calibration value (PGMH/PGML); determined together with 0x1380 from 4 special-case combinations of frequency band, DataRate, and h"),
+            new RegTableItem("ANCTL_CONFIG_1", 0x1E04, 0x00800060, "DataRate", "mainly the TX modulation mode setting, but bit23 is additionally set to 1 when DataRate >= 100000"),
 
             new RegTableItem("SYNTH_CAL_CONFIG_5", 0x1998, 0x0035428F, "Freq", "PLL divider ratio DIV_INT<<18|DIV_FRAC, hf32Channel=freq+deviation, high-frequency corner"),
             new RegTableItem("SYNTH_CAL_CONFIG_6", 0x199C, 0x00353D70, "Freq", "PLL divider ratio, lf32Channel=freq-deviation, low-frequency corner"),

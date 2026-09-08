@@ -891,6 +891,10 @@ namespace ER41xxTestTool
         private bool bRegAutoRefreshReady = false;
         private bool bRegRefreshing = false;
 
+        // PARAMETER 區的值改了、但還沒按 Write DVB Register 寫進板子 —— 用來在
+        // btnSendStart/btnCWOn/btnScanStart/btnRxStart/btnStateSet 按下前提醒使用者。
+        private bool bRegTableDirty = false;
+
         /// <summary>
         /// 參數有變動時重算整份 REG TABLE:先回到 .h 預設值, 再套上畫面現值。
         /// 先歸零再套是必要的 —— 否則按過 READ 之後列表是實機值, 只更新部分列會變成新舊混雜。
@@ -905,6 +909,7 @@ namespace ER41xxTestTool
                 // ApplyUiValuesToRegisterList() 內部已經是「.h 預設值打底 + 畫面參數覆蓋」,
                 // 整份重建一次即可; 算不出來時保持原樣不動。
                 ApplyUiValuesToRegisterList();
+                bRegTableDirty = true;
             }
             finally
             {
@@ -1232,21 +1237,25 @@ namespace ER41xxTestTool
         /// 沿用舊版 regPage (WriteAllRegProc2) 的作法: 不逐筆等回應, 只在送出之間留 15ms,
         /// 韌體端 wr 沒有另外新增命令。
         /// </summary>
-        private void btnRegTableWrite_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 順序跟 Generate 產生的內容一致: 從 GenerateTxt() 實際寫入 TRx_Config_Array/
+        /// TRx_ConfigEx_Array 的先後順序取位址清單 (不含 Initial_Reg_Array), 再依目前 REG TABLE
+        /// 的 Topic/DependsOn 過濾狀態篩掉沒勾選的位址, 值則一律用 regItemsByName 目前的值
+        /// (含手動 bit field 編輯), 不是重新用參數算一次。
+        /// </summary>
+        /// <summary>不管REG TABLE有沒有勾選、有沒有值, 一律不寫進DVB的位址清單。</summary>
+        private static readonly HashSet<ushort> WriteIgnoredAddrList = new HashSet<ushort>
         {
-            if (!serialPort1.IsOpen)
-            {
-                ShowInsLog("REG WRITE: COM port not open, please connect via the COM PORT menu\r\n");
-                return;
-            }
+            0xA028, //TX FIFO Format
+        };
 
-            // 順序跟 Generate 產生的內容一致: 從 GenerateTxt() 實際寫入 TRx_Config_Array/
-            // TRx_ConfigEx_Array 的先後順序取位址清單 (不含 Initial_Reg_Array), 再依目前 REG TABLE
-            // 的 Topic/DependsOn 過濾狀態篩掉沒勾選的位址, 值則一律用 regItemsByName 目前的值
-            // (含手動 bit field 編輯), 不是重新用參數算一次。
+        private List<ushort> BuildRegWriteOrder()
+        {
             List<ushort> writeOrder = new List<ushort>();
             foreach (ushort addr in GetGeneratedRegisterOrder())
             {
+                if (WriteIgnoredAddrList.Contains(addr))
+                    continue;
                 RegTableItem item;
                 if (!RegTableItems.TryGetByAddr(addr, out item) || !PassesFilter(item))
                     continue;
@@ -1255,13 +1264,11 @@ namespace ER41xxTestTool
                     continue;   // 還沒有值 (畫面上顯示 "-") 的不寫
                 writeOrder.Add(addr);
             }
-            if (writeOrder.Count == 0)
-                return;
+            return writeOrder;
+        }
 
-            if (MessageBox.Show("Write " + writeOrder.Count + " register values (in the same order as Generate) to the board. Continue?",
-                "REG WRITE", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                return;
-
+        private void PerformRegWrite(List<ushort> writeOrder)
+        {
             btnRegDump.Enabled = false;
             btnRegTableWrite.Enabled = false;
             lblRegDumpStatus.Text = "Writing ...";
@@ -1286,12 +1293,51 @@ namespace ER41xxTestTool
                 TimeSpan t = DateTime.Now - start;
                 lblRegDumpStatus.Text = written + " regs written, " + t.TotalSeconds.ToString("0.00") + "s";
                 ShowInsLog("REG WRITE: " + written + " regs written\r\n");
+                bRegTableDirty = false;
             }
             finally
             {
                 Cursor.Current = Cursors.Default;
                 btnRegDump.Enabled = true;
                 btnRegTableWrite.Enabled = true;
+            }
+        }
+
+        private void btnRegTableWrite_Click(object sender, EventArgs e)
+        {
+            if (!serialPort1.IsOpen)
+            {
+                ShowInsLog("REG WRITE: COM port not open, please connect via the COM PORT menu\r\n");
+                return;
+            }
+
+            List<ushort> writeOrder = BuildRegWriteOrder();
+            if (writeOrder.Count == 0)
+                return;
+
+            if (MessageBox.Show("Write " + writeOrder.Count + " register values (in the same order as Generate) to the board. Continue?",
+                "REG WRITE", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
+
+            PerformRegWrite(writeOrder);
+        }
+
+        /// <summary>
+        /// btnSendStart/btnCWOn/btnScanStart/btnRxStart/btnStateSet 開始動作前呼叫:
+        /// 如果PARAMETER區改過、還沒寫回DVB (bRegTableDirty), 詢問是否要先寫入。
+        /// 不管選 Yes 或 No, 呼叫端原本要做的動作都照常繼續, 只差在有沒有先補寫暫存器。
+        /// </summary>
+        private void ConfirmRewriteIfRegTableDirty()
+        {
+            if (!bRegTableDirty)
+                return;
+
+            if (MessageBox.Show("REG TABLE has been changed. Do you want to rewrite the settings to the DVB?",
+                "REG TABLE Changed", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                List<ushort> writeOrder = BuildRegWriteOrder();
+                if (writeOrder.Count > 0)
+                    PerformRegWrite(writeOrder);
             }
         }
 

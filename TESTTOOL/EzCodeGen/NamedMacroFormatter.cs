@@ -274,7 +274,8 @@ namespace ER41xxTestTool
                 // 依40MHz的時序填入這顆, 38.4MHz時硬體填的還是40MHz版本的錯誤值, 韌體必須在trigger
                 // 之後重新寫入正確值才生效 —— 提醒使用產生出的.h檔的人不要調換寫入順序。
                 if (d.name == "MODEM_CLK_REG")
-                    sb.Append("// NOTE: must be written after the Synthesizer trigger (0x1980~0x1990), or the 40MHz-based hardware auto-fill will overwrite it\r\n");
+                    sb.Append("// NOTE: must be written after the Synthesizer trigger (0x1980~0x1990), or the 40MHz-based hardware auto-fill will overwrite it.\r\n" +
+                              "// Also remember to move MODEM_CLK_REG's entry in RF_REG_CONFIG_ARRAY (below) to after the Synthesizer trigger registers' entries (0x1980/0x1984/0x1988/0x1990).\r\n");
                 sb.Append(FormatDefine(d.name, d.addr, d.data)).Append("\r\n");
             }
             pending.Clear();

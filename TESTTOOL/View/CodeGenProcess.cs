@@ -130,9 +130,9 @@ namespace ER41xxTestTool
             UpdateTxGroupBoxVisible();
             syncwordOrderList(true);
             syncwordOrderList(false);
-            // 沒 invert 時 lblTxBitOrder/rxBitOrder 現在會顯示 "Actual send/verify stream", 打字改
+            // 沒 invert 時 lblActualTxSyncword/lblActualRxSyncword 現在會顯示 "Actual send/verify stream", 打字改
             // txSyncword/rxSyncword 也要跟著即時重算, 不然只有切 invert checkbox 才會更新, 值會顯示過期
-            txSyncword.TextChanged += (s, ev) => syncwordOrderList(true);
+            txSyncword.TextChanged += (s, ev) => { syncwordOrderList(true); RefreshPacketFormatDiagram(); };
             rxSyncword.TextChanged += (s, ev) => syncwordOrderList(false);
 
             // Code Gen 的設定項目都已移到上方 PARAMETER 分頁區,
@@ -176,6 +176,24 @@ namespace ER41xxTestTool
             }
             if (PAConfigCombo.Items.Count > 0)
                 PAConfigCombo.SelectedIndex = 0;
+        }
+
+        private void rfParamFreqPwrHelpBtn_Click(object sender, EventArgs e)
+        {
+            string msg =
+                "1. Xtal: Must match the crystal actually fitted on the module. It determines which Data Rates are available.\r\n\r\n" +
+                "2. Cap IO: Trims the crystal's internal load capacitance, used to fine-tune the actual Base Frequency offset.\r\n\r\n" +
+                "3. DVB Band: Only relevant to the DVB Tester. Determined by the ER4100 daughter-board's hardware and cannot be selected from software - it reflects the frequency band the daughter-board was built for. This setting does not limit the Base Frequency; it only narrows down the PA Config options.\r\n\r\n" +
+                "4. Frequency: The Base Frequency. ER4100 supports the following 5 bands:\r\n" +
+                "      99 - 125 MHz\r\n" +
+                "      196 - 253 MHz\r\n" +
+                "      391 - 508 MHz\r\n" +
+                "      780 - 1018 MHz\r\n" +
+                "      1558 - 2038 MHz\r\n\r\n" +
+                "5. PA Config: Selects the output power of the chip's internal High-Power PA (H-PA) or Low-Power PA (L-PA), and must match the external matching network design.\r\n" +
+                "      e.g. if the external matching is designed for 915MHz / 23dBm, select \"23\" here. H-PA/L-PA itself is fixed at the factory and cannot be changed here - this only selects the corresponding dBm value.\r\n\r\n" +
+                "6. Power LV: The range depends on PA Config - H-PA (23dBm) is 0~127, L-PA (10/14dBm) is 0~27. E.g. with PA Config = 23dBm (H-PA), 127 is the theoretical value for full 23dBm output.";
+            MessageBox.Show(this, msg, "Frequency & Power Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>PA CONFIG(dBm) = 10 或 14 時 POWER LV 只到 27, 其餘 dBm 到 127; 依 PAConfigCombo 目前的值更新 PwrLvLabel 上的範圍字樣</summary>
@@ -550,17 +568,17 @@ namespace ER41xxTestTool
             {
                 if (syncLSBCheckbox.Checked)
                     // invert: 實際送出的是位元反轉後的值 (跟 Syncword.Set() 寫進 0xA038 前做的 hexReverse 是同一個轉換)
-                    lblTxBitOrder.Text = Txsyncword_Invert + FormatSyncwordBytes(TrySyncwordReverse(txSyncword.Text));
+                    lblActualTxSyncword.Text = Txsyncword_Invert + FormatSyncwordBytes(TrySyncwordReverse(txSyncword.Text));
                 else
                     // 沒 invert: 實際送出的 bit stream 就是 txSyncword 欄位打的值本身, 直接排成 byte 顯示方便對照
-                    lblTxBitOrder.Text = Txsyncword_Forward + FormatSyncwordBytes(txSyncword.Text);
+                    lblActualTxSyncword.Text = Txsyncword_Forward + FormatSyncwordBytes(txSyncword.Text);
             }
             else
             {
                 if (rxsyncInvertCheckbox.Checked)
-                    rxBitOrder.Text = Rxsyncword_Invert  + FormatSyncwordBytes(TrySyncwordReverse(rxSyncword.Text));
+                    lblActualRxSyncword.Text = Rxsyncword_Invert  + FormatSyncwordBytes(TrySyncwordReverse(rxSyncword.Text));
                 else
-                    rxBitOrder.Text = Rxsyncword_Forward + FormatSyncwordBytes(rxSyncword.Text);
+                    lblActualRxSyncword.Text = Rxsyncword_Forward + FormatSyncwordBytes(rxSyncword.Text);
             }
         }
 
@@ -836,7 +854,15 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1988, " + hex);
             hex = $"0x{i:X8},";
             CodeOutHelper.CodeOut(sw, "0x1990, " + hex);
-            // 0x1E04 移到 SetTx.TxRegister() 了 (跟 0x13AC 同屬 TRx_TX_SETUP() 那組, 不屬於這裡)。
+
+            // 0x1E04 (ANCTL_CONFIG_1): 從 SetTx.TxRegister() 移回這裡, 接在 0x1990 後面。
+            // bits[7:5] ANCTL_TX_MOD: 原廠 API 在 GFSK 分支下固定寫成 FSK 編碼(=3), 這個工具
+            // 目前 isGFSK 恆為 true, 對應這裡固定的 0x60 (bits[7:5]=3, 其餘全 0, 皆為硬體預設值)。
+            // bit23 ANCTL_TPM_CAL_EN: 原廠是 DataRate>=100000 才開啟。
+            uint reg1E04 = 0x60;
+            if (drValue >= 100000)
+                reg1E04 |= (1 << 23);
+            CodeOutHelper.CodeOut(sw, "0x1e04, 0x" + reg1E04.ToString("X").PadLeft(8, '0') + ",");
         }
 
         public void RxExtent(StreamWriter sw, uint dataRate)
@@ -1085,7 +1111,7 @@ namespace ER41xxTestTool
                 //     SetTx.TxRegister(sw, crystal_HZ, drValue, isGFSK);
                 // }
                 SetTx.TxRegister(sw, crystal_HZ, drValue, isGFSK);
-                //SetTx.TxCondition_1(sw, drValue, freqDouble, H);   // 0x1380 最終生效值在此寫入
+                SetTx.TxCondition_1(sw, drValue, freqDouble, H);   // 0x1380 最終生效值在此寫入
 
                 string modemClkReg;
                 RxGenerate(sw, dataRate_offset, H, out modemClkReg);    // Version_2
@@ -1094,7 +1120,7 @@ namespace ER41xxTestTool
                 // reg 0x1984 (SYNTH_CAL_OFFSET_IN) = 2 * Frequency Deviation(Hz);
                 // devValue 本身其餘地方 (H 計算、GLB_DEVIATION 註解) 代表的是物理 fdev(Hz), 只有寫進 register 時才乘 2。
                 SetStandardParameter(sw, freqValue, devValue * 2, drValue);
-                FREQSET.TxCondition_1(sw, drValue, freqDouble, H);   // 0x1380 最終生效值在此寫入
+                
                 if (xtalValue == 38.4)
                 {
                     //38.4M 才需要設的 channel 0 PLL calibration 值 (0x1998/199C/19A0/1994)
@@ -1113,10 +1139,10 @@ namespace ER41xxTestTool
                 // Write TRx_ConfigEx_Array
                 sw.WriteLine("code const t_reg_array code TRx_ConfigEx_Array[] = {");
                 WriteCapValue.Set(sw, (uint)capValue);
-                if (enGpio0)
-                    GPIO_Def.SetGpio0(sw, enGpio0, gpio0Type);
-                if (enGpio1)
-                    GPIO_Def.SetGpio1(sw, enGpio1, gpio1Type);
+                // GPIO0/GPIO1 不管有沒有勾選 Enable 都要生成 (SetGpio0/SetGpio1 內部本來就有
+                // en=false 時寫 disable 預設值 0x00160000 的分支, 只是呼叫端被 if(enGpioX) 擋住沒進去)
+                GPIO_Def.SetGpio0(sw, enGpio0, gpio0Type);
+                GPIO_Def.SetGpio1(sw, enGpio1, gpio1Type);
                 PCRMU.Set(sw, pcrmuEn);
                 EnableInt.Set(sw, intMode);
                 if (isTXEmpty || isRXFull)
@@ -1480,7 +1506,7 @@ namespace ER41xxTestTool
             if (MyIni.KeyExists("ENABLE", "GPIO1"))
             {
                 tmpRead = MyIni.Read("ENABLE", "GPIO1").ToUpper();
-                GPIO1_Enable.Checked = tmpRead.Equals("FALSE");
+                GPIO1_Enable.Checked = tmpRead.Equals("TRUE");
             }
             if (MyIni.KeyExists("VALUE", "GPIO1"))
             {
