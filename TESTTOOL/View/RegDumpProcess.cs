@@ -90,18 +90,18 @@ namespace ER41xxTestTool
         {
             try
             {
-                if (xtalCombo.Text.Trim() == "40" && Xtal384OnlySynthAddrs.Contains(addr))
+                if (paramXtalCombo.Text.Trim() == "40" && Xtal384OnlySynthAddrs.Contains(addr))
                     return true;
 
                 if (addr == 0xA0A4)
-                    return !(TXAEMPTY_Grp.Visible || RXFULL_Grp.Visible);
+                    return !(paramIntModeTxAemptyGroup.Visible || paramIntModeRxAfullGroup.Visible);
 
                 if (addr == 0xB0D0 || addr == 0xB0F0 || addr == 0xB108 || addr == 0xB10C || addr == 0xB110 ||
                     addr == 0xB114 || addr == 0xB118 || addr == 0xB11C)
                 {
-                    double xtalValue = Convert.ToDouble(xtalCombo.Text);
-                    double drTextValue = double.Parse(txDRCombo.Text);
-                    double freqDevDouble = Convert.ToDouble(freqDev.Text);
+                    double xtalValue = Convert.ToDouble(paramXtalCombo.Text);
+                    double drTextValue = double.Parse(paramDataRateCombo.Text);
+                    double freqDevDouble = Convert.ToDouble(paramDeviationText.Text);
                     uint drValue = (uint)(1000 * drTextValue);
                     uint devValue = (uint)(1000 * freqDevDouble);
                     double dataRateOffset, H;
@@ -173,7 +173,7 @@ namespace ER41xxTestTool
             // regGroup ("REG TABLE") 固定在主視窗右側, 寬度已加大到 320 以容納三欄
             // (REG_NAME/ADDR/VALUE); 主視窗寬度也隨之縮到 regGroup 右邊緣, 詳見 MainForm.Designer.cs。
 
-            int inner = regGroup.ClientSize.Width;      // 約 314
+            int inner = regTableTopicGroup.ClientSize.Width;      // 約 314
 
             /* ----- 生成DVB讀按鈕，但將之隱藏，由main form的按鈕驅動 ----------*/
             btnRegDump = new Button();
@@ -341,7 +341,7 @@ namespace ER41xxTestTool
             /* ----- 生成Register table本體 -----------------------------*/
             regDumpView = new ListView();
             regDumpView.Location = new Point(6, searchRowY + filterRowH + gap);
-            regDumpView.Size = new Size(inner - 12, regGroup.ClientSize.Height - (searchRowY + filterRowH + gap) - 6);
+            regDumpView.Size = new Size(inner - 12, regTableTopicGroup.ClientSize.Height - (searchRowY + filterRowH + gap) - 6);
             regDumpView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             regDumpView.View = System.Windows.Forms.View.Details;
             regDumpView.FullRowSelect = true;
@@ -369,15 +369,15 @@ namespace ER41xxTestTool
                 regDumpView.Groups.Add(grp);
             }
 
-            regGroup.Controls.Add(btnRegDump);
-            regGroup.Controls.Add(btnRegTableWrite);
-            regGroup.Controls.Add(lblRegDumpStatus);
-            regGroup.Controls.Add(btnCategoryFilter);
-            regGroup.Controls.Add(btnDependsOnFilter);
-            regGroup.Controls.Add(lblSearchHint);
-            regGroup.Controls.Add(txtSearchName);
-            regGroup.Controls.Add(btnSearchName);
-            regGroup.Controls.Add(regDumpView);
+            regTableTopicGroup.Controls.Add(btnRegDump);
+            regTableTopicGroup.Controls.Add(btnRegTableWrite);
+            regTableTopicGroup.Controls.Add(lblRegDumpStatus);
+            regTableTopicGroup.Controls.Add(btnCategoryFilter);
+            regTableTopicGroup.Controls.Add(btnDependsOnFilter);
+            regTableTopicGroup.Controls.Add(lblSearchHint);
+            regTableTopicGroup.Controls.Add(txtSearchName);
+            regTableTopicGroup.Controls.Add(btnSearchName);
+            regTableTopicGroup.Controls.Add(regDumpView);
 
             // 開啟程式時先列出 .h 的預設值; 按下 READ 後會被實機讀回的值取代
             ShowRegisterDefaults();
@@ -892,7 +892,7 @@ namespace ER41xxTestTool
         private bool bRegRefreshing = false;
 
         // PARAMETER 區的值改了、但還沒按 Write DVB Register 寫進板子 —— 用來在
-        // btnSendStart/btnCWOn/btnScanStart/btnRxStart/btnStateSet 按下前提醒使用者。
+        // dvbTstPktTxStartBtn/dvbTstContiTxStartBtn/dvbTstPktRxScanBtn/dvbTstPktRxStartBtn/dvbTstStateSetBtn 按下前提醒使用者。
         private bool bRegTableDirty = false;
 
         /// <summary>
@@ -942,8 +942,8 @@ namespace ER41xxTestTool
                     RefreshRegisterListFromUi();
             };
 
-            TextBox[] boxes = { txFreqText, freqDev, pwrlvl, capioStr, txSyncword, rxSyncword,
-                                preambleContent, preambleLen, allowBitError, txAemptyThr, rxFullThr };
+            TextBox[] boxes = { paramBaseFreqText, paramDeviationText, paramPwrLvText, paramCapIoText, paramTxSyncText, paramRxSyncText,
+                                paramPbContentText, paramPbLenText, paramRxSyncAllowBitErrText, paramIntModeTxAemptyText, paramIntModeRxAfullText };
             foreach (TextBox tb in boxes)
                 if (tb != null) tb.Leave += onChange;
 
@@ -951,30 +951,30 @@ namespace ER41xxTestTool
             // 後者連「程式改動」也會觸發: txFreqText 每打一個字都會呼叫 UpdatePAConfigCombo()
             // 重建 PA CONFIG 的選項, 用 SelectedIndexChanged 就會在打字途中一直重算。
             // xtalCombo 不放進這裡: 見下面 xtalCombo 專用的 deferredRefresh。
-            ComboBox[] combos = { txDRCombo, PAConfigCombo, txModCombo,
-                                  gpio0_Combo, gpio1_Combo, DVBBandCombo };
+            ComboBox[] combos = { paramDataRateCombo, paramPAConfigCombo, paramModulationCombo,
+                                  paramGpio0Combo, paramGpio1Combo, paramDvbBandCombo };
             foreach (ComboBox cb in combos)
                 if (cb != null) { cb.SelectionChangeCommitted += onChange; cb.Leave += onChange; }
 
             // xtalCombo: 事件觸發當下 .Text 有時還沒真的切換過去 (跟下面 intModeCheckedList.ItemCheck
             // 同一類 WinForms 時序問題), REG TABLE 裡依 Xtal=40/38.4 判斷灰字的邏輯會讀到切換前的舊值,
             // 所以排到訊息迴圈後面再重算, 確保讀到的是切換後的新值。
-            if (xtalCombo != null)
+            if (paramXtalCombo != null)
             {
                 EventHandler deferredRefresh = delegate
                 {
                     BeginInvoke((MethodInvoker)delegate { RefreshRegisterListFromUi(); });
                 };
-                xtalCombo.SelectionChangeCommitted += deferredRefresh;
-                xtalCombo.Leave += deferredRefresh;
+                paramXtalCombo.SelectionChangeCommitted += deferredRefresh;
+                paramXtalCombo.Leave += deferredRefresh;
             }
 
-            CheckBox[] checks = { syncLSBCheckbox, rxsyncInvertCheckbox, GPIO0_Enable, GPIO1_Enable };
+            CheckBox[] checks = { paramTxSyncSoftInvertCheck, paramRxSyncSoftInvertCheck, paramGpio0EnableCheck, paramGpio1EnableCheck };
             foreach (CheckBox c in checks)
                 if (c != null) c.CheckedChanged += onChange;
 
-            RadioButton[] radios = { pcrmuEnable, pcrmuDisable, payloadMSB, payloadLSB,
-                                     radioTransparent, radioTransWithPresync, radio802154 };
+            RadioButton[] radios = { paramPcrmuEnableRadioBtn, paramPcrmuDisableRadioBtn, paramFIFOBitOrderMSBRadioBtn, paramFIFOBitOrderLSBRadioBtn,
+                                     paramTxFifoModeTransparentRadioBtn, paramTxFifoModeTransPresyncRadioBtn, paramTxFifoMode802154RadioBtn };
             foreach (RadioButton r in radios)
                 if (r != null) r.CheckedChanged += onRadio;
 
@@ -990,7 +990,7 @@ namespace ER41xxTestTool
             parameterControls = new HashSet<Control>();
             foreach (TextBox tb in boxes) if (tb != null) parameterControls.Add(tb);
             foreach (ComboBox cb in combos) if (cb != null) parameterControls.Add(cb);
-            if (xtalCombo != null) parameterControls.Add(xtalCombo);
+            if (paramXtalCombo != null) parameterControls.Add(paramXtalCombo);
             foreach (CheckBox c in checks) if (c != null) parameterControls.Add(c);
             foreach (RadioButton r in radios) if (r != null) parameterControls.Add(r);
             if (intModeCheckedList != null) parameterControls.Add(intModeCheckedList);
@@ -1065,13 +1065,13 @@ namespace ER41xxTestTool
         private string GetGeneratedRawText()
         {
             // 靜默前置檢查: 欄位空的話直接放棄, 避免 CheckGenParameterReady() 在開機時跳 MessageBox
-            if (string.IsNullOrWhiteSpace(xtalCombo.Text) ||
-                string.IsNullOrWhiteSpace(capioStr.Text) ||
-                string.IsNullOrWhiteSpace(txFreqText.Text) ||
-                string.IsNullOrWhiteSpace(txDRCombo.Text) ||
-                string.IsNullOrWhiteSpace(freqDev.Text) ||
-                string.IsNullOrWhiteSpace(pwrlvl.Text) ||
-                string.IsNullOrWhiteSpace(PAConfigCombo.Text))
+            if (string.IsNullOrWhiteSpace(paramXtalCombo.Text) ||
+                string.IsNullOrWhiteSpace(paramCapIoText.Text) ||
+                string.IsNullOrWhiteSpace(paramBaseFreqText.Text) ||
+                string.IsNullOrWhiteSpace(paramDataRateCombo.Text) ||
+                string.IsNullOrWhiteSpace(paramDeviationText.Text) ||
+                string.IsNullOrWhiteSpace(paramPwrLvText.Text) ||
+                string.IsNullOrWhiteSpace(paramPAConfigCombo.Text))
                 return null;
 
             bool saved8Bits = is8BitsFormat;
@@ -1323,7 +1323,7 @@ namespace ER41xxTestTool
         }
 
         /// <summary>
-        /// btnSendStart/btnCWOn/btnScanStart/btnRxStart/btnStateSet 開始動作前呼叫:
+        /// dvbTstPktTxStartBtn/dvbTstContiTxStartBtn/dvbTstPktRxScanBtn/dvbTstPktRxStartBtn/dvbTstStateSetBtn 開始動作前呼叫:
         /// 如果PARAMETER區改過、還沒寫回DVB (bRegTableDirty), 詢問是否要先寫入。
         /// 不管選 Yes 或 No, 呼叫端原本要做的動作都照常繼續, 只差在有沒有先補寫暫存器。
         /// </summary>

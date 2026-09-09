@@ -107,7 +107,7 @@ namespace ER41xxTestTool
         public void CodeOutTitle(double txdataRate, double rxdataRate, double xtal, double txfdev, double rxfdev, double txH, double rxH)
         {
             ShowInsLog("//Crystal = " + xtal + "MHz\r\n");
-            ShowInsLog("//Frequency = " + DVBBandCombo.Text + "Hz\r\n");
+            ShowInsLog("//Frequency = " + paramDvbBandCombo.Text + "Hz\r\n");
 
             ShowInsLog("//RX_DateRate = " + rxdataRate + "bps\r\n");
             ShowInsLog("//RX_FreqDev = " + rxfdev + "Hz\r\n");
@@ -159,10 +159,10 @@ namespace ER41xxTestTool
                     else
                     {
                         newH = 0.5;    // 202601/16前是 H=1
-                        txResult.Text += "RX Frequency Derivation: " + fdev + "->";
+                        logResultText.Text += "RX Frequency Derivation: " + fdev + "->";
                         fdev = (newH * dataRate / 2)/1000;
-                        freqDev.Text = fdev.ToString();
-                        txResult.Text += fdev + "kbps\r\n";
+                        paramDeviationText.Text = fdev.ToString();
+                        logResultText.Text += fdev + "kbps\r\n";
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<="+ newH+"\r\nHere the setting is H="+ newH+"\r\nwhen FreqDev=" + fdev+";\r\nPress START again";
                         ShowMesgBox(str);
                     }
@@ -174,10 +174,10 @@ namespace ER41xxTestTool
                     else
                     {                         
                         newH = 1;      // 202601/16前是 H=2
-                        txResult.Text += "RX Frequency Derivation: " + fdev + "->";
+                        logResultText.Text += "RX Frequency Derivation: " + fdev + "->";
                         fdev = (newH * dataRate / 2) / 1000;
-                        freqDev.Text = fdev.ToString();
-                        txResult.Text += fdev + "kbps\r\n";
+                        paramDeviationText.Text = fdev.ToString();
+                        logResultText.Text += fdev + "kbps\r\n";
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=" + newH + "\r\nHere the setting is H=" + newH + "\r\nwhen FreqDev=" + fdev + ";\r\nPress START again";
                         ShowMesgBox(str);
                     }
@@ -189,10 +189,10 @@ namespace ER41xxTestTool
                     else
                     {
                         newH = 3;
-                        txResult.Text += "RX Frequency Derivation: " + fdev + "->";
+                        logResultText.Text += "RX Frequency Derivation: " + fdev + "->";
                         fdev = (newH * dataRate / 2) / 1000;
-                        freqDev.Text = fdev.ToString();
-                        txResult.Text += fdev + "kbps\r\n";
+                        paramDeviationText.Text = fdev.ToString();
+                        logResultText.Text += fdev + "kbps\r\n";
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=3\r\nHere the setting is H=3\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
                     }
@@ -204,10 +204,10 @@ namespace ER41xxTestTool
                     else
                     {
                         newH = 4;
-                        txResult.Text += "RX Frequency Derivation: " + fdev + "->";
+                        logResultText.Text += "RX Frequency Derivation: " + fdev + "->";
                         fdev = (newH * dataRate / 2) / 1000;
-                        freqDev.Text = fdev.ToString();
-                        txResult.Text += fdev + "kbps\r\n";
+                        paramDeviationText.Text = fdev.ToString();
+                        logResultText.Text += fdev + "kbps\r\n";
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=4\r\nHere the setting is H=4\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
                     }
@@ -219,10 +219,10 @@ namespace ER41xxTestTool
                     else
                     {
                         newH = 4;
-                        txResult.Text += "RX Frequency Derivation: " + fdev + "->";
+                        logResultText.Text += "RX Frequency Derivation: " + fdev + "->";
                         fdev = (newH * dataRate / 2) / 1000;
-                        freqDev.Text = fdev.ToString();
-                        txResult.Text += fdev + "kbps\r\n";
+                        paramDeviationText.Text = fdev.ToString();
+                        logResultText.Text += fdev + "kbps\r\n";
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=4\r\nHere the setting is H=4\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
                     }
@@ -234,10 +234,10 @@ namespace ER41xxTestTool
                     else
                     {
                         newH = 6;
-                        txResult.Text += "RX Frequency Derivation: " + fdev + "->";
+                        logResultText.Text += "RX Frequency Derivation: " + fdev + "->";
                         fdev = (newH * dataRate / 2) / 1000;
-                        freqDev.Text = fdev.ToString();
-                        txResult.Text += fdev + "kbps\r\n";
+                        paramDeviationText.Text = fdev.ToString();
+                        logResultText.Text += fdev + "kbps\r\n";
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=6\r\nHere the setting is H=6\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
                     }
@@ -253,11 +253,11 @@ namespace ER41xxTestTool
             bool res = false;
             int generateReturn = 0;
             double new_rxH = 0.0;
-            double xtal = Convert.ToDouble(xtalCombo.Text);    // 40 or 38.4, 依 XTAL 下拉選單
+            double xtal = Convert.ToDouble(paramXtalCombo.Text);    // 40 or 38.4, 依 XTAL 下拉選單
             double dataRate_offset = 0.0;
             double BPSOffset = xtal * 1000000 / 40000000;
-            double rxdataRate = (double.Parse(txDRCombo.Text)) * 1000;
-            double rxfdev = (Convert.ToDouble(freqDev.Text)) * 1000;
+            double rxdataRate = (double.Parse(paramDataRateCombo.Text)) * 1000;
+            double rxfdev = (Convert.ToDouble(paramDeviationText.Text)) * 1000;
             double rxH = 2 * rxfdev / rxdataRate;
             dataRate_offset = rxdataRate / BPSOffset;  // datarate用Rx的
             new_rxH = CheckDataRate(rxdataRate, rxdataRate, dataRate_offset, xtal, rxfdev, rxfdev, rxH, rxH);    // datarate用Rx的

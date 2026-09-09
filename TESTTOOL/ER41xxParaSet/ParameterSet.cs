@@ -98,7 +98,7 @@ namespace ER41xxTestTool
             string cmd = "";
             try
             {
-                input = this.capioStr.Text.Trim(); // 取出字串並去掉前後空白
+                input = this.paramCapIoText.Text.Trim(); // 取出字串並去掉前後空白
                 if (int.TryParse(input, out capio))
                 {
                     // 成功轉換
@@ -139,13 +139,13 @@ namespace ER41xxTestTool
         {
             bool res = false;
             string stmp = "";
-            int drIdx = txDRCombo.SelectedIndex;
+            int drIdx = paramDataRateCombo.SelectedIndex;
             int crcSelect = 0;
           
             if (src ==0)
-                crcSelect = crcSelectCombo.SelectedIndex;
+                crcSelect = dvbTstPktTxCrcCombo.SelectedIndex;
             else if (src == 2)
-                crcSelect = packetRxCrcCombo.SelectedIndex;
+                crcSelect = dvbTstPktRxCrcCombo.SelectedIndex;
             //txResult.Text += "Idx=" + idx + "   ";
             //txResult.Text += "PowerLevel=" + powerLevelList[idx] + "\r\n";
 
@@ -159,8 +159,8 @@ namespace ER41xxTestTool
             bool freqInputIsOK = false;
             try
             {
-                freqDevDouble = Convert.ToDouble(freqDev.Text);
-                freqDouble = Convert.ToDouble(txFreqText.Text);
+                freqDevDouble = Convert.ToDouble(paramDeviationText.Text);
+                freqDouble = Convert.ToDouble(paramBaseFreqText.Text);
             }
             catch (Exception ex)
             {
@@ -175,8 +175,8 @@ namespace ER41xxTestTool
                     // src: 0-PacketTx / 1-ContinueTx 用 PARAMETER 內的 TX SYNCWORD;
                     //      2-PacketRx (含 SCAN) 用 RX SYNCWORD
                     bool isRx = (src == 2);
-                    string syncwordInput = isRx ? rxSyncword.Text : txSyncword.Text;
-                    bool syncwordInvert = isRx ? rxsyncInvertCheckbox.Checked : syncLSBCheckbox.Checked;
+                    string syncwordInput = isRx ? paramRxSyncText.Text : paramTxSyncText.Text;
+                    bool syncwordInvert = isRx ? paramRxSyncSoftInvertCheck.Checked : paramTxSyncSoftInvertCheck.Checked;
                     string syncwordString = "";
                     syncwordString = syncwordInput;
 
@@ -185,7 +185,7 @@ namespace ER41xxTestTool
 
                     string cmd = "";
                     freqValue = (int)(1000000 * freqDouble);
-                    double drTextValue = double.Parse(txDRCombo.Text);
+                    double drTextValue = double.Parse(paramDataRateCombo.Text);
                     drValue = (int) (1000 * drTextValue);//Convert.ToInt32(drList2[drIdx]);
                     freqDevValue = (int)(2 * 1000 * freqDevDouble);
 
@@ -200,14 +200,14 @@ namespace ER41xxTestTool
 
                     stmp = serialPort1.ReadExisting();
                     Thread.Sleep(50);
-                    string maxPwrValue = PAConfigCombo.Text;
+                    string maxPwrValue = paramPAConfigCombo.Text;
                     serialPort1.Write("cfg 11 "+ maxPwrValue+"\r");
                     Thread.Sleep(50);
                     
                     stmp = serialPort1.ReadExisting();
                     try
                     {
-                        pwrLevel = pwrlvl.Text.Trim();   // 抓取並去掉前後空白
+                        pwrLevel = paramPwrLvText.Text.Trim();   // 抓取並去掉前後空白
                         pwrInteger = int.Parse(pwrLevel);          // 嘗試轉換
                         if (pwrInteger < 0 || pwrInteger > 127)
                         {
@@ -235,13 +235,13 @@ namespace ER41xxTestTool
                     // 先送這兩個才會被 cfg 7 一起套進去。
                     // 注意 cfg 34 是不存 flash 的, 每次重開機/cfg 255 韌體都會回到 0xAA,
                     // 所以每次 SetParameter 都要重送一次。
-                    string preambleContentStr = preambleContent.Text.Trim().PadLeft(2, '0');
+                    string preambleContentStr = paramPbContentText.Text.Trim().PadLeft(2, '0');
                     cmd = "cfg 34 0x" + preambleContentStr + "\r";
                     serialPort1.Write(cmd);
                     Thread.Sleep(50);
                     stmp = serialPort1.ReadExisting();
 
-                    string preambleLenStr = preambleLen.Text.Trim();
+                    string preambleLenStr = paramPbLenText.Text.Trim();
                     cmd = "cfg 9 " + preambleLenStr + "\r";
                     serialPort1.Write(cmd);
                     Thread.Sleep(50);
@@ -261,8 +261,8 @@ namespace ER41xxTestTool
                     //ShowInsLog("SET TX OK\r\n");
                     stmp = serialPort1.ReadExisting();
                     //ShowInsLog(stmp+"\r\n");
-                    txResult.Clear();
-                    stmp = ("Set Parameter: " + txFreqText.Text + "MHz, " + txDRCombo.Text + "kbps, " + freqDev.Text + "kHz \r\n");
+                    logResultText.Clear();
+                    stmp = ("Set Parameter: " + paramBaseFreqText.Text + "MHz, " + paramDataRateCombo.Text + "kbps, " + paramDeviationText.Text + "kHz \r\n");
                     ShowInsLog(stmp);
                     stmp = (isRx ? "RX Syncword= (" : "TX Syncword= (") + HexToBitString(hexReverse(syncwordString)) + ")\r\n";
                     ShowInsLog(stmp);
@@ -294,7 +294,7 @@ namespace ER41xxTestTool
                 ShowInsLog("COM PORT ERROR!\r\n");
                 return false;
             }
-            bool msbEnable = payloadMSB.Checked;
+            bool msbEnable = paramFIFOBitOrderMSBRadioBtn.Checked;
             string cmd = "wr 0xa0a8 0x" + (msbEnable ? "00000001" : "00000000") + "\r";
             serialPort1.Write(cmd);
             Thread.Sleep(50);
@@ -317,7 +317,7 @@ namespace ER41xxTestTool
                 return false;
             }
             uint bitErr;
-            if (!uint.TryParse(allowBitError.Text.Trim(), out bitErr) || bitErr > 7)
+            if (!uint.TryParse(paramRxSyncAllowBitErrText.Text.Trim(), out bitErr) || bitErr > 7)
             {
                 ShowInsLog("Allow Bit Error only (0~7)\r\n");
                 return false;
@@ -337,7 +337,7 @@ namespace ER41xxTestTool
             // F/W: XTAPP_TransPbSwSend(void)
             // F/W: XTAPP_CustomerizePkt_Tx(uint32_t len)
             // 2025/08/14:加上CCIT及CRC16_IBM選擇
-            // 2026/01/02:crcSelectCombo 加 NO_CRC 
+            // 2026/01/02:dvbTstPktTxCrcCombo 加 NO_CRC 
             int crcChoose = 0;
             int len = 0;
             int num = 0;
@@ -348,7 +348,7 @@ namespace ER41xxTestTool
             serialPort1.Write(cmd);
             Thread.Sleep(50);
 
-            if (addSeqCheckbox.Checked)
+            if (dvbTstPktTxPrependSeqCheck.Checked)
                 addSeq = true;
             else
                 addSeq = false;
@@ -368,7 +368,7 @@ namespace ER41xxTestTool
                 serialPort1.Write(cmd);
                 Thread.Sleep(50);
             }
-            crcChoose = crcSelectCombo.SelectedIndex;
+            crcChoose = dvbTstPktTxCrcCombo.SelectedIndex;
             cmd = "rfg 27 " + crcChoose+"\r";
             serialPort1.Write(cmd);
             Thread.Sleep(50);
@@ -409,7 +409,7 @@ namespace ER41xxTestTool
             }
             else
             {
-                txResult.Text = "COM PORT NOT READY!\r\n";
+                logResultText.Text = "COM PORT NOT READY!\r\n";
             }
 
 

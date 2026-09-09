@@ -7,61 +7,65 @@ using System.Windows.Forms;
 
 namespace ER41xxTestTool
 {
-    // v1.21L: COM PORT 選擇改用獨立對話方塊(仿 Tera Term New Connection),
-    // ComboBox 是一般 Form 上的控制項、不再巢狀在 ToolStrip 選單裡,
-    // 徹底避開 ToolStripComboBox 巢狀彈出清單點擊失效的問題
+    // 此Dialog的作用如下:
+    // (1) 取得資訊：讓使用者選port、按Refresh重新列舉、顯示對應的USB裝置資訊（VID/PID）。
+    //     回傳結果給呼叫端（MainForm）判斷：
+    // (2) Connect : DialogResult.OK + dlg.SelectedPort屬性
+    //      → 告訴MainForm「使用者選了這個port、想連線」
+    //       
+    // (3) Disconnect按鈕 : DialogResult.Abort → 告訴MainForm「使用者想斷線」
+    // (4) 其他（按X關閉、按Esc等）→ 什麼都不做
     //
     // ShowDialog() 回傳值:
     //   OK      -> 使用者選好 port 按 OK, 呼叫端要執行連線
     //   Abort   -> 使用者按 DISCONNECT, 呼叫端要執行斷線
     //   其他     -> 只是關閉對話方塊, 不做任何事
+
     public partial class ComPortSelectDialog : Form
     {
-        public string SelectedPort => portCombo.Text;
+        public string SelectedPort => dvbPortCombo.Text;
+        public string[] locPortNames; 
+        string locCurrentPort; 
+        string locBaudRateText; 
+        bool locIsConnected;
 
         public ComPortSelectDialog(string[] portNames, string currentPort, string baudRateText, bool isConnected)
         {
             InitializeComponent();
+            
+            locPortNames = portNames;
+            locCurrentPort = currentPort;
+            locBaudRateText = baudRateText;
+            locIsConnected = isConnected;
 
-            baudLabel.Text = baudRateText;
-            portCombo.Enabled = !isConnected;
-            SetPortItems(portNames, currentPort);
+            dvbPortBaudLabel.Text = locBaudRateText;
+            dvbPortCombo.Enabled = !locIsConnected;
+            SetPortItems(locPortNames, locCurrentPort);
             UpdateDeviceInfo();
 
-            portCombo.SelectedIndexChanged += (s, e) => UpdateDeviceInfo();
-
-            refreshButton.Enabled = !isConnected;
-            refreshButton.Click += (s, e) =>
-            {
-                string selected = portCombo.Text;
-                string[] refreshed = SerialPort.GetPortNames().Distinct().OrderBy(p => p).ToArray();
-                SetPortItems(refreshed, selected);
-                UpdateDeviceInfo();
-                okButton.Enabled = refreshed.Length > 0 && !isConnected;
-            };
-
-            okButton.Enabled = portNames.Length > 0 && !isConnected;
-            disconnectButton.Enabled = isConnected;
+            dvbPortRefreshButton.Enabled = !locIsConnected;
+            dvbConnectButton.Enabled = portNames.Length > 0 && !isConnected;
+            dvbDisconnectButton.Enabled = isConnected;
         }
 
         private void SetPortItems(string[] portNames, string preferredSelection)
         {
-            portCombo.Items.Clear();
-            portCombo.Items.AddRange(portNames);
+            dvbPortCombo.Items.Clear();
+            dvbPortCombo.Items.AddRange(portNames);
             if (portNames.Length > 0)
             {
                 int idx = Array.IndexOf(portNames, preferredSelection);
-                portCombo.SelectedIndex = idx >= 0 ? idx : 0;
+                dvbPortCombo.SelectedIndex = idx >= 0 ? idx : 0;
             }
         }
 
         /// <summary>依目前 portCombo 選的 port, 查 Windows PnP 裝置資訊填 deviceNameLabel/vidPidLabel; 查不到 (例如清單是空的、或裝置沒回報標準 USB VID/PID) 就顯示空白, 不讓 dialog 掛掉。</summary>
         private void UpdateDeviceInfo()
         {
-            string portName = portCombo.Text;
+            string portName = dvbPortCombo.Text;
             var info = GetPortDeviceInfo(portName);
-            deviceNameLabel.Text = info.Name ?? "";
-            vidPidLabel.Text = (info.Vid != null && info.Pid != null) ? "VID: " + info.Vid + "  PID: " + info.Pid : "";
+            dvbPortDeviceNameLabel.Text = info.Name ?? "";
+            dvbPortVidPidLabel.Text = (info.Vid != null && info.Pid != null) ? "VID: " + info.Vid + "  PID: " + info.Pid : "";
         }
 
         /// <summary>
@@ -101,6 +105,36 @@ namespace ER41xxTestTool
                 // WMI 查詢失敗 (例如系統沒有 WMI 服務、或權限問題) 時顯示空白就好, 不影響選 port/連線這個 dialog 的主要功能。
             }
             return (null, null, null);
+        }
+ 
+         // DVB Port 連線鍵事件
+         //
+        private void dvbConnectButton_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.OK;
+        }
+
+         // DVB Port 可選Port 刷新鍵事件
+         // 
+        private void dvbPortRefreshButton_Click(object sender, EventArgs e)
+        {
+            string selected = dvbPortCombo.Text;
+            string[] refreshed = SerialPort.GetPortNames().Distinct().OrderBy(p => p).ToArray();
+            SetPortItems(refreshed, selected);
+            UpdateDeviceInfo();
+            dvbConnectButton.Enabled = refreshed.Length > 0 && !locIsConnected;
+        }
+
+        // DVB Port 可選Port 清單被選事件
+        // 
+        private void dvbPortCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateDeviceInfo();
+        }
+
+        private void dvbDisconnectButton_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Abort;
         }
     }
 }

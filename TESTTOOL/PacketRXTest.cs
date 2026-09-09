@@ -23,32 +23,32 @@ namespace ER41xxTestTool
 
         public void DisableParameterSetting()
         {
-            DVBBandCombo.Enabled = false;
-            PAConfigCombo.Enabled = false;
-            txFreqText.Enabled = false;
-            txDRCombo.Enabled = false;
-            freqDev.Enabled = false;
-            txModCombo.Enabled = false;
-            pwrlvl.Enabled = false;
-            capioStr.Enabled = false;
-            rxSyncword.Enabled = false;              // RX 測試用 RX SYNCWORD
-            rxsyncInvertCheckbox.Enabled = false;
-            allowBitError.Enabled = false;
+            paramDvbBandCombo.Enabled = false;
+            paramPAConfigCombo.Enabled = false;
+            paramBaseFreqText.Enabled = false;
+            paramDataRateCombo.Enabled = false;
+            paramDeviationText.Enabled = false;
+            paramModulationCombo.Enabled = false;
+            paramPwrLvText.Enabled = false;
+            paramCapIoText.Enabled = false;
+            paramRxSyncText.Enabled = false;              // RX 測試用 RX SYNCWORD
+            paramRxSyncSoftInvertCheck.Enabled = false;
+            paramRxSyncAllowBitErrText.Enabled = false;
         }
 
         public void EnableParameterSetting()
         {
-            DVBBandCombo.Enabled = true;
-            PAConfigCombo.Enabled = true;
-            txFreqText.Enabled = true;
-            txDRCombo.Enabled = true;
-            freqDev.Enabled = true;
-            txModCombo.Enabled = true;
-            pwrlvl.Enabled = true;
-            capioStr.Enabled = true;
-            rxSyncword.Enabled = true;               // RX 測試用 RX SYNCWORD
-            rxsyncInvertCheckbox.Enabled = true;
-            allowBitError.Enabled = true;
+            paramDvbBandCombo.Enabled = true;
+            paramPAConfigCombo.Enabled = true;
+            paramBaseFreqText.Enabled = true;
+            paramDataRateCombo.Enabled = true;
+            paramDeviationText.Enabled = true;
+            paramModulationCombo.Enabled = true;
+            paramPwrLvText.Enabled = true;
+            paramCapIoText.Enabled = true;
+            paramRxSyncText.Enabled = true;               // RX 測試用 RX SYNCWORD
+            paramRxSyncSoftInvertCheck.Enabled = true;
+            paramRxSyncAllowBitErrText.Enabled = true;
 
         }
         //const uint8_t pktHeader[] = { 0xA5, 0xB3, 0xC6, 0xD9 };
@@ -85,7 +85,7 @@ namespace ER41xxTestTool
                 int index = 6;   // Payload 起始位置 (0xAA, 0xBB時是4)
 
                 // --- 情況1: 有 Sequence Number ---
-                if (rxParseSeq.Checked && packet.Length >= 6)  // 至少要 L, Seq_H, Seq_L, X, X, RSSI, CRC
+                if (dvbTstPktRxParseSeqCheck.Checked && packet.Length >= 6)  // 至少要 L, Seq_H, Seq_L, X, X, RSSI, CRC
                 {
                     // 1️) 讀取序號
                     int seq = (packet[index] << 8) | packet[index + 1];
@@ -116,9 +116,9 @@ namespace ER41xxTestTool
                 // === 更新 RSSI ===
                 this.Invoke((MethodInvoker)(() =>
                 {
-                    rssiValue.Text = averageRssi.ToString();
-                    rcvOkText.Text = rcvOK.ToString();
-                    rcvErrText.Text = rcvErr.ToString();
+                    dvbTstPktRxRssiText.Text = averageRssi.ToString();
+                    dvbTstPktRxOkCntText.Text = rcvOK.ToString();
+                    dvbTstPktRxErrCntText.Text = rcvErr.ToString();
                 }));
             }
             catch (Exception ex)
@@ -176,7 +176,7 @@ namespace ER41xxTestTool
                 string seqStr = "";
                 int displayLen = 0;
 
-                if (rxParseSeq.Checked)
+                if (dvbTstPktRxParseSeqCheck.Checked)
                 {
                     // Sequence (2 bytes)
                     if (parts.Length < 5) // 至少要有 header + 2 bytes seq + payload
@@ -209,9 +209,9 @@ namespace ER41xxTestTool
 
                     payloadStr = string.Join(" ", dataList.Select(b => b.ToString("X2")));
                     //displayLen = headerLen - 2; // 去掉 sequence 的 2 bytes // Owen 改
-                    if (packetRxCrcCombo.SelectedIndex==0)   // seq. CCIT
+                    if (dvbTstPktRxCrcCombo.SelectedIndex==0)   // seq. CCIT
                         displayLen = headerLen - 2; 
-                    else if (packetRxCrcCombo.SelectedIndex == 1)   // seq. CRC16
+                    else if (dvbTstPktRxCrcCombo.SelectedIndex == 1)   // seq. CRC16
                         displayLen = headerLen;
                 }
                 else
@@ -226,9 +226,9 @@ namespace ER41xxTestTool
 
                     payloadStr = string.Join(" ", dataList.Select(b => b.ToString("X2")));
                     //displayLen = headerLen; // headerLen 就是 payload+checksum 長度
-                    if (packetRxCrcCombo.SelectedIndex == 0)   // no seq. CCIT
+                    if (dvbTstPktRxCrcCombo.SelectedIndex == 0)   // no seq. CCIT
                         displayLen = headerLen;
-                    else if (packetRxCrcCombo.SelectedIndex == 1)   // no seq. CRC16
+                    else if (dvbTstPktRxCrcCombo.SelectedIndex == 1)   // no seq. CRC16
                         displayLen = headerLen + 2;
                 }
 
@@ -236,7 +236,7 @@ namespace ER41xxTestTool
                 string timestamp = DateTime.Now.ToString("HH:mm:ss:fff");
                 string status = (crcOk == 1) ? "Ok" : "Er";
 
-                if (rxParseSeq.Checked)
+                if (dvbTstPktRxParseSeqCheck.Checked)
                     ShowRxPacket($"{timestamp} :{status}: {displayLen}: {seqStr}: {payloadStr}\r\n");
                 else
                     ShowRxPacket($"{timestamp} :{status}: {displayLen}: {payloadStr}\r\n");
@@ -244,9 +244,9 @@ namespace ER41xxTestTool
                 // 更新 UI
                 this.Invoke((MethodInvoker)(() =>
                 {
-                    rssiValue.Text = averageRssi.ToString();
-                    rcvOkText.Text = rcvOK.ToString();
-                    rcvErrText.Text = rcvErr.ToString();
+                    dvbTstPktRxRssiText.Text = averageRssi.ToString();
+                    dvbTstPktRxOkCntText.Text = rcvOK.ToString();
+                    dvbTstPktRxErrCntText.Text = rcvErr.ToString();
                 }));
             }
             catch (Exception ex2)
@@ -257,26 +257,26 @@ namespace ER41xxTestTool
        
         public void ShowRxPacket(string str) //從MCU送出printf格式
         {
-            if (rxResult.InvokeRequired)
+            if (dvbTstPktRxLogText.InvokeRequired)
             {
                 // 如果在非 UI Thread 呼叫 (例如 DataReceived)，要用 Invoke 切回 UI Thread
-                rxResult.BeginInvoke((MethodInvoker)(() => ShowRxPacket(str)));
+                dvbTstPktRxLogText.BeginInvoke((MethodInvoker)(() => ShowRxPacket(str)));
             }
             else
             {
                 // 限制文字大小，避免 TextBox 文字太多卡住
                 const int MAX_LENGTH = 100000; // 例如只保留最近 100K 字
-                if (rxResult.TextLength > MAX_LENGTH)
+                if (dvbTstPktRxLogText.TextLength > MAX_LENGTH)
                 {
-                    rxResult.Text = rxResult.Text.Substring(rxResult.TextLength - MAX_LENGTH);
+                    dvbTstPktRxLogText.Text = dvbTstPktRxLogText.Text.Substring(dvbTstPktRxLogText.TextLength - MAX_LENGTH);
                 }
 
                 // 追加文字
-                rxResult.AppendText(str); // AppendText 效率比 += 好
+                dvbTstPktRxLogText.AppendText(str); // AppendText 效率比 += 好
 
                 // 自動捲到最後
-                rxResult.SelectionStart = rxResult.Text.Length;
-                rxResult.ScrollToCaret();
+                dvbTstPktRxLogText.SelectionStart = dvbTstPktRxLogText.Text.Length;
+                dvbTstPktRxLogText.ScrollToCaret();
             }
         }
         
@@ -466,7 +466,7 @@ namespace ER41xxTestTool
             bool res = false;
             string cmd = "";
             string stmp = "";
-            int rxCRCSel = packetRxCrcCombo.SelectedIndex;
+            int rxCRCSel = dvbTstPktRxCrcCombo.SelectedIndex;
 
            // cmd = "rfg 31 0\r";  // disable IRQ
            // serialPort1.Write(cmd);
@@ -526,10 +526,10 @@ namespace ER41xxTestTool
 
                 AttachUartRxHandler();
                 
-                if (packetRxLimitRadio.Checked)
+                if (dvbTstPktRxCntLimitRadioBtn.Checked)
                 {
                     rxInfiniteMode = false;
-                    packetRxMaxRcvNum = int.Parse(packetRxNum.Text);
+                    packetRxMaxRcvNum = int.Parse(dvbTstPktRxCntText.Text);
                     if (packetRxMaxRcvNum <= 0)
                     {
                         ShowInsLog("Rx Rcv Num need to be > 0\r\n");
@@ -540,11 +540,11 @@ namespace ER41xxTestTool
                 {
                     rxInfiniteMode = true;
                 }
-                packetRxCrcCombo.Enabled = false;
-                rxParseSeq.Enabled = false;
-                packetRxNum.Enabled = false;
-                packetRxLimitRadio.Enabled = false;
-                packetRxNoLimitRadio.Enabled = false;
+                dvbTstPktRxCrcCombo.Enabled = false;
+                dvbTstPktRxParseSeqCheck.Enabled = false;
+                dvbTstPktRxCntText.Enabled = false;
+                dvbTstPktRxCntLimitRadioBtn.Enabled = false;
+                dvbTstPktRxCntNoLimitRadioBtn.Enabled = false;
 
                 //cmd = "rfg 31 1\r";  // enable IRQ
                 //serialPort1.Write(cmd);

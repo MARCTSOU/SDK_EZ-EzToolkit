@@ -76,7 +76,8 @@ namespace ER41xxTestTool
 
         public int maxPwrIdx = 0;
         public int frequencyBand = 0;
-        List<string>[] freqTable =
+
+        List<string>[] dvbBandTable =
         {
             new List<string>{ "433", "868", "915" },   // idx = 0 (Low Power)
             new List<string>{ "433", "915" }           // idx = 1 (High Power)
@@ -95,7 +96,8 @@ namespace ER41xxTestTool
         };
         // Max Power:  0=10dBm, 1=14dBm, 2=16dBm, 3=20dBm, 4=23dBm
         public int baudRateNumber = 57600;    //9600;//115200;
-        //public bool comConnect = false;       	
+        //public bool comConnect = false;
+        public bool isDVBConnected  = false;	//DVB連線旗標 - 與DVB的連線狀態綁定
         public bool isTableReadReg  = false;
         public bool isWaitingData   = false;
         public bool isGetBackData   = false;
@@ -120,9 +122,9 @@ namespace ER41xxTestTool
         public int formHeight = 900;
 
         public int txMeter = 0;
-        private bool meterGetPower = false;
+        //private bool meterGetPower = false;
 
-        private int ckTxTimes = 0;
+        //private int ckTxTimes = 0;
         public int isRomExist = 0;
         public bool isReadAllRegister;
         public bool isReadRegister;
@@ -167,8 +169,8 @@ namespace ER41xxTestTool
             InitializeComponent();
             this.AutoScaleMode = AutoScaleMode.Dpi; // 或 Font
             InitializeCOMCombox();
-            TxComRefresh();
-            InitCodeGenUI();   // v1.19L: EzCodeGen 整合功能初始化
+            RefreshDvbComPortList();     //刷新DVB Connection頁面中的com port list
+            InitParamZoneUI();   // PARAMETER 分頁的動態控制項生成(INTERRUPT下拉勾選清單)+元件間即時連動邏輯
             InitRegDumpUI();   // REG WR 分頁的 REGISTER DUMP 功能初始化
             SetDVBBandComboDisconnected();   // 開機時還沒連線, DVBBandCombo 先鎖住顯示 "Don't care"
             InitialCRCList();
@@ -177,10 +179,11 @@ namespace ER41xxTestTool
             //InitialMaxPowerSelectList(5);          
             InitialXtalList();
             //InitialTxPwr();
-            //this.packetRxPage.Parent = null;//隱藏
-            //this.continusTxPage.Parent = null;//隱藏
-            btnCWOn.Enabled = true;
-            btnCWOff.Enabled = false;
+            //this.dvbTstPktRxPage.Parent = null;//隱藏
+            //this.dvbTstContiTxPage.Parent = null;//隱藏
+
+            dvbTstContiTxStartBtn.Enabled = true;
+            dvbTstContiTxStopBtn.Enabled = false;
             powerTxt = 0;
             freqTxt = 0;
             cwProcess = 0;
@@ -275,11 +278,11 @@ namespace ER41xxTestTool
             int i = 0;
             for (i = 0; i < crcList.Length; i++)
             {
-                crcSelectCombo.Items.Add(crcList[i]);
-                packetRxCrcCombo.Items.Add(crcList[i]);
+                dvbTstPktTxCrcCombo.Items.Add(crcList[i]);
+                dvbTstPktRxCrcCombo.Items.Add(crcList[i]);
             }
-            crcSelectCombo.SelectedIndex = 0;
-            packetRxCrcCombo.SelectedIndex = 0;
+            dvbTstPktTxCrcCombo.SelectedIndex = 0;
+            dvbTstPktRxCrcCombo.SelectedIndex = 0;
         }
 
         public void InitialTxDatarate()
@@ -287,33 +290,33 @@ namespace ER41xxTestTool
             int i = 0;
             for (i = 0; i < drList.Length; i++)
             {
-                txDRCombo.Items.Add(drList[i]);
+                paramDataRateCombo.Items.Add(drList[i]);
             }
-            txDRCombo.SelectedIndex = 6;
+            paramDataRateCombo.SelectedIndex = 6;
         }
 
         public void InitialMaxPowerSelectList(int len)
         {
             int i = 0;
-            PAConfigCombo.Items.Clear();
+            paramPAConfigCombo.Items.Clear();
             for (i = 0; i < len; i++)
             {
-                PAConfigCombo.Items.Add(MaxPwrSelList[i]);
+                paramPAConfigCombo.Items.Add(MaxPwrSelList[i]);
             }
-            PAConfigCombo.SelectedIndex = 0;
+            paramPAConfigCombo.SelectedIndex = 0;
         }
         public void InitialTxMod()
         {
-            txModCombo.Items.Clear();
-            txModCombo.Items.AddRange(modList.ToArray());
-            txModCombo.SelectedIndex = 0;
+            paramModulationCombo.Items.Clear();
+            paramModulationCombo.Items.AddRange(modList.ToArray());
+            paramModulationCombo.SelectedIndex = 0;
         }
 
         public void InitialFreqBandList(int idx)
         {
-            DVBBandCombo.Items.Clear();
-            DVBBandCombo.Items.AddRange(freqTable[idx].ToArray());
-            DVBBandCombo.SelectedIndex = 0;
+            paramDvbBandCombo.Items.Clear();
+            paramDvbBandCombo.Items.AddRange(dvbBandTable[idx].ToArray());
+            paramDvbBandCombo.SelectedIndex = 0;
         }
 
         /// <summary>
@@ -323,22 +326,22 @@ namespace ER41xxTestTool
         /// </summary>
         private void SetDVBBandComboDisconnected()
         {
-            DVBBandCombo.Items.Clear();
-            DVBBandCombo.Items.Add("Don't care");
-            DVBBandCombo.SelectedIndex = 0;
-            DVBBandCombo.Enabled = false;
+            paramDvbBandCombo.Items.Clear();
+            paramDvbBandCombo.Items.Add("Don't care");
+            paramDvbBandCombo.SelectedIndex = 0;
+            paramDvbBandCombo.Enabled = false;
         }
         public void InitialPAConfigList(int idx)
         {
-            PAConfigCombo.Items.Clear();
-            PAConfigCombo.Items.AddRange(PAConfigTable[idx].ToArray());
-            PAConfigCombo.SelectedIndex = 0;
+            paramPAConfigCombo.Items.Clear();
+            paramPAConfigCombo.Items.AddRange(PAConfigTable[idx].ToArray());
+            paramPAConfigCombo.SelectedIndex = 0;
         }
         public void InitialXtalList()
         {
-            xtalCombo.Items.Clear();
-            xtalCombo.Items.AddRange(xtalArray.ToArray());
-            xtalCombo.SelectedIndex = 0;
+            paramXtalCombo.Items.Clear();
+            paramXtalCombo.Items.AddRange(xtalArray.ToArray());
+            paramXtalCombo.SelectedIndex = 0;
         }                          
        
         public void GetDataRightNow(string str, int mode)
@@ -570,16 +573,16 @@ namespace ER41xxTestTool
                     if ((dataR[i] == '&') && (dataR[i - 1] == '#'))   // @ = 38
                     {
                         rxReceivedNum++;
-                        rcvOkText.Text = rxReceivedNum.ToString();
-                        rcvOkText.Update();
+                        dvbTstPktRxOkCntText.Text = rxReceivedNum.ToString();
+                        dvbTstPktRxOkCntText.Update();
                         // * 可以用以下方法每8bytes剪一下, 再每一個bytes轉成str, 也可以只用一條command:
                         string stmp = "";
                         if ((i - 4) >= 0)
                         {
                             stmp = System.Text.Encoding.UTF8.GetString(dataR, (i - 4), 3);
                             nowRssi = (-1) * Convert.ToInt32(stmp);
-                            rssiValue.Text = nowRssi.ToString();
-                            rssiValue.Update();
+                            dvbTstPktRxRssiText.Text = nowRssi.ToString();
+                            dvbTstPktRxRssiText.Update();
                             //ShowInsLog("- " + nowRssi + "\r\n");
                         }
                         else
@@ -978,7 +981,7 @@ namespace ER41xxTestTool
         private void MainForm_Load(object sender, EventArgs e)
         {
             FitToScreen();   // v1.19L: 螢幕夠大就維持原始大小(無捲軸), 螢幕不夠大才啟用捲軸
-            patternGrp.Visible = false;
+            dvbTstContiTxPatternGroup.Visible = false;
 
             // PARAMETER 等分頁先套上官方預設值 (38.4MHz/435MHz/96kbps/48kHz/PA23dBm, 見
             // DefaultParameters.cs), 這組值已驗證跟 REG TABLE 內建預設值 (RegTableItems.cs)
@@ -994,7 +997,7 @@ namespace ER41xxTestTool
 
             RefreshPacketFormatDiagram();
 
-            //SetStateButton(btnRxStart, true);
+            //SetStateButton(dvbTstPktRxStartBtn, true);
         }
 
         /*  //因為ListView compile 時出error, 暫時 closed
@@ -1976,32 +1979,32 @@ namespace ER41xxTestTool
         {
             if (bQuietLog)      // 開機時的 REG TABLE 初始化不要洗版 (見 RegDumpProcess.cs)
                 return;
-            if (txResult.InvokeRequired)
+            if (logResultText.InvokeRequired)
             {
                 // 如果在非 UI Thread 呼叫 (例如 DataReceived)，要用 Invoke 切回 UI Thread
-                txResult.BeginInvoke((MethodInvoker)(() => ShowInsLog(str)));
+                logResultText.BeginInvoke((MethodInvoker)(() => ShowInsLog(str)));
             }
             else
             {
                 // 限制文字大小，避免 TextBox 文字太多卡住
                 const int MAX_LENGTH = 100000; // 例如只保留最近 100K 字
-                if (txResult.TextLength > MAX_LENGTH)
+                if (logResultText.TextLength > MAX_LENGTH)
                 {
-                    txResult.Text = txResult.Text.Substring(txResult.TextLength - MAX_LENGTH);
+                    logResultText.Text = logResultText.Text.Substring(logResultText.TextLength - MAX_LENGTH);
                 }
 
                 // 追加文字
-                txResult.AppendText(str); // AppendText 效率比 += 好
+                logResultText.AppendText(str); // AppendText 效率比 += 好
 
                 // 自動捲到最後
-                txResult.SelectionStart = txResult.Text.Length;
-                txResult.ScrollToCaret();
+                logResultText.SelectionStart = logResultText.Text.Length;
+                logResultText.ScrollToCaret();
             }
         }       
         
         private void btnTxClear_Click(object sender, EventArgs e)
         {
-            txResult.Clear();
+            logResultText.Clear();
         }       
                 
         System.Threading.Thread CloseDown2;
@@ -2016,7 +2019,7 @@ namespace ER41xxTestTool
             }
             else
             {
-                // 2026-09-03 暫時關閉: 見 btnSendStart_Click 同樣的說明, 改成使用者自己先按
+                // 2026-09-03 暫時關閉: 見 dvbTstPktTxStartBtn_Click 同樣的說明, 改成使用者自己先按
                 // Write DVB Register 再操作。
                 // res = ER4100_SetParameter(0); // Set Tx Parameter
             }
@@ -2148,7 +2151,7 @@ namespace ER41xxTestTool
         private void btnRxStart_Click(object sender, EventArgs e)
         {
             bool res = false;
-            if (btnRxStart.Text == "Start")
+            if (dvbTstPktRxStartBtn.Text == "Start")
             {
                 if (isRxOldMethod)
                     res = ER4100_SendCmdThread("\r");
@@ -2166,15 +2169,15 @@ namespace ER41xxTestTool
                     Thread.Sleep(100);
                     res = SetRxPerMode(1);
                     rxTestMode = true;
-                    btnRxStart.Text = "Stop";
-                    btnRxStart.Update();
+                    dvbTstPktRxStartBtn.Text = "Stop";
+                    dvbTstPktRxStartBtn.Update();
                     rxReceivedNum = 0;
                     nowRssi = 0;
                     //avgRssi = 0;
                     //rcvIdx = 0;
                     //rcvEnd = 0;
-                    rcvOkText.Text = rxReceivedNum.ToString();
-                    rssiValue.Text = nowRssi.ToString();
+                    dvbTstPktRxOkCntText.Text = rxReceivedNum.ToString();
+                    dvbTstPktRxRssiText.Text = nowRssi.ToString();
                     //avgrssitbx.Text = avgRssi.ToString();
                     isRSSIAnalysis = true;
                     serialPort2.DiscardOutBuffer();
@@ -2197,8 +2200,8 @@ namespace ER41xxTestTool
                     isRSSIAnalysis = false;
                     lastRSSI = "";
                     isRxSenStart = false;
-                    btnRxStart.Text = "Rx Start";
-                    btnRxStart.Update();
+                    dvbTstPktRxStartBtn.Text = "Rx Start";
+                    dvbTstPktRxStartBtn.Update();
                     ShowInsLog("Set Rx Mode: OFF\r\n");
                 }
                 else
@@ -2207,7 +2210,7 @@ namespace ER41xxTestTool
                           
         }
 
-        public void TxComRefresh()
+        public void RefreshDvbComPortList()
         {
             comPortToolStripComboBox.Items.Clear();
             string[] ArrayComPortsNames = SerialPort.GetPortNames().Distinct().ToArray();
@@ -2231,13 +2234,14 @@ namespace ER41xxTestTool
         // ===== v1.19L: COM PORT 選單 =====
         private void refreshComToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TxComRefresh();
+            RefreshDvbComPortList();
         }
 
+        // 呼叫Menu上的DVB Connection小視窗，讓使用者選擇DVB Port相關資訊
         // v1.21L: 點「COM PORT」-> 已連線時直接斷線, 未連線時彈出 ComPortSelectDialog 選 port 後直接連線
         private void comPortToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            bool isConnected = (connectComToolStripMenuItem.Text == "CLOSE");
+            bool isConnected = isDVBConnected;// (connectComToolStripMenuItem.Text == "CLOSE");
             string[] portNames = SerialPort.GetPortNames().Distinct().OrderBy(p => p).ToArray();
 
             string baudRateText = "Baudrate: " + baudRateNumber.ToString() + " bps";
@@ -2247,18 +2251,21 @@ namespace ER41xxTestTool
                 if (result == DialogResult.OK)
                 {
                     comPortToolStripComboBox.Text = dlg.SelectedPort;
-                    connectComToolStripMenuItem_Click(sender, e);
+                    //connectComToolStripMenuItem_Click(sender, e); //透過com port讀取er4100模組設定
+                    dvbConnectionProcess();
+                    RefreshRegisterListFromUi();
                 }
                 else if (result == DialogResult.Abort)  // DISCONNECT
                 {
-                    connectComToolStripMenuItem_Click(sender, e);
+                    //connectComToolStripMenuItem_Click(sender, e); //透過com port讀取er4100模組設定
+                    dvbConnectionProcess();
                 }
             }
         }
 
         private void RxSenTextClr_Click_1(object sender, EventArgs e)
         {
-            rxResult.Text = "";
+            dvbTstPktRxLogText.Text = "";
         }
 
         private void SaveInitValueToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2300,11 +2307,12 @@ namespace ER41xxTestTool
         }
 
         System.Threading.Thread CloseDown1;
-        private void connectComToolStripMenuItem_Click(object sender, EventArgs e)
+        //private void connectComToolStripMenuItem_Click(object sender, EventArgs e)
+        private void dvbConnectionProcess()
         {
             bool res = false;
 
-            if (connectComToolStripMenuItem.Text == "CONNECT")
+            if (!isDVBConnected)//(connectComToolStripMenuItem.Text == "CONNECT")
             {
                 if (!serialPort1.IsOpen)
                 {
@@ -2327,7 +2335,8 @@ namespace ER41xxTestTool
  
                     Thread.Sleep(50);
                     stmp = serialPort1.ReadExisting();
-                    connectComToolStripMenuItem.Text = "CLOSE";
+                   // connectComToolStripMenuItem.Text = "CLOSE";
+                    isDVBConnected = true;
 
                     highlowICType = CheckICPowerType();
 
@@ -2336,9 +2345,9 @@ namespace ER41xxTestTool
                         // v1.19L: 讀不到 IC 設定時不斷線, 顯示訊息並讓 user 手動選 PA CONFIG
                         ShowInsLog("Cannot read IC setting value.\r\n");
                         ShowInsLog("Please select PA CONFIG manually.\r\n");
-                        PAConfigCombo.Enabled = true;
+                        paramPAConfigCombo.Enabled = true;
                         InitialFreqBandList(0);   // 已連線, 只是讀不到 IC 類型, 給真的 band 選項讓使用者手動選 (不是 "Don't care")
-                        DVBBandCombo.Enabled = true;
+                        paramDvbBandCombo.Enabled = true;
                         return;
                     }
                     //public enum PA_TYPE{
@@ -2349,29 +2358,29 @@ namespace ER41xxTestTool
                     else if (highlowICType == 0)
                     {
                         InitialFreqBandList(0);  // low power
-                        pwrlvl.Text = "27";
+                        paramPwrLvText.Text = "27";
                        // pwrlvlLable.Text = "Level (0-27)";
-                        PwrLvLabel.Text = "Power LV(0~27)";
+                        paramPwrLvLabel.Text = "Power LV(0~27)";
                         InitialPAConfigList((int)PA_TYPE.PA_915433L);
                         ShowInsLog("Low Power IC\r\n");
                     }                       
                     else if (highlowICType == 1)
                     {
                         InitialFreqBandList(1);    // high power
-                        pwrlvl.Text = "127";
+                        paramPwrLvText.Text = "127";
                         //pwrlvlLable.Text = "Level (0-127)";
-                        PwrLvLabel.Text = "Power LV(0~127)";
+                        paramPwrLvLabel.Text = "Power LV(0~127)";
                         InitialPAConfigList((int)PA_TYPE.PA_915433H);
-                        PAConfigCombo.SelectedIndex = 1;
+                        paramPAConfigCombo.SelectedIndex = 1;
                         ShowInsLog("High Power IC\r\n");
                     }                       
                     else {
                         // v1.19L: 讀不到 IC 設定時不斷線, 顯示訊息並讓 user 手動選 PA CONFIG
                         ShowInsLog("Cannot read IC setting value.\r\n");
                         ShowInsLog("Please select PA CONFIG manually.\r\n");
-                        PAConfigCombo.Enabled = true;
+                        paramPAConfigCombo.Enabled = true;
                         InitialFreqBandList(0);   // 已連線, 只是讀不到 IC 類型, 給真的 band 選項讓使用者手動選 (不是 "Don't care")
-                        DVBBandCombo.Enabled = true;
+                        paramDvbBandCombo.Enabled = true;
                         return;
                     }
                     stmp = serialPort1.ReadExisting();
@@ -2388,44 +2397,44 @@ namespace ER41xxTestTool
                             ShowInsLog("Read CAPIO From EEPROM FAIL! Let initial cap=33\r\n");
                             capio = 33;
                         }
-                        capioStr.Text = capio.ToString();
+                        paramCapIoText.Text = capio.ToString();
                         maxPwrIdx = ReadMaxPwrFromEeprom();                       
                         if ((maxPwrIdx >=0) && (maxPwrIdx <= 4))
                         {
-                            PAConfigCombo.Items.Clear();
+                            paramPAConfigCombo.Items.Clear();
                             InitialMaxPowerSelectList(5);
-                            PAConfigCombo.SelectedIndex = maxPwrIdx;
-                            PAConfigCombo.Enabled = false;
+                            paramPAConfigCombo.SelectedIndex = maxPwrIdx;
+                            paramPAConfigCombo.Enabled = false;
                             //PAConfigCombo.Text = MaxPwrSelList[maxPwrIdx];
                         }
                         else
                         {
                             ShowInsLog("Cannot read PA CONFIG setting value (" + maxPwrIdx + "). Please select PA CONFIG manually.\r\n");
-                            PAConfigCombo.Enabled = true;
+                            paramPAConfigCombo.Enabled = true;
                         }
                         frequencyBand = ReadFreqBandFromEeprom();
                         if (frequencyBand == 2)
                         {
-                            DVBBandCombo.Text = RFBandSel[2];
-                            txFreqText.Text = RFBandSel[2];
-                            DVBBandCombo.Enabled = false;
+                            paramDvbBandCombo.Text = RFBandSel[2];
+                            paramBaseFreqText.Text = RFBandSel[2];
+                            paramDvbBandCombo.Enabled = false;
                         }
                         else if (frequencyBand == 4)
                         {
-                            DVBBandCombo.Text = RFBandSel[4];
-                            txFreqText.Text = RFBandSel[4];
-                            DVBBandCombo.Enabled = false;
+                            paramDvbBandCombo.Text = RFBandSel[4];
+                            paramBaseFreqText.Text = RFBandSel[4];
+                            paramDvbBandCombo.Enabled = false;
                         }                            
                         else if (frequencyBand == 5)
                         {
-                            DVBBandCombo.Text = RFBandSel[5];
-                            txFreqText.Text = RFBandSel[5];
-                            DVBBandCombo.Enabled = false;
+                            paramDvbBandCombo.Text = RFBandSel[5];
+                            paramBaseFreqText.Text = RFBandSel[5];
+                            paramDvbBandCombo.Enabled = false;
                         }
                         else
                         {
                             ShowInsLog("Read RF Band Fail: " + frequencyBand + "\r\n");
-                            DVBBandCombo.Enabled = true;
+                            paramDvbBandCombo.Enabled = true;
                         }
                     }                            
                 }
@@ -2454,11 +2463,12 @@ namespace ER41xxTestTool
                 CloseDown1 = new System.Threading.Thread(new System.Threading.ThreadStart(CloseSerial1OnExit));
                 CloseDown1.Start();
             }
-            connectComToolStripMenuItem.Text = "CONNECT";
+            //connectComToolStripMenuItem.Text = "CONNECT";
+            isDVBConnected = false;
             refreshComToolStripMenuItem.Enabled = true;
             comPortToolStripComboBox.Enabled = true;
             SetDVBBandComboDisconnected();   // 斷線後 DVBBandCombo 跟 DVB 無關, 鎖住顯示 "Don't care"
-            PAConfigCombo.Enabled = true;
+            paramPAConfigCombo.Enabled = true;
         }
         
         private void CloseSerial1OnExit()
@@ -2484,7 +2494,7 @@ namespace ER41xxTestTool
         }
         public void SetSyncword()
         {
-            string txSyncwordHex = txSyncword.Text;
+            string txSyncwordHex = paramTxSyncText.Text;
             uint intValue = (UInt32)Convert.ToInt32(txSyncwordHex, 16);
             string cmd = "rfg 7 " + intValue + "\r";
             bool res = ER4100_SendCmd(cmd);
@@ -2495,7 +2505,7 @@ namespace ER41xxTestTool
         }
         private void btnTxSetSyncword_Click(object sender, EventArgs e)
         {
-            string txSyncwordHex = txSyncword.Text;
+            string txSyncwordHex = paramTxSyncText.Text;
             uint intValue = (UInt32)Convert.ToInt32(txSyncwordHex, 16);
             string cmd = "rfg 7 " + intValue + "\r";
             bool res = ER4100_SendCmd(cmd);
@@ -2515,10 +2525,10 @@ namespace ER41xxTestTool
             else
             {
                 //txPCBPower.Text = str;
-                rcvOkText.Text = sNum;
-                rcvOkText.Update();
-                rssiValue.Text = sRssi;
-                rssiValue.Update();
+                dvbTstPktRxOkCntText.Text = sNum;
+                dvbTstPktRxOkCntText.Update();
+                dvbTstPktRxRssiText.Text = sRssi;
+                dvbTstPktRxRssiText.Update();
             }
         }
         //public int rnum = 0;
@@ -2713,7 +2723,7 @@ namespace ER41xxTestTool
             
             for (int j=0;j<len; j++)
             {
-                txResult.Text += datas[j].ToString("X2") + " ";
+                logResultText.Text += datas[j].ToString("X2") + " ";
             }
             //txResult.Text += "\r\n";
             //int totalLen = len + 3;
@@ -2721,11 +2731,11 @@ namespace ER41xxTestTool
             ushort crc = crc16_ibm(datas, (byte)len);
             //ushort crc = ComputeCrc16Ibm(datas);
             //txResult.Text += "CRC="+crc.ToString("X4") + "\r\n";
-            txResult.Text += (crc & 0xFF).ToString("X2") + " " + (crc >> 8).ToString("X2")+"\r\n";            
+            logResultText.Text += (crc & 0xFF).ToString("X2") + " " + (crc >> 8).ToString("X2")+"\r\n";            
         }
 
         
-        private void btnSetPayload_Click(object sender, EventArgs e)
+        private void dvbTstPktRxSetPayloadBtn_Click(object sender, EventArgs e)
         {
             SetPayloadProcess();
             
@@ -2735,10 +2745,10 @@ namespace ER41xxTestTool
         private bool isEditing = false;
         private List<byte> tmpArray = new List<byte>();
         
-        private void dataTxt_TextChanged(object sender, EventArgs e)
+        private void dvbTstPktTxPayloadText_TextChanged(object sender, EventArgs e)
         {
             int MaxHexChars = 123;
-            int crcChoose = crcSelectCombo.SelectedIndex;
+            int crcChoose = dvbTstPktTxCrcCombo.SelectedIndex;
             int maxLen = CRC_LEN_NO_SEQ;
             switch (crcChoose)
             {
@@ -2752,14 +2762,14 @@ namespace ER41xxTestTool
                     maxLen = NO_CRC_LEN_NO_SEQ;
                     break;
             }
-            if (!randomCheckbox.Checked)
+            if (!dvbTstPktTxRandomPlCheck.Checked)
             {
                 if (isEditing) return;
                 isEditing = true;
 
                 // Step 1: 移除非十六進位字元並轉大寫
-                string raw = Regex.Replace(dataTxt.Text.ToUpper(), @"[^0-9A-F]", "");
-                if (addSeqCheckbox.Checked)
+                string raw = Regex.Replace(dvbTstPktTxPayloadText.Text.ToUpper(), @"[^0-9A-F]", "");
+                if (dvbTstPktTxPrependSeqCheck.Checked)
                     MaxHexChars = (maxLen-2) * 2;
                 else
                     MaxHexChars = maxLen * 2;
@@ -2783,8 +2793,8 @@ namespace ER41xxTestTool
                 }
 
                 // Step 4: 將格式化後的字串寫回 TextBoxInput
-                dataTxt.Text = formatted.ToString();
-                dataTxt.SelectionStart = dataTxt.Text.Length;
+                dvbTstPktTxPayloadText.Text = formatted.ToString();
+                dvbTstPktTxPayloadText.SelectionStart = dvbTstPktTxPayloadText.Text.Length;
 
                 // Step 5: 將完整兩位一組的 hex 字串轉成 byte
                 try
@@ -2803,7 +2813,7 @@ namespace ER41xxTestTool
                 }
                 //tmpArray[0] = (byte)(tmpArray.Count - 1);
                 // Step 6: 更新長度與 HEX 顯示
-                lenOfHex.Text = tmpArray.Count.ToString(); // tmpArray[0].ToString();   //tmpArray.Count.ToString();
+                dvbTstPktTxFilledLenText.Text = tmpArray.Count.ToString(); // tmpArray[0].ToString();   //tmpArray.Count.ToString();
 
                 StringBuilder hexOutput = new StringBuilder();
                 foreach (byte b in tmpArray)
@@ -2836,12 +2846,12 @@ namespace ER41xxTestTool
             hexResult = reversed.ToString("X8");
             return hexResult;
         }
-        private void btnCalCrc_Click(object sender, EventArgs e)
+        private void dvbTstPktTxTestBtn_Click(object sender, EventArgs e)
         {
             
-            string hexInput = txSyncword.Text;
-            string hexResult = hexReverse(txSyncword.Text);
-            txResult.Text = "0x"+hexInput + "=>" + hexResult;
+            string hexInput = paramTxSyncText.Text;
+            string hexResult = hexReverse(paramTxSyncText.Text);
+            logResultText.Text = "0x"+hexInput + "=>" + hexResult;
             
             /*
             int crcValue = 0;
@@ -2862,7 +2872,7 @@ namespace ER41xxTestTool
         private void btnDevComment_Click(object sender, EventArgs e)
         {
             double dataRateKbps;
-            if (!double.TryParse(txDRCombo.Text, out dataRateKbps))
+            if (!double.TryParse(paramDataRateCombo.Text, out dataRateKbps))
             {
                 GenMsg.Show("Please set DATA RATE first.", "DEVIATION");
                 return;
@@ -2933,35 +2943,35 @@ namespace ER41xxTestTool
             }
             else
             {
-                txFreqText.Enabled = false;
-                txFreqText.Update();
-                txDRCombo.Enabled = false;
-                txDRCombo.Update();
-                freqDev.Enabled = false;
-                freqDev.Update();
-                txModCombo.Enabled = false;
-                txModCombo.Update();
-                pwrlvl.Enabled = false;
-                pwrlvl.Update();
-                capioStr.Enabled = false;
-                capioStr.Update();
-                txSyncword.Enabled = false;
-                txSyncword.Update();
-                syncLSBCheckbox.Enabled = false;
-                syncLSBCheckbox.Update();
-                infiniteCheckbox.Enabled = false;
-                infiniteCheckbox.Update();
-                addSeqCheckbox.Enabled = false;
-                addSeqCheckbox.Update(); 
-                randomCheckbox.Enabled = false;
-                randomCheckbox.Update();
-                //numOfPkt.Enabled = false;
-                randomLen.Enabled = false;
-                randomLen.Update();
-                dataTxt.Enabled = false;
-                dataTxt.Update();
-                crcSelectCombo.Enabled = false;
-                crcSelectCombo.Update();
+                paramBaseFreqText.Enabled = false;
+                paramBaseFreqText.Update();
+                paramDataRateCombo.Enabled = false;
+                paramDataRateCombo.Update();
+                paramDeviationText.Enabled = false;
+                paramDeviationText.Update();
+                paramModulationCombo.Enabled = false;
+                paramModulationCombo.Update();
+                paramPwrLvText.Enabled = false;
+                paramPwrLvText.Update();
+                paramCapIoText.Enabled = false;
+                paramCapIoText.Update();
+                paramTxSyncText.Enabled = false;
+                paramTxSyncText.Update();
+                paramTxSyncSoftInvertCheck.Enabled = false;
+                paramTxSyncSoftInvertCheck.Update();
+                dvbTstPktTxInfiniteCheck.Enabled = false;
+                dvbTstPktTxInfiniteCheck.Update();
+                dvbTstPktTxPrependSeqCheck.Enabled = false;
+                dvbTstPktTxPrependSeqCheck.Update(); 
+                dvbTstPktTxRandomPlCheck.Enabled = false;
+                dvbTstPktTxRandomPlCheck.Update();
+                //dvbTstPktTxCntText.Enabled = false;
+                dvbTstPktTxRandomPlLenText.Enabled = false;
+                dvbTstPktTxRandomPlLenText.Update();
+                dvbTstPktTxPayloadText.Enabled = false;
+                dvbTstPktTxPayloadText.Update();
+                dvbTstPktTxCrcCombo.Enabled = false;
+                dvbTstPktTxCrcCombo.Update();
             }
             
 
@@ -2969,24 +2979,24 @@ namespace ER41xxTestTool
 
         public void EnableSetting()
         {
-            txFreqText.Enabled = true;
-            txDRCombo.Enabled = true;
-            freqDev.Enabled = true;
-            txModCombo.Enabled = true;
-            pwrlvl.Enabled = true;
-            capioStr.Enabled=true;
-            txSyncword.Enabled = true;
-            syncLSBCheckbox.Enabled = true;
-            infiniteCheckbox.Enabled = true;
-            addSeqCheckbox.Enabled = true;
-            randomCheckbox.Enabled = true;
-            numOfPkt.Enabled = true;
-            randomLen.Enabled = randomCheckbox.Checked;
-            crcSelectCombo.Enabled = true;
-            crcSelectCombo.Update();
-            dataTxt.Enabled = true;
-            dataTxt.ReadOnly = randomCheckbox.Checked;
-            dataTxt.Update();
+            paramBaseFreqText.Enabled = true;
+            paramDataRateCombo.Enabled = true;
+            paramDeviationText.Enabled = true;
+            paramModulationCombo.Enabled = true;
+            paramPwrLvText.Enabled = true;
+            paramCapIoText.Enabled=true;
+            paramTxSyncText.Enabled = true;
+            paramTxSyncSoftInvertCheck.Enabled = true;
+            dvbTstPktTxInfiniteCheck.Enabled = true;
+            dvbTstPktTxPrependSeqCheck.Enabled = true;
+            dvbTstPktTxRandomPlCheck.Enabled = true;
+            dvbTstPktTxCntText.Enabled = true;
+            dvbTstPktTxRandomPlLenText.Enabled = dvbTstPktTxRandomPlCheck.Checked;
+            dvbTstPktTxCrcCombo.Enabled = true;
+            dvbTstPktTxCrcCombo.Update();
+            dvbTstPktTxPayloadText.Enabled = true;
+            dvbTstPktTxPayloadText.ReadOnly = dvbTstPktTxRandomPlCheck.Checked;
+            dvbTstPktTxPayloadText.Update();
         }
         public void InfiniteStop()
         {
@@ -2998,7 +3008,7 @@ namespace ER41xxTestTool
             if (serialPort1.IsOpen)
                 InfiniteStop();
             else
-                txResult.Text += "COMPORT ERROR!\r\n";
+                logResultText.Text += "COMPORT ERROR!\r\n";
         }
         public void InfiniteStart()
         {            
@@ -3010,8 +3020,8 @@ namespace ER41xxTestTool
 
         private int GetFifoLen()
         {
-            int seqLen = addSeqCheckbox.Checked ? 2 : 0;
-            int crcLen = (crcSelectCombo.SelectedIndex == 2) ? 0 : 2;  // NO_CRC = 0 bytes
+            int seqLen = dvbTstPktTxPrependSeqCheck.Checked ? 2 : 0;
+            int crcLen = (dvbTstPktTxCrcCombo.SelectedIndex == 2) ? 0 : 2;  // NO_CRC = 0 bytes
             return 1 + tmpArray.Count + seqLen + crcLen;  // 1 = Length field
         }
 
@@ -3027,10 +3037,10 @@ namespace ER41xxTestTool
             //serialPort1.WriteLine(cmd);
             this.Invoke((MethodInvoker)(() =>
             {
-                btnSendStop.Enabled = true;
-                btnSendStart.Enabled = false;
+                dvbTstPktTxStopBtn.Enabled = true;
+                dvbTstPktTxStartBtn.Enabled = false;
                 ShowInsLog("Packet Send: " + GetFifoLen() + " bytes\r\n");
-                drTextValue = double.Parse(txDRCombo.Text);
+                drTextValue = double.Parse(paramDataRateCombo.Text);
             }));
             
             drValue = (int)(1000 * drTextValue);
@@ -3056,8 +3066,8 @@ namespace ER41xxTestTool
             {
                 ShowInsLog("Packet Send Finished\r\n");
                 isSending = false;
-                btnSendStart.Enabled = true;
-                btnSendStop.Enabled = false;
+                dvbTstPktTxStartBtn.Enabled = true;
+                dvbTstPktTxStopBtn.Enabled = false;
                 EnableSetting();
             }));
         }
@@ -3065,7 +3075,7 @@ namespace ER41xxTestTool
         {
             return System.Text.RegularExpressions.Regex.IsMatch(s, @"^\d+$");
         }
-        private void btnSendStart_Click(object sender, EventArgs e)
+        private void dvbTstPktTxStartBtn_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {
@@ -3073,25 +3083,25 @@ namespace ER41xxTestTool
                 return;
             }
             ConfirmRewriteIfRegTableDirty();
-            int lenOfHexTxt = Convert.ToInt32(lenOfHex.Text);
-            int lenOfRandomTxt = Convert.ToInt32(randomLen.Text);
-            int crcChoose = crcSelectCombo.SelectedIndex;
+            int lenOfHexTxt = Convert.ToInt32(dvbTstPktTxFilledLenText.Text);
+            int lenOfRandomTxt = Convert.ToInt32(dvbTstPktTxRandomPlLenText.Text);
+            int crcChoose = dvbTstPktTxCrcCombo.SelectedIndex;
             int byteLength = 0;
             bool isEmpty = false;
             int num = 0;
-            if (string.IsNullOrWhiteSpace(numOfPkt.Text))
+            if (string.IsNullOrWhiteSpace(dvbTstPktTxCntText.Text))
             {
                 MessageBox.Show("Packet Num need 0<num<=200", "Error");
                 return;
             }
-            if (!int.TryParse(numOfPkt.Text, out int value))
+            if (!int.TryParse(dvbTstPktTxCntText.Text, out int value))
             {
                 MessageBox.Show("Only input numeric 0-9", "Error");
                 return;
             }
             else
             {
-                num = Convert.ToInt32(numOfPkt.Text);
+                num = Convert.ToInt32(dvbTstPktTxCntText.Text);
                 if (num > 200 || num <= 0)
                 {
                     MessageBox.Show("Packet Num need 0<num<=200", "Warning");
@@ -3099,7 +3109,7 @@ namespace ER41xxTestTool
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(dataTxt.Text))
+            if (string.IsNullOrWhiteSpace(dvbTstPktTxPayloadText.Text))
             {
                 isEmpty = true;
             }
@@ -3123,7 +3133,7 @@ namespace ER41xxTestTool
                 //ShowInsLog("=================================\r\n");
                 return;
             }
-            if (randomCheckbox.Checked)
+            if (dvbTstPktTxRandomPlCheck.Checked)
                 byteLength = lenOfRandomTxt;
             else
                 byteLength = lenOfHexTxt;
@@ -3132,14 +3142,14 @@ namespace ER41xxTestTool
                 string str = "";
                 if (crcChoose == 2) // NO_CRC
                 {
-                    if (addSeqCheckbox.Checked)
+                    if (dvbTstPktTxPrependSeqCheck.Checked)
                         str = "0 < Max Len (no CRC)<= 125 (add seq)";
                     else
                         str = "0 < Max Len (no CRC)<= 127";
                 }
                 else
                 {
-                    if (addSeqCheckbox.Checked)
+                    if (dvbTstPktTxPrependSeqCheck.Checked)
                         str = "0 < Max Len <= 123(add seq)";
                     else
                         str = "0 < Max Len <= 125";
@@ -3170,13 +3180,13 @@ namespace ER41xxTestTool
                     serialPort1.Write("rfg 31 1\r");  // enable IRQ
                     Thread.Sleep(50);
 
-                    if (infiniteCheckbox.Checked)
+                    if (dvbTstPktTxInfiniteCheck.Checked)
                     {
                         serialPort1.WriteLine("rfg 29 1\r"); // infinite 要加delaytime
                         Thread.Sleep(50);
                         //btnInfiniteStart.Text = "Stop";                    
-                        btnSendStart.Enabled = false;
-                        btnSendStop.Enabled = true;
+                        dvbTstPktTxStartBtn.Enabled = false;
+                        dvbTstPktTxStopBtn.Enabled = true;
                         ShowInsLog("Packet Send: " + GetFifoLen() + " bytes\r\n");
 
                         DisableSetting();
@@ -3201,28 +3211,28 @@ namespace ER41xxTestTool
             }
             else
             {
-                txResult.Text += "COMPORT ERROR!\r\n";
+                logResultText.Text += "COMPORT ERROR!\r\n";
                 EnableSetting();
             }
                 
         }
 
-        private void infiniteCheckbox_CheckedChanged(object sender, EventArgs e)
+        private void dvbTstPktTxInfiniteCheck_CheckedChanged(object sender, EventArgs e)
         {
-            if (infiniteCheckbox.Checked)
+            if (dvbTstPktTxInfiniteCheck.Checked)
             {
-                numOfPkt.Enabled = false;
+                dvbTstPktTxCntText.Enabled = false;
             }
             else
-                numOfPkt.Enabled = true;
+                dvbTstPktTxCntText.Enabled = true;
         }
 
         public void HexGenerate()
         {
             int byteLength = 0;
-            //dataTxt.Clear();
+            //dvbTstPktTxPayloadText.Clear();
             try{
-                byteLength = Convert.ToInt32(randomLen.Text);
+                byteLength = Convert.ToInt32(dvbTstPktTxRandomPlLenText.Text);
             }
             catch (Exception ex)
             {
@@ -3244,71 +3254,71 @@ namespace ER41xxTestTool
                     sb.AppendFormat("{0:X2} ", b); // 轉成兩位大寫十六進位
                 }
 
-                dataTxt.Text = sb.ToString().Trim(); // 移除最後一個空格
+                dvbTstPktTxPayloadText.Text = sb.ToString().Trim(); // 移除最後一個空格
             }
             /*
             else
                 ShowInsLog("Payload length: 0<Len<=125\r\n");  */
         }
-        // randomCheckbox/randomLen 兩個一起作用就好: 勾選當下直接產生一次隨機payload(不用再另外按按鈕確認),
-        // randomLen 改變長度時(Leave事件, 見下面 randomLen_Leave)也會直接重新產生。
-        // randomLen/randomLenLable 一律保持可見, 只依checkbox狀態切換Enabled, 不再Visible顯示/隱藏來回切換。
-        private void randomCheckbox_CheckedChanged(object sender, EventArgs e)
+        // dvbTstPktTxRandomPlCheck/dvbTstPktTxRandomPlLenText 兩個一起作用就好: 勾選當下直接產生一次隨機payload(不用再另外按按鈕確認),
+        // dvbTstPktTxRandomPlLenText 改變長度時(Leave事件, 見下面 dvbTstPktTxRandomPlLenText_Leave)也會直接重新產生。
+        // dvbTstPktTxRandomPlLenText/dvbTstPktTxRandomPlLenUnitLabel 一律保持可見, 只依checkbox狀態切換Enabled, 不再Visible顯示/隱藏來回切換。
+        private void dvbTstPktTxRandomPlCheck_CheckedChanged(object sender, EventArgs e)
         {
-            randomLen.Enabled = randomCheckbox.Checked;
-            if (randomCheckbox.Checked) {
-                dataTxt.Clear();
-                dataTxt.ReadOnly = true;
-                dataTxt.BackColor = Color.FromArgb(32, 32, 32);
-                dataTxt.Update();
+            dvbTstPktTxRandomPlLenText.Enabled = dvbTstPktTxRandomPlCheck.Checked;
+            if (dvbTstPktTxRandomPlCheck.Checked) {
+                dvbTstPktTxPayloadText.Clear();
+                dvbTstPktTxPayloadText.ReadOnly = true;
+                dvbTstPktTxPayloadText.BackColor = Color.FromArgb(32, 32, 32);
+                dvbTstPktTxPayloadText.Update();
                 tmpArray.Clear();
-                lenOfHex.Text = "0";
-                lenOfHex.BackColor = Color.White;
-                lenOfHex.Update();
-                randomLen.Text = "5";
-                lenOfHex.Visible = false;
-                lenOfTxtLable.Visible = false;
+                dvbTstPktTxFilledLenText.Text = "0";
+                dvbTstPktTxFilledLenText.BackColor = Color.White;
+                dvbTstPktTxFilledLenText.Update();
+                dvbTstPktTxRandomPlLenText.Text = "5";
+                dvbTstPktTxFilledLenText.Visible = false;
+                dvbTstPktTxFilledLenDescLabel.Visible = false;
                 GenerateRandomPayload();
             }
             else
             {
-                lenOfHex.Visible = true;
-                lenOfHex.Text = "0";
-                lenOfTxtLable.Visible = true;
-                dataTxt.BackColor = Color.FromArgb(32, 32, 32);
-                dataTxt.ReadOnly = false;
-                dataTxt.Update();
-                dataTxt.Clear();
+                dvbTstPktTxFilledLenText.Visible = true;
+                dvbTstPktTxFilledLenText.Text = "0";
+                dvbTstPktTxFilledLenDescLabel.Visible = true;
+                dvbTstPktTxPayloadText.BackColor = Color.FromArgb(32, 32, 32);
+                dvbTstPktTxPayloadText.ReadOnly = false;
+                dvbTstPktTxPayloadText.Update();
+                dvbTstPktTxPayloadText.Clear();
                 tmpArray.Clear();
             }
         }
 
-        private void randomLen_Leave(object sender, EventArgs e)
+        private void dvbTstPktTxRandomPlLenText_Leave(object sender, EventArgs e)
         {
-            if (randomCheckbox.Checked)
+            if (dvbTstPktTxRandomPlCheck.Checked)
                 GenerateRandomPayload();
         }
 
-        // 焦點還在 randomLen 裡直接按 Enter 也重新產生一次, 不用先點別的地方讓焦點離開觸發 Leave。
+        // 焦點還在 dvbTstPktTxRandomPlLenText 裡直接按 Enter 也重新產生一次, 不用先點別的地方讓焦點離開觸發 Leave。
         // SuppressKeyPress 擋掉 Enter 在單行 TextBox 上預設的警示音。
-        private void randomLen_KeyDown(object sender, KeyEventArgs e)
+        private void dvbTstPktTxRandomPlLenText_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
                 e.SuppressKeyPress = true;
-                if (randomCheckbox.Checked)
+                if (dvbTstPktTxRandomPlCheck.Checked)
                     GenerateRandomPayload();
             }
         }
 
-        /// <summary>依 randomLen 目前的長度重新產生一次隨機payload, 存進 tmpArray; randomCheckbox沒勾時不做事。原本是獨立的"Apply"按鈕(btnRandomGenerate)才會觸發, 現在勾選/改長度時直接呼叫。</summary>
+        /// <summary>依 dvbTstPktTxRandomPlLenText 目前的長度重新產生一次隨機payload, 存進 tmpArray; randomCheckbox沒勾時不做事。原本是獨立的"Apply"按鈕(btnRandomGenerate)才會觸發, 現在勾選/改長度時直接呼叫。</summary>
         private void GenerateRandomPayload()
         {
-            if (!randomCheckbox.Checked)
+            if (!dvbTstPktTxRandomPlCheck.Checked)
                 return;
 
             int byteLength = 0;
-            int crcChoose = crcSelectCombo.SelectedIndex;
+            int crcChoose = dvbTstPktTxCrcCombo.SelectedIndex;
             int maxLen = CRC_LEN_NO_SEQ;
             switch (crcChoose){
                 case 0 :   //CCITT
@@ -3321,16 +3331,16 @@ namespace ER41xxTestTool
                     maxLen = NO_CRC_LEN_NO_SEQ;
                     break;
             }
-            dataTxt.Clear();
+            dvbTstPktTxPayloadText.Clear();
             try
             {
-                byteLength = Convert.ToInt32(randomLen.Text);
+                byteLength = Convert.ToInt32(dvbTstPktTxRandomPlLenText.Text);
             }
             catch (Exception ex){
                 ShowInsLog("0 <= Len <= 127");
                 return;
             }
-            if (addSeqCheckbox.Checked)
+            if (dvbTstPktTxPrependSeqCheck.Checked)
                 byteLength = byteLength + 2;
             if (byteLength > 0 && byteLength <= maxLen)
                 HexGenerate();
@@ -3339,14 +3349,14 @@ namespace ER41xxTestTool
                 string str = "";
                 if (crcChoose == 2) // NO_CRC
                 {
-                    if (addSeqCheckbox.Checked)
+                    if (dvbTstPktTxPrependSeqCheck.Checked)
                         str = "0 < NO_CRC Len <= 125 (add seq)";
                     else
                         str = "0 < NO_CRC Len <= 127";
                 }
                 else
                 {
-                    if (addSeqCheckbox.Checked)
+                    if (dvbTstPktTxPrependSeqCheck.Checked)
                         str = "0 < CRC Len <= 123(add seq)";
                     else
                         str = "0 < CRC Len <= 125";
@@ -3355,16 +3365,16 @@ namespace ER41xxTestTool
             }
         }
 
-        private void btnSendStop_Click(object sender, EventArgs e)
+        private void dvbTstPktTxStopBtn_Click(object sender, EventArgs e)
         {
-            if (infiniteCheckbox.Checked)
+            if (dvbTstPktTxInfiniteCheck.Checked)
             {
                 InfiniteStop();
                 //btnInfiniteStart.Text = "Start";
             }
             isSending = false;
-            btnSendStop.Enabled = false;
-            btnSendStart.Enabled = true;
+            dvbTstPktTxStopBtn.Enabled = false;
+            dvbTstPktTxStartBtn.Enabled = true;
             ShowInsLog("Packet Stop\r\n");
             EnableSetting();
         }
@@ -3383,7 +3393,7 @@ namespace ER41xxTestTool
                 return;
             }
             // 合法 → 套用到 ComboBox
-            PAConfigCombo.Text = setPA.ToString();
+            paramPAConfigCombo.Text = setPA.ToString();
         }
 
         public int getOneByteData(string stmp)
@@ -3461,24 +3471,24 @@ namespace ER41xxTestTool
 
         private void btnClearInsLog_Click(object sender, EventArgs e)
         {
-            txResult.Clear();
+            logResultText.Clear();
         }
 
         public void cwOnProcess()
         {
             string cmd = "txst 1\r";
-            if (singleToneRadio.Checked)
+            if (dvbTstContiTxSingleToneRadioBtn.Checked)
             {
                 cmd = "txst 1\r";
                 ShowInsLog("SingleTone CW ON\r\n");
             }
             else
             {
-                if (pr55Radio.Checked){
+                if (dvbTstContiTxBit0101RadioBtn.Checked){
                     cmd = "txpr55\r";
                     ShowInsLog("CW (Pattern 0101).. ON\r\n");
                 }
-                else if (prbs9Radio.Checked) {
+                else if (dvbTstContiTxPrbs9RadioBtn.Checked) {
                     cmd = "txprbs\r";
                     ShowInsLog("CW (Pattern PRBS9) ON\r\n");
                 }
@@ -3492,7 +3502,7 @@ namespace ER41xxTestTool
             serialPort1.Write(cmd);
             ShowInsLog("CW OFF\r\n");
         }
-        private void btnCWOn_Click(object sender, EventArgs e)
+        private void dvbTstContiTxStartBtn_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {
@@ -3502,7 +3512,7 @@ namespace ER41xxTestTool
             ConfirmRewriteIfRegTableDirty();
             if (serialPort1.IsOpen)
             {
-                // 2026-09-03 暫時關閉: 見 btnSendStart_Click 同樣的說明, 改成使用者自己先按
+                // 2026-09-03 暫時關閉: 見 dvbTstPktTxStartBtn_Click 同樣的說明, 改成使用者自己先按
                 // Write DVB Register 再操作。
                 // ER4100_SetParameter(1);
                 Thread.Sleep(50);
@@ -3511,43 +3521,43 @@ namespace ER41xxTestTool
                 cwOnProcess();
                 this.BeginInvoke((MethodInvoker)(() =>
                 {                   
-                    singleToneRadio.Enabled = false;
-                    modulationRadio.Enabled = false;
-                    btnCWOn.Enabled = false;
-                    btnCWOff.Enabled = true;
+                    dvbTstContiTxSingleToneRadioBtn.Enabled = false;
+                    dvbTstContiTxPatternRadioBtn.Enabled = false;
+                    dvbTstContiTxStartBtn.Enabled = false;
+                    dvbTstContiTxStopBtn.Enabled = true;
                 }));
             }
             else
             {
                 this.BeginInvoke((MethodInvoker)(() =>
                 {
-                    singleToneRadio.Enabled = true;
-                    modulationRadio.Enabled = true;
-                    btnCWOn.Enabled = true;
-                    btnCWOff.Enabled = false;
+                    dvbTstContiTxSingleToneRadioBtn.Enabled = true;
+                    dvbTstContiTxPatternRadioBtn.Enabled = true;
+                    dvbTstContiTxStartBtn.Enabled = true;
+                    dvbTstContiTxStopBtn.Enabled = false;
                     ShowInsLog("COM PORT FAIL!\r\n");
                 }));
             }
         }
 
-        private void btnCWOff_Click(object sender, EventArgs e)
+        private void dvbTstContiTxStopBtn_Click(object sender, EventArgs e)
         {
             if (serialPort1.IsOpen)
             {
                 cwOffProcess();
                 this.BeginInvoke((MethodInvoker)(() =>
                 {
-                    btnCWOn.Enabled = true;
-                    btnCWOff.Enabled = false;
-                    singleToneRadio.Enabled = true;
-                    modulationRadio.Enabled = true;
+                    dvbTstContiTxStartBtn.Enabled = true;
+                    dvbTstContiTxStopBtn.Enabled = false;
+                    dvbTstContiTxSingleToneRadioBtn.Enabled = true;
+                    dvbTstContiTxPatternRadioBtn.Enabled = true;
                 }));
             }
             else
             {
                 ShowInsLog("COM PORT FAIL!\r\n");
-                btnCWOn.Enabled = true;
-                btnCWOff.Enabled = false;
+                dvbTstContiTxStartBtn.Enabled = true;
+                dvbTstContiTxStopBtn.Enabled = false;
             }
         }
 
@@ -3558,7 +3568,7 @@ namespace ER41xxTestTool
             
             if (highlowICType == 0)
             {  // LOW POWER
-                switch (DVBBandCombo.Text)
+                switch (paramDvbBandCombo.Text)
                 {
                     case "433":
                         InitialPAConfigList((int)PA_TYPE.PA_915433L);
@@ -3625,15 +3635,15 @@ namespace ER41xxTestTool
         // 供 PacketRxBtnStopProcess() 及 PacketRxStartProcess() 的失敗路徑共用,避免兩邊各自維護一份清單而漏改。
         public void EnableRxControlsAfterStop()
         {
-            rxsyncInvertCheckbox.Enabled = true;
-            btnScanStart.Enabled = true;
+            paramRxSyncSoftInvertCheck.Enabled = true;
+            dvbTstPktRxScanBtn.Enabled = true;
             EnableParameterSetting();
-            btnRxStart.Enabled = true;
-            packetRxCrcCombo.Enabled = true;
-            rxParseSeq.Enabled = true;
-            packetRxLimitRadio.Enabled = true;
-            packetRxNoLimitRadio.Enabled = true;
-            packetRxNum.Enabled = packetRxLimitRadio.Checked;
+            dvbTstPktRxStartBtn.Enabled = true;
+            dvbTstPktRxCrcCombo.Enabled = true;
+            dvbTstPktRxParseSeqCheck.Enabled = true;
+            dvbTstPktRxCntLimitRadioBtn.Enabled = true;
+            dvbTstPktRxCntNoLimitRadioBtn.Enabled = true;
+            dvbTstPktRxCntText.Enabled = dvbTstPktRxCntLimitRadioBtn.Checked;
         }
 
         public void DisconnectUartProcess()
@@ -3648,7 +3658,7 @@ namespace ER41xxTestTool
             Thread.Sleep(50);
             // ---------------------------
 
-            btnRxStart.Enabled = true;
+            dvbTstPktRxStartBtn.Enabled = true;
         }
         void SetStateButton(System.Windows.Forms.Button btn, bool enable)
         {
@@ -3675,7 +3685,7 @@ namespace ER41xxTestTool
                 btn.FlatAppearance.MouseDownBackColor = btn.BackColor;
             }
         }
-        private void btnRxStart_Click_1(object sender, EventArgs e)
+        private void dvbTstPktRxStartBtn_Click(object sender, EventArgs e)
         {
             bool res = false;
             averageRssi = 0;
@@ -3690,19 +3700,19 @@ namespace ER41xxTestTool
                 return;
             }
 
-            if (btnRxStart.Text == "Start RX")
+            if (dvbTstPktRxStartBtn.Text == "Start RX")
             {
                 ConfirmRewriteIfRegTableDirty();
                 this.BeginInvoke((MethodInvoker)(() =>
                 {
-                    //rxsyncInvertCheckbox.Enabled = false;
-                    rxResult.Clear();
+                    //paramRxSyncSoftInvertCheck.Enabled = false;
+                    dvbTstPktRxLogText.Clear();
                     //btnRxResultClr.Enabled = false;
-                    rcvOkText.Text = "";
-                    rcvErrText.Text = "";
-                    rssiValue.Text = "";
-                    btnScanStart.Enabled = false;   // Scan RSSI 跟 Start RX 互斥, RX 開始時鎖住 Scan RSSI
-                    //SetStateButton(btnRxStart, false);
+                    dvbTstPktRxOkCntText.Text = "";
+                    dvbTstPktRxErrCntText.Text = "";
+                    dvbTstPktRxRssiText.Text = "";
+                    dvbTstPktRxScanBtn.Enabled = false;   // Scan RSSI 跟 Start RX 互斥, RX 開始時鎖住 Scan RSSI
+                    //SetStateButton(dvbTstPktRxStartBtn, false);
                     DisableParameterSetting();
                 }));
 
@@ -3710,49 +3720,49 @@ namespace ER41xxTestTool
                 if (res)
                 {
                     ShowInsLog("RX Reception Start\r\n");
-                    btnRxStart.Text = "Stop RX";
+                    dvbTstPktRxStartBtn.Text = "Stop RX";
                 }
                 //if (serialPort1.IsOpen)
                 //    DisconnectUartProcess();
 
             }
-            else if (btnRxStart.Text == "Stop RX")
+            else if (dvbTstPktRxStartBtn.Text == "Stop RX")
             {
                 PacketRxBtnStopProcess();
                 ShowInsLog("RX Reception Stop\r\n");
-                btnRxStart.Text = "Start RX";
+                dvbTstPktRxStartBtn.Text = "Start RX";
             }
             
         }
-        // packetRxLimitRadio("Max Packet Count")/packetRxNoLimitRadio("No limitation") 共用同一個handler,
-        // 兩顆 RadioButton 的 CheckedChanged 都會掛這個 —— 選了 Max Packet Count 才讓 packetRxNum 可編輯。
+        // dvbTstPktRxCntLimitRadioBtn("Max Packet Count")/dvbTstPktRxCntNoLimitRadioBtn("No limitation") 共用同一個handler,
+        // 兩顆 RadioButton 的 CheckedChanged 都會掛這個 —— 選了 Max Packet Count 才讓 dvbTstPktRxCntText 可編輯。
         private void packetRxCountMode_CheckedChanged(object sender, EventArgs e)
         {
-            packetRxNum.Enabled = packetRxLimitRadio.Checked;
+            dvbTstPktRxCntText.Enabled = dvbTstPktRxCntLimitRadioBtn.Checked;
         }
 
         private void btnRxResultClr_Click_1(object sender, EventArgs e)
         {
-            rxResult.Clear();
+            dvbTstPktRxLogText.Clear();
         }
 
-        private void modulationRadio_CheckedChanged(object sender, EventArgs e)
+        private void dvbTstContiTxPatternRadioBtn_CheckedChanged(object sender, EventArgs e)
         {
-            patternGrp.Visible = true;
+            dvbTstContiTxPatternGroup.Visible = true;
         }
 
-        private void singleToneRadio_CheckedChanged(object sender, EventArgs e)
+        private void dvbTstContiTxSingleToneRadioBtn_CheckedChanged(object sender, EventArgs e)
         {
-            patternGrp.Visible = false;
+            dvbTstContiTxPatternGroup.Visible = false;
         }
 
-        private void addSeqCheckbox_CheckedChanged(object sender, EventArgs e)
+        private void dvbTstPktTxPrependSeqCheck_CheckedChanged(object sender, EventArgs e)
         {
-            //addSeqLevel.Visible = addSeqCheckbox.Checked;
+            //addSeqLevel.Visible = dvbTstPktTxPrependSeqCheck.Checked;
             RefreshPacketFormatDiagram();
         }
 
-        private void crcSelectCombo_SelectedIndexChanged(object sender, EventArgs e)
+        private void dvbTstPktTxCrcCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             RefreshPacketFormatDiagram();
         }
@@ -3772,28 +3782,28 @@ namespace ER41xxTestTool
         private void RefreshPacketFormatDiagram()
         {
             int preambleBytes;
-            if (!int.TryParse(preambleLen.Text.Trim(), out preambleBytes))
+            if (!int.TryParse(paramPbLenText.Text.Trim(), out preambleBytes))
                 preambleBytes = 0;
-            pktTxPreambleLenLabel.Text = preambleBytes + "Bytes";
+            dvbTstPktTxDgmPbLenLabel.Text = preambleBytes + "Bytes";
 
-            // lblActualTxSyncword.Text 是 "Transfer :5A 0F BE 66" 這種格式 (前綴 + 冒號 + 空白分隔的hex byte),
+            // paramTxSyncActualLabel.Text 是 "Transfer :5A 0F BE 66" 這種格式 (前綴 + 冒號 + 空白分隔的hex byte),
             // 取冒號後面的hex字元數 /2 就是實際的syncword bytes數, 這樣invert切換/沒打完整都跟著真實狀態走
-            string syncHexPart = Regex.Replace(lblActualTxSyncword.Text, @"^[^:]*:", "");
+            string syncHexPart = Regex.Replace(paramTxSyncActualLabel.Text, @"^[^:]*:", "");
             string syncHexOnly = Regex.Replace(syncHexPart, "[^0-9A-Fa-f]", "");
-            pktTxSyncwordLenLabel.Text = (syncHexOnly.Length / 2) + "Bytes";
+            dvbTstPktTxDgmSyncLenLabel.Text = (syncHexOnly.Length / 2) + "Bytes";
 
-            bool hasSeq = addSeqCheckbox.Checked;
-            SetFifoSegmentState(pktTxSeqNumLabel, pktTxSeqNumLenLabel, hasSeq, "2Bytes");
+            bool hasSeq = dvbTstPktTxPrependSeqCheck.Checked;
+            SetFifoSegmentState(dvbTstPktTxDgmSeqNumLabel, dvbTstPktTxDgmSeqNumLenLabel, hasSeq, "2Bytes");
 
-            bool hasCrc = crcSelectCombo.SelectedIndex != 2;   // 2 = "No CRC"
-            SetFifoSegmentState(pktTxCrcLabel, pktTxCrcLenLabel, hasCrc, "2Bytes");
+            bool hasCrc = dvbTstPktTxCrcCombo.SelectedIndex != 2;   // 2 = "No CRC"
+            SetFifoSegmentState(dvbTstPktTxDgmCrcLabel, dvbTstPktTxDgmCrcLenLabel, hasCrc, "2Bytes");
 
             // Length(1) + SeqNum(0/2) + Payload + CRC(0/2) = FIFO_MAX_LEN(128)
             int maxPayload = FIFO_MAX_LEN - 1 - (hasSeq ? 2 : 0) - (hasCrc ? 2 : 0);
-            pktTxPaylaodeLenLabel.Text = "Max " + maxPayload + " Bytes";
+            dvbTstPktTxDgmPayloadLenLabel.Text = "Max " + maxPayload + " Bytes";
         }
 
-        private void btnStateSet_Click(object sender, EventArgs e)
+        private void dvbTstStateSetBtn_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {
@@ -3802,7 +3812,7 @@ namespace ER41xxTestTool
             }
             ConfirmRewriteIfRegTableDirty();
             string cmd = "";
-            if (idleRadioBtn.Checked)
+            if (dvbTstStateIdleRadioBtn.Checked)
             {
                 cmd = "pm 0\r";
                 serialPort1.Write(cmd);
@@ -3811,12 +3821,12 @@ namespace ER41xxTestTool
                 serialPort1.Write(cmd);
                 ShowInsLog("Set idle mode OK\r\n");
             }
-            else if (deepSleepRadioBtn.Checked) {
+            else if (dvbTstStateDeepSleepRadioBtn.Checked) {
                 cmd = "pm 1\r";
                 serialPort1.Write(cmd);
                 ShowInsLog("Set deep sleep mode OK\r\n");
             }
-            else if (shutdownRadioBtn.Checked)
+            else if (dvbTstStateShutdownRadioBtn.Checked)
             {
                 cmd = "pm 2\r";
                 serialPort1.Write(cmd);
@@ -3852,7 +3862,7 @@ namespace ER41xxTestTool
             rssi = GetRSSI(stmp);
             this.Invoke((MethodInvoker)(() =>
             {
-                rssiValue.Text = rssi.ToString();
+                dvbTstPktRxRssiText.Text = rssi.ToString();
             }));
             string timestamp = DateTime.Now.ToString("HH:mm:ss:fff");
             ShowRxPacket(timestamp + " RSSI : " + rssi + "dBm\r\n");
@@ -3895,11 +3905,11 @@ namespace ER41xxTestTool
             serialPort1.Write(cmd);
             StopScanTimer();
             EnableParameterSetting();
-            btnScanStart.Text = "Scan RSSI";
+            dvbTstPktRxScanBtn.Text = "Scan RSSI";
             hScanInit = false;
-            btnRxStart.Enabled = true;
-            rcvOkText.Enabled = true;
-            rcvErrText.Enabled = true;
+            dvbTstPktRxStartBtn.Enabled = true;
+            dvbTstPktRxOkCntText.Enabled = true;
+            dvbTstPktRxErrCntText.Enabled = true;
         }
 
         public void ScanStart()
@@ -3908,12 +3918,12 @@ namespace ER41xxTestTool
             string cmd = "";
             string stmp = "";
             int tmpRssi = -118;
-            btnScanStart.Text = "Scan Off";
+            dvbTstPktRxScanBtn.Text = "Scan Off";
             cmd = "settestst 1\r";
 
             serialPort1.Write(cmd);
             Thread.Sleep(30);
-            // 2026-09-03 暫時關閉: 見 btnSendStart_Click 同樣的說明, 改成使用者自己先按
+            // 2026-09-03 暫時關閉: 見 dvbTstPktTxStartBtn_Click 同樣的說明, 改成使用者自己先按
             // Write DVB Register 再操作。
             // res = ER4100_SetParameter(2);
             res = true;
@@ -3929,19 +3939,19 @@ namespace ER41xxTestTool
             res = ER4100_SendCmd(cmd);
             Thread.Sleep(50);
             stmp = serialPort1.ReadExisting();
-            btnScanStart.Text = "Scan Stop";
-            btnRxStart.Enabled = false;
-            rcvOkText.Enabled = false;
-            rcvErrText.Enabled = false;
+            dvbTstPktRxScanBtn.Text = "Scan Stop";
+            dvbTstPktRxStartBtn.Enabled = false;
+            dvbTstPktRxOkCntText.Enabled = false;
+            dvbTstPktRxErrCntText.Enabled = false;
             InitScanTimer();
             hScanInit = true;
             this.BeginInvoke((MethodInvoker)(() =>
             {
-                rxResult.Clear();
+                dvbTstPktRxLogText.Clear();
                 //btnRxResultClr.Enabled = false;
-                rcvOkText.Text = "";
-                rcvErrText.Text = "";
-                rssiValue.Text = "";
+                dvbTstPktRxOkCntText.Text = "";
+                dvbTstPktRxErrCntText.Text = "";
+                dvbTstPktRxRssiText.Text = "";
                 DisableParameterSetting();
             }));
         }
@@ -3952,7 +3962,7 @@ namespace ER41xxTestTool
                 MessageBox.Show("Com Port not connected", "Error");
                 return;
             }
-            if (btnScanStart != null && btnScanStart.Text == "Scan RSSI")
+            if (dvbTstPktRxScanBtn != null && dvbTstPktRxScanBtn.Text == "Scan RSSI")
             {
                 ConfirmRewriteIfRegTableDirty();
                 ScanStart();
@@ -3972,9 +3982,9 @@ namespace ER41xxTestTool
                 ScanProcess();
         }
 
-        private void btnPayloadClear_Click(object sender, EventArgs e)
+        private void dvbTstPktRxClearLogBtn_Click(object sender, EventArgs e)
         {
-            rxResult.Clear();
+            dvbTstPktRxLogText.Clear();
         }
 
         private void pageParameter_Click(object sender, EventArgs e)
@@ -4013,14 +4023,14 @@ namespace ER41xxTestTool
                 genMenu.Items.Add("Generate filter result", null, (s, ev) => RunGenerate(true));
                 genMenu.Items.Add("Generate all result", null, (s, ev) => RunGenerate(false));
             }
-            genMenu.Show(btnGen, new Point(0, btnGen.Height));
+            genMenu.Show(regTableGenBtn, new Point(0, regTableGenBtn.Height));
         }
 
         /// <summary>filterOnly=true 時只有目前通過 REG TABLE Topic/DependsOn 過濾的位址會被 CodeOutHelper 寫出 (見 GenerateAllowedAddrs); false 就是原本的「全部產生」</summary>
         private void RunGenerate(bool filterOnly)
         {
             string apiVersion = "V4.04";
-            if (radio8Bits.Checked)
+            if (paramDataFormat8BitsRadioBtn.Checked)
                 is8BitsFormat = true;
             else
                 is8BitsFormat = false;
@@ -4089,9 +4099,9 @@ private void btnICCheck_Click(object sender, EventArgs e)
 } */
 
         /* Hold 1
-        private void dataTxt_TextChanged(object sender, EventArgs e)
+        private void dvbTstPktTxPayloadText_TextChanged(object sender, EventArgs e)
         {
-            string hexString = dataTxt.Text.Replace(" ", ""); // 移除空格
+            string hexString = dvbTstPktTxPayloadText.Text.Replace(" ", ""); // 移除空格
             tmpArray.Clear();
 
             if (hexString.Length % 2 != 0)
@@ -4122,13 +4132,13 @@ private void btnICCheck_Click(object sender, EventArgs e)
 
 
         /* Hold 2
-        private void dataTxt_TextChanged(object sender, EventArgs e)
+        private void dvbTstPktTxPayloadText_TextChanged(object sender, EventArgs e)
         {         
             if (isEditing) return;
             isEditing = true;
 
             // Step 1: 移除非十六進位字元並轉大寫
-            string raw = Regex.Replace(dataTxt.Text.ToUpper(), @"[^0-9A-F]", "");
+            string raw = Regex.Replace(dvbTstPktTxPayloadText.Text.ToUpper(), @"[^0-9A-F]", "");
             StringBuilder formatted = new StringBuilder();
             tmpArray.Clear();
 
@@ -4143,8 +4153,8 @@ private void btnICCheck_Click(object sender, EventArgs e)
             }
 
             // Step 3: 將格式化後的字串寫回 TextBoxInput
-            dataTxt.Text = formatted.ToString();
-            dataTxt.SelectionStart = dataTxt.Text.Length;
+            dvbTstPktTxPayloadText.Text = formatted.ToString();
+            dvbTstPktTxPayloadText.SelectionStart = dvbTstPktTxPayloadText.Text.Length;
 
             // Step 4: 將完整的兩位一組轉成 byte 存入 tmpArray
             try

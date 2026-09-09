@@ -100,7 +100,7 @@ namespace ER41xxTestTool
         {
             kbps = (regRawValue & 0xFFFFFF) / 1000.0;
             double xtalVal;
-            if (!double.TryParse(xtalCombo.Text, out xtalVal))
+            if (!double.TryParse(paramXtalCombo.Text, out xtalVal))
                 return true;   // CRYSTAL 還沒設定好, 交給 CheckGenParameterReady() 處理, 這裡不擋
             string[] legalList = (xtalVal == 38.4) ? drList384 : drList;
             foreach (string s in legalList)
@@ -115,36 +115,36 @@ namespace ER41xxTestTool
         /// <summary>
         /// Code Gen 功能初始化 (由 MainForm 建構子呼叫)
         /// </summary>
-        private void InitCodeGenUI()
+        private void InitParamZoneUI()
         {
             InitInterruptModeSelector();
 
             // FREQUENCY TABLE ListView
-            freqList.View = System.Windows.Forms.View.Details;
-            freqList.FullRowSelect = true;
-            freqList.CheckBoxes = true;
-            freqList.Columns.Clear();
-            freqList.Columns.Add("Frequency (MHz)", -2);
+            paramFreqTableList.View = System.Windows.Forms.View.Details;
+            paramFreqTableList.FullRowSelect = true;
+            paramFreqTableList.CheckBoxes = true;
+            paramFreqTableList.Columns.Clear();
+            paramFreqTableList.Columns.Add("Frequency (MHz)", -2);
 
-            EnhanceButton(btnGen);
+            EnhanceButton(regTableGenBtn);
             UpdateTxGroupBoxVisible();
             syncwordOrderList(true);
             syncwordOrderList(false);
-            // 沒 invert 時 lblActualTxSyncword/lblActualRxSyncword 現在會顯示 "Actual send/verify stream", 打字改
+            // 沒 invert 時 paramTxSyncActualLabel/paramRxSyncActualLabel 現在會顯示 "Actual send/verify stream", 打字改
             // txSyncword/rxSyncword 也要跟著即時重算, 不然只有切 invert checkbox 才會更新, 值會顯示過期
-            txSyncword.TextChanged += (s, ev) => { syncwordOrderList(true); RefreshPacketFormatDiagram(); };
-            rxSyncword.TextChanged += (s, ev) => syncwordOrderList(false);
+            paramTxSyncText.TextChanged += (s, ev) => { syncwordOrderList(true); RefreshPacketFormatDiagram(); };
+            paramRxSyncText.TextChanged += (s, ev) => syncwordOrderList(false);
 
             // Code Gen 的設定項目都已移到上方 PARAMETER 分頁區,
             // GENERATE 隨時可用, 不再跟著分頁切換; 按下後彈出預覽視窗 (CodeGenPreviewForm) 顯示內容並可存檔。
 
             // 未連線時給 PA CONFIG 預設清單 (連線後由元件讀回的設定覆蓋)
-            if (double.TryParse(txFreqText.Text, out double f0))
+            if (double.TryParse(paramBaseFreqText.Text, out double f0))
                 UpdatePAConfigCombo(f0);
             // FREQUENCY 改變時 (未連線) 跟著更新 PA CONFIG 清單
-            txFreqText.TextChanged += (s, ev) =>
+            paramBaseFreqText.TextChanged += (s, ev) =>
             {
-                if (!serialPort1.IsOpen && double.TryParse(txFreqText.Text, out double f))
+                if (!serialPort1.IsOpen && double.TryParse(paramBaseFreqText.Text, out double f))
                     UpdatePAConfigCombo(f);
             };
 
@@ -153,7 +153,7 @@ namespace ER41xxTestTool
             // 用 TextChanged 而非 SelectedIndexChanged: PAConfigCombo.Text 有好幾處是直接賦值改的
             // (讀取實機設定/載入 ini), 不一定會經過 SelectedIndexChanged, TextChanged 兩種情況都能接到。
             UpdatePwrLvLabel();
-            PAConfigCombo.TextChanged += (s, ev) => UpdatePwrLvLabel();
+            paramPAConfigCombo.TextChanged += (s, ev) => UpdatePwrLvLabel();
         }
 
         /// <summary>
@@ -164,18 +164,18 @@ namespace ER41xxTestTool
         {
             if (serialPort1.IsOpen)   // 連線中由元件決定, 不覆蓋
                 return;
-            PAConfigCombo.Items.Clear();
+            paramPAConfigCombo.Items.Clear();
             if (x >= 900 || x <= 508)
             {
-                PAConfigCombo.Items.Add("10");
-                PAConfigCombo.Items.Add("23");
+                paramPAConfigCombo.Items.Add("10");
+                paramPAConfigCombo.Items.Add("23");
             }
             else if (x >= 780 && x < 900)
             {
-                PAConfigCombo.Items.Add("14");
+                paramPAConfigCombo.Items.Add("14");
             }
-            if (PAConfigCombo.Items.Count > 0)
-                PAConfigCombo.SelectedIndex = 0;
+            if (paramPAConfigCombo.Items.Count > 0)
+                paramPAConfigCombo.SelectedIndex = 0;
         }
 
         private void rfParamFreqPwrHelpBtn_Click(object sender, EventArgs e)
@@ -189,7 +189,6 @@ namespace ER41xxTestTool
                 "      196 - 253 MHz\r\n" +
                 "      391 - 508 MHz\r\n" +
                 "      780 - 1018 MHz\r\n" +
-                "      1558 - 2038 MHz\r\n\r\n" +
                 "5. PA Config: Selects the output power of the chip's internal High-Power PA (H-PA) or Low-Power PA (L-PA), and must match the external matching network design.\r\n" +
                 "      e.g. if the external matching is designed for 915MHz / 23dBm, select \"23\" here. H-PA/L-PA itself is fixed at the factory and cannot be changed here - this only selects the corresponding dBm value.\r\n\r\n" +
                 "6. Power LV: The range depends on PA Config - H-PA (23dBm) is 0~127, L-PA (10/14dBm) is 0~27. E.g. with PA Config = 23dBm (H-PA), 127 is the theoretical value for full 23dBm output.";
@@ -199,11 +198,11 @@ namespace ER41xxTestTool
         /// <summary>PA CONFIG(dBm) = 10 或 14 時 POWER LV 只到 27, 其餘 dBm 到 127; 依 PAConfigCombo 目前的值更新 PwrLvLabel 上的範圍字樣</summary>
         private void UpdatePwrLvLabel()
         {
-            string paConfig = PAConfigCombo.Text.Trim();
+            string paConfig = paramPAConfigCombo.Text.Trim();
             if (paConfig == "10" || paConfig == "14")
-                PwrLvLabel.Text = "Power LV(0~27)";
+                paramPwrLvLabel.Text = "Power LV(0~27)";
             else
-                PwrLvLabel.Text = "Power LV(0~127)";
+                paramPwrLvLabel.Text = "Power LV(0~127)";
         }
 
         /// <summary>
@@ -211,12 +210,12 @@ namespace ER41xxTestTool
         /// </summary>
         private void xtalCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
-            txDRCombo.Items.Clear();
-            if (xtalCombo.SelectedIndex == 0)   // 40MHz
-                txDRCombo.Items.AddRange(drList);
+            paramDataRateCombo.Items.Clear();
+            if (paramXtalCombo.SelectedIndex == 0)   // 40MHz
+                paramDataRateCombo.Items.AddRange(drList);
             else                                 // 38.4MHz
-                txDRCombo.Items.AddRange(drList384);
-            txDRCombo.SelectedIndex = 6;         // 100 / 96 kbps
+                paramDataRateCombo.Items.AddRange(drList384);
+            paramDataRateCombo.SelectedIndex = 6;         // 100 / 96 kbps
         }
 
         /// <summary>
@@ -264,11 +263,11 @@ namespace ER41xxTestTool
             btnIntMode.Font = new Font("Microsoft Sans Serif", 8f);
             btnIntMode.AutoSize = false;
             btnIntMode.Location = new Point(8, 38);
-            btnIntMode.Size = new Size(intModeGrp.Width - 16, 26);
+            btnIntMode.Size = new Size(paramIntModeGroup.Width - 16, 26);
             btnIntMode.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnIntMode.Click += BtnIntMode_Click;
 
-            intModeGrp.Controls.Add(btnIntMode);
+            paramIntModeGroup.Controls.Add(btnIntMode);
 
             // 2. CheckedListBox
             intModeCheckedList = new CheckedListBox();
@@ -314,12 +313,12 @@ namespace ER41xxTestTool
                 .Cast<TRx_InterruptMode>()
                 .Any(m => m == TRx_InterruptMode.INT_ST_RX_FIFO_AFULL);
 
-            TXAEMPTY_Grp.Visible = txAEmptySelected;
-            RXFULL_Grp.Visible = txFullSelected;
+            paramIntModeTxAemptyGroup.Visible = txAEmptySelected;
+            paramIntModeRxAfullGroup.Visible = txFullSelected;
 
             // 計算目前勾選數量
             intNum = intModeCheckedList.CheckedItems.Count;
-            showIntNum.Text = intNum.ToString();
+            paramIntModeSelectedCountLabel.Text = intNum.ToString();
         }
 
         private void intModeCheckedList_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -363,37 +362,37 @@ namespace ER41xxTestTool
         // =============== GPIO ===============
         public void Initial_Gpio0_Combo()
         {
-            gpio0_Combo.DataSource = Enum.GetValues(typeof(TRx_GPIOMode));
+            paramGpio0Combo.DataSource = Enum.GetValues(typeof(TRx_GPIOMode));
         }
         public void Initial_Gpio1_Combo()
         {
-            gpio1_Combo.DataSource = Enum.GetValues(typeof(TRx_GPIOMode));
+            paramGpio1Combo.DataSource = Enum.GetValues(typeof(TRx_GPIOMode));
         }
 
         public void GPIO0_Initial()
         {
-            if (GPIO0_Enable.Checked == true)
+            if (paramGpio0EnableCheck.Checked == true)
             {
-                gpio0_Combo.DataSource = null;
-                gpio0_Combo.SelectedIndex = -1;
+                paramGpio0Combo.DataSource = null;
+                paramGpio0Combo.SelectedIndex = -1;
                 Initial_Gpio0_Combo();
-                gpio0_Combo.Enabled = true;
+                paramGpio0Combo.Enabled = true;
             }
             else
-                gpio0_Combo.Enabled = false;
+                paramGpio0Combo.Enabled = false;
         }
 
         public void GPIO1_Initial()
         {
-            if (GPIO1_Enable.Checked == true)
+            if (paramGpio1EnableCheck.Checked == true)
             {
-                gpio1_Combo.DataSource = null;
-                gpio1_Combo.SelectedIndex = -1;
+                paramGpio1Combo.DataSource = null;
+                paramGpio1Combo.SelectedIndex = -1;
                 Initial_Gpio1_Combo();
-                gpio1_Combo.Enabled = true;
+                paramGpio1Combo.Enabled = true;
             }
             else
-                gpio1_Combo.Enabled = false;
+                paramGpio1Combo.Enabled = false;
         }
 
         private void GPIO0_Enable_CheckedChanged(object sender, EventArgs e)
@@ -409,8 +408,8 @@ namespace ER41xxTestTool
         // =============== FREQUENCY TABLE ===============
         public bool CheckFreqValue(double X)
         {
-            if ((X >= 1558 && X <= 2038) ||
-                (X >= 780 && X <= 1018) ||
+            //if ((X >= 1558 && X <= 2038) ||
+                if ((X >= 780 && X <= 1018) ||
                 (X >= 391 && X <= 508) ||
                 (X >= 196 && X <= 253) ||
                 (X >= 99 && X <= 125))
@@ -424,8 +423,8 @@ namespace ER41xxTestTool
         public double AdjustFreqValue(double X)
         {
             // 1. 先判斷是否在定義的五個範圍內
-            if ((X >= 1558 && X <= 2038) ||
-                (X >= 780 && X <= 1018) ||
+            //if ((X >= 1558 && X <= 2038) ||
+            if ((X >= 780 && X <= 1018) ||
                 (X >= 391 && X <= 508) ||
                 (X >= 196 && X <= 253) ||
                 (X >= 99 && X <= 125))
@@ -433,10 +432,10 @@ namespace ER41xxTestTool
                 return X;
             }
             // 2. 如果都不在範圍內，找最接近的邊界值
-            double[] boundaries = { 99, 125, 196, 253, 391, 508, 780, 1018, 1558, 2038 };
+            double[] boundaries = { 99, 125, 196, 253, 391, 508, 780, 1018};
             double closestValue = boundaries.OrderBy(b => Math.Abs(b - X)).First();
 
-            GenMsg.Show("Frequency: " + X.ToString() + "MHz is out of range:\r\n(1558 <= X <= 2038)\r\n(780 <= X <= 1018)\r\n(391 <= X <= 508)\r\n(196 <= X <= 253)\r\n(99 <= X <= 125))\r\nNow " + X.ToString() + "MHz change to " + closestValue.ToString() + "MHz", "WARNING");
+            GenMsg.Show("Frequency: " + X.ToString() + "MHz is out of range:\r\n(780 <= X <= 1018)\r\n(391 <= X <= 508)\r\n(196 <= X <= 253)\r\n(99 <= X <= 125))\r\nNow " + X.ToString() + "MHz change to " + closestValue.ToString() + "MHz", "WARNING");
             return closestValue;
         }
 
@@ -450,8 +449,8 @@ namespace ER41xxTestTool
         // 封裝一個方法來同步 UI
         private void UpdateListView(double highlightedValue)
         {
-            freqList.BeginUpdate();
-            freqList.Items.Clear();
+            paramFreqTableList.BeginUpdate();
+            paramFreqTableList.Items.Clear();
 
             ListViewItem targetItem = null;
 
@@ -459,7 +458,7 @@ namespace ER41xxTestTool
             {
                 ListViewItem item = new ListViewItem(val.ToString("F2"));
                 item.SubItems.Add("");
-                freqList.Items.Add(item);
+                paramFreqTableList.Items.Add(item);
 
                 if (val == highlightedValue)
                 {
@@ -474,8 +473,8 @@ namespace ER41xxTestTool
                 targetItem.EnsureVisible();
             }
 
-            freqList.EndUpdate();
-            freqList.Focus();
+            paramFreqTableList.EndUpdate();
+            paramFreqTableList.Focus();
 
             // FREQ TABLE 的增/刪都會經過這裡, 是 freqData 變動的共同出口 -> 順便重算 REG TABLE
             RefreshRegisterListFromUi();
@@ -483,27 +482,27 @@ namespace ER41xxTestTool
 
         private void btnAddFreq_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(inFreq.Text))
+            if (string.IsNullOrWhiteSpace(paramFreqTableInputText.Text))
             {
-                inFreq.BackColor = Color.Yellow;
+                paramFreqTableInputText.BackColor = Color.Yellow;
                 GenMsg.Show(this, "Please enter a value before leaving.", "WARNING");
-                inFreq.Focus();
+                paramFreqTableInputText.Focus();
                 return;
             }
 
-            string text = inFreq.Text.Trim();
+            string text = paramFreqTableInputText.Text.Trim();
             double freqDouble = Convert.ToDouble(text);
             bool res = CheckFreqValue(freqDouble);
             if (!res)
             {
-                inFreq.BackColor = Color.Yellow;
-                inFreq.Focus();
+                paramFreqTableInputText.BackColor = Color.Yellow;
+                paramFreqTableInputText.Focus();
                 freqDouble = AdjustFreqValue(freqDouble);
-                inFreq.Text = freqDouble.ToString();
+                paramFreqTableInputText.Text = freqDouble.ToString();
             }
             else
             {
-                inFreq.BackColor = SystemColors.Window;
+                paramFreqTableInputText.BackColor = SystemColors.Window;
                 if (!double.TryParse(text, out double freq))
                 {
                     GenMsg.Show("Must be a base-10 number", "WARNING");
@@ -532,17 +531,17 @@ namespace ER41xxTestTool
 
         private void RemoveSelectedFreq()
         {
-            if (freqList.SelectedIndices.Count == 0)
+            if (paramFreqTableList.SelectedIndices.Count == 0)
                 return;
 
-            int index = freqList.SelectedIndices[0];
+            int index = paramFreqTableList.SelectedIndices[0];
             freqData.RemoveAt(index);
-            freqList.Items.RemoveAt(index);
+            paramFreqTableList.Items.RemoveAt(index);
         }
 
         private void freqList_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Delete && freqList.SelectedIndices.Count > 0)
+            if (e.KeyCode == Keys.Delete && paramFreqTableList.SelectedIndices.Count > 0)
             {
                 RemoveSelectedFreq();
             }
@@ -551,12 +550,12 @@ namespace ER41xxTestTool
         private void btnDeleteItem_Click(object sender, EventArgs e)
         {
             // 從最後一個項目開始往前檢查, 刪除所有勾選項目
-            for (int i = freqList.Items.Count - 1; i >= 0; i--)
+            for (int i = paramFreqTableList.Items.Count - 1; i >= 0; i--)
             {
-                if (freqList.Items[i].Checked)
+                if (paramFreqTableList.Items[i].Checked)
                 {
                     freqData.RemoveAt(i);
-                    freqList.Items.RemoveAt(i);
+                    paramFreqTableList.Items.RemoveAt(i);
                 }
             }
         }
@@ -566,19 +565,19 @@ namespace ER41xxTestTool
         {
             if (isTx)
             {
-                if (syncLSBCheckbox.Checked)
+                if (paramTxSyncSoftInvertCheck.Checked)
                     // invert: 實際送出的是位元反轉後的值 (跟 Syncword.Set() 寫進 0xA038 前做的 hexReverse 是同一個轉換)
-                    lblActualTxSyncword.Text = Txsyncword_Invert + FormatSyncwordBytes(TrySyncwordReverse(txSyncword.Text));
+                    paramTxSyncActualLabel.Text = Txsyncword_Invert + FormatSyncwordBytes(TrySyncwordReverse(paramTxSyncText.Text));
                 else
                     // 沒 invert: 實際送出的 bit stream 就是 txSyncword 欄位打的值本身, 直接排成 byte 顯示方便對照
-                    lblActualTxSyncword.Text = Txsyncword_Forward + FormatSyncwordBytes(txSyncword.Text);
+                    paramTxSyncActualLabel.Text = Txsyncword_Forward + FormatSyncwordBytes(paramTxSyncText.Text);
             }
             else
             {
-                if (rxsyncInvertCheckbox.Checked)
-                    lblActualRxSyncword.Text = Rxsyncword_Invert  + FormatSyncwordBytes(TrySyncwordReverse(rxSyncword.Text));
+                if (paramRxSyncSoftInvertCheck.Checked)
+                    paramRxSyncActualLabel.Text = Rxsyncword_Invert  + FormatSyncwordBytes(TrySyncwordReverse(paramRxSyncText.Text));
                 else
-                    lblActualRxSyncword.Text = Rxsyncword_Forward + FormatSyncwordBytes(rxSyncword.Text);
+                    paramRxSyncActualLabel.Text = Rxsyncword_Forward + FormatSyncwordBytes(paramRxSyncText.Text);
             }
         }
 
@@ -632,7 +631,7 @@ namespace ER41xxTestTool
                         newH = 1;
                         ShowInsLog("RX Frequency Derivation: " + fdev + "->");
                         fdev = newH * dataRate / 2;
-                        freqDev.Text = (fdev / 1000).ToString();
+                        paramDeviationText.Text = (fdev / 1000).ToString();
                         ShowInsLog(fdev + "\r\n");
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=1\r\nHere the setting is H=1\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
@@ -647,7 +646,7 @@ namespace ER41xxTestTool
                         newH = 2;
                         ShowInsLog("RX Frequency Derivation: " + fdev + "->");
                         fdev = newH * dataRate / 2;
-                        freqDev.Text = (fdev / 1000).ToString();
+                        paramDeviationText.Text = (fdev / 1000).ToString();
                         ShowInsLog(fdev + "\r\n");
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=2\r\nHere the setting is H=2\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
@@ -662,7 +661,7 @@ namespace ER41xxTestTool
                         newH = 3;
                         ShowInsLog("RX Frequency Derivation: " + fdev + "->");
                         fdev = newH * dataRate / 2;
-                        freqDev.Text = (fdev / 1000).ToString();
+                        paramDeviationText.Text = (fdev / 1000).ToString();
                         ShowInsLog(fdev + "\r\n");
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=3\r\nHere the setting is H=3\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
@@ -678,7 +677,7 @@ namespace ER41xxTestTool
                         newH = 4;
                         ShowInsLog("RX Frequency Derivation: " + fdev + "->");
                         fdev = newH * dataRate / 2;
-                        freqDev.Text = (fdev / 1000).ToString();
+                        paramDeviationText.Text = (fdev / 1000).ToString();
                         ShowInsLog(fdev + "\r\n");
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=4\r\nHere the setting is H=4\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
@@ -693,7 +692,7 @@ namespace ER41xxTestTool
                         newH = 8;
                         ShowInsLog("RX Frequency Derivation: " + fdev + "->");
                         fdev = newH * dataRate / 2;
-                        freqDev.Text = (fdev / 1000).ToString();
+                        paramDeviationText.Text = (fdev / 1000).ToString();
                         ShowInsLog(fdev + "\r\n");
                         str = "Now H=" + H + "\r\nBut H need to be 0<H<=8\r\nHere the setting is H=8\r\nwhen FreqDev=" + fdev;
                         ShowMesgBox(str);
@@ -892,13 +891,13 @@ namespace ER41xxTestTool
         private bool CheckGenParameterReady()
         {
             string missing = "";
-            if (string.IsNullOrWhiteSpace(xtalCombo.Text)) missing += "CRYSTAL\r\n";
-            if (string.IsNullOrWhiteSpace(capioStr.Text)) missing += "CAPIO\r\n";
-            if (string.IsNullOrWhiteSpace(txFreqText.Text)) missing += "FREQUENCY\r\n";
-            if (string.IsNullOrWhiteSpace(txDRCombo.Text)) missing += "DATA RATE\r\n";
-            if (string.IsNullOrWhiteSpace(freqDev.Text)) missing += "DEVIATION\r\n";
-            if (string.IsNullOrWhiteSpace(PAConfigCombo.Text)) missing += "PA CONFIG\r\n";
-            if (string.IsNullOrWhiteSpace(pwrlvl.Text)) missing += "POWER LEVEL\r\n";
+            if (string.IsNullOrWhiteSpace(paramXtalCombo.Text)) missing += "CRYSTAL\r\n";
+            if (string.IsNullOrWhiteSpace(paramCapIoText.Text)) missing += "CAPIO\r\n";
+            if (string.IsNullOrWhiteSpace(paramBaseFreqText.Text)) missing += "FREQUENCY\r\n";
+            if (string.IsNullOrWhiteSpace(paramDataRateCombo.Text)) missing += "DATA RATE\r\n";
+            if (string.IsNullOrWhiteSpace(paramDeviationText.Text)) missing += "DEVIATION\r\n";
+            if (string.IsNullOrWhiteSpace(paramPAConfigCombo.Text)) missing += "PA CONFIG\r\n";
+            if (string.IsNullOrWhiteSpace(paramPwrLvText.Text)) missing += "POWER LEVEL\r\n";
             if (missing != "")
             {
                 GenMsg.Show("Below parameter(s) is empty:\r\n\r\n" + missing, "GENERATE");
@@ -912,31 +911,31 @@ namespace ER41xxTestTool
             bool res = false;
             if (!CheckGenParameterReady())
                 return false;
-            bool isTXEmpty = TXAEMPTY_Grp.Visible;
-            bool isRXFull = RXFULL_Grp.Visible;
+            bool isTXEmpty = paramIntModeTxAemptyGroup.Visible;
+            bool isRXFull = paramIntModeRxAfullGroup.Visible;
             int txEmptyThrValue = -1;
             int rxFullThrValue = -1;
-            bool enGpio0 = GPIO0_Enable.Checked;
-            bool enGpio1 = GPIO1_Enable.Checked;
+            bool enGpio0 = paramGpio0EnableCheck.Checked;
+            bool enGpio1 = paramGpio1EnableCheck.Checked;
             int gpio0Type = 0;
             int gpio1Type = 0;
             if (enGpio0)
-                gpio0Type = gpio0_Combo.SelectedIndex;
+                gpio0Type = paramGpio0Combo.SelectedIndex;
             if (enGpio1)
-                gpio1Type = gpio1_Combo.SelectedIndex;
-            bool pcrmuEn = pcrmuEnable.Checked;
-            bool msbEnable = payloadMSB.Checked;
+                gpio1Type = paramGpio1Combo.SelectedIndex;
+            bool pcrmuEn = paramPcrmuEnableRadioBtn.Checked;
+            bool msbEnable = paramFIFOBitOrderMSBRadioBtn.Checked;
             bool isGFSK = true;
             uint crystal_HZ = 0;
             uint drValue = 0;
             uint devValue = 0;
-            string xtal = xtalCombo.Text;                       // RF TOOL 固定 40MHz
+            string xtal = paramXtalCombo.Text;                       // RF TOOL 固定 40MHz
             double xtalValue = Convert.ToDouble(xtal);
-            string capio = capioStr.Text;
-            string freq = txFreqText.Text;                      // 共用 RF TOOL 的 FREQUENCY 欄位
-            double drTextValue = double.Parse(txDRCombo.Text);
-            double freqDevDouble = Convert.ToDouble(freqDev.Text);
-            double freqDouble = Convert.ToDouble(txFreqText.Text);
+            string capio = paramCapIoText.Text;
+            string freq = paramBaseFreqText.Text;                      // 共用 RF TOOL 的 FREQUENCY 欄位
+            double drTextValue = double.Parse(paramDataRateCombo.Text);
+            double freqDevDouble = Convert.ToDouble(paramDeviationText.Text);
+            double freqDouble = Convert.ToDouble(paramBaseFreqText.Text);
 
             int freqValue = (int)(1000000 * freqDouble);
             drValue = (uint)(1000 * drTextValue);
@@ -968,7 +967,7 @@ namespace ER41xxTestTool
             uint intMode = GetInterruptModeBitMask();
             if (isTXEmpty)
             {
-                txEmptyThrValue = CheckInput.CheckTxRxThr(txAemptyThr.Text, 0, 128);
+                txEmptyThrValue = CheckInput.CheckTxRxThr(paramIntModeTxAemptyText.Text, 0, 128);
                 if (txEmptyThrValue == 999)
                 {
                     GenMsg.Show("Value out of range", "TX_AEMPTY_THR");
@@ -977,7 +976,7 @@ namespace ER41xxTestTool
             }
             if (isRXFull)
             {
-                rxFullThrValue = CheckInput.CheckTxRxThr(rxFullThr.Text, 1, 128);
+                rxFullThrValue = CheckInput.CheckTxRxThr(paramIntModeRxAfullText.Text, 1, 128);
                 if (rxFullThrValue == 999)
                 {
                     GenMsg.Show("Value out of range", "RX_FULL_THR");
@@ -1011,37 +1010,37 @@ namespace ER41xxTestTool
                 GenMsg.Show("CAP VALUE: 0 < CAP < 128", "WARNING");
                 return res;
             }
-            string mod = txModCombo.Text;
-            string PAConfig = PAConfigCombo.Text;
-            string pwr = pwrlvl.Text;
+            string mod = paramModulationCombo.Text;
+            string PAConfig = paramPAConfigCombo.Text;
+            string pwr = paramPwrLvText.Text;
 
             uint txPayloadType = 0;
-            if (radioTransparent.Checked)
+            if (paramTxFifoModeTransparentRadioBtn.Checked)
                 txPayloadType = (int)TxPayloadMode.TX_TRANSPARENT;
-            else if (radioTransWithPresync.Checked)
+            else if (paramTxFifoModeTransPresyncRadioBtn.Checked)
                 txPayloadType = (int)TxPayloadMode.TX_TRANSPARENTwithPRESYNC;
-            else if (radio802154.Checked)
+            else if (paramTxFifoMode802154RadioBtn.Checked)
                 txPayloadType = (int)TxPayloadMode.TX_802154withPRESYNC;
 
-            string txsyncword = CheckInput.GetSyncword(txSyncword.Text);   // PARAMETER 內共用的 TX SYNCWORD
+            string txsyncword = CheckInput.GetSyncword(paramTxSyncText.Text);   // PARAMETER 內共用的 TX SYNCWORD
             if (txsyncword == null)
                 return res;
-            if (syncLSBCheckbox.Checked)                       // PARAMETER 內共用的 TX INVERT
+            if (paramTxSyncSoftInvertCheck.Checked)                       // PARAMETER 內共用的 TX INVERT
                 txsyncword = hexReverse(txsyncword);
-            string rxsyncword = CheckInput.GetSyncword(rxSyncword.Text);
+            string rxsyncword = CheckInput.GetSyncword(paramRxSyncText.Text);
             if (rxsyncword == null)
                 return res;
-            if (rxsyncInvertCheckbox.Checked)
+            if (paramRxSyncSoftInvertCheck.Checked)
                 rxsyncword = hexReverse(rxsyncword);
 
-            uint bitError = CheckInput.GetAllowBitError(allowBitError.Text);
+            uint bitError = CheckInput.GetAllowBitError(paramRxSyncAllowBitErrText.Text);
             if (bitError > 7)
                 return res;
 
-            uint preambleContentValue = CheckInput.GetPreambleContent(preambleContent.Text.Trim());
+            uint preambleContentValue = CheckInput.GetPreambleContent(paramPbContentText.Text.Trim());
             if (preambleContentValue > 300)
                 return res;
-            uint preambleLengthValue = CheckInput.GetPreambleLength(preambleLen.Text.Trim());
+            uint preambleLengthValue = CheckInput.GetPreambleLength(paramPbLenText.Text.Trim());
             if (preambleLengthValue > 300)
                 return res;
             uint pwrlvlValue = Convert.ToUInt32(pwr);
@@ -1074,7 +1073,7 @@ namespace ER41xxTestTool
                 if (freqArraySize > 0)                               // Unit MHz
                     channel_pll_table.WriteItem(sw, (xtal == "38.4"), freqArray, freqArraySize, (double)drValue, H);
 
-                if (IncludeInitArrayCheckBox.Checked)
+                if (regTableIncInitArrayCheck.Checked)
                 {
                     // Initial_Reg_Array 的位址不在 RegTableItems 的範圍內, 不受 Topic/DependsOn 過濾、
                     // 也不受「Generate 以 REG TABLE 目前值為資料來源」影響 (只受這顆 checkbox 控制),
@@ -1298,7 +1297,7 @@ namespace ER41xxTestTool
                     GenMsg.Show("[BAUDRATE]BR value is wrong");
             }
             if (MyIni.KeyExists("FREQBAND_CONFIG", "CONFIG"))
-                DVBBandCombo.Text = MyIni.Read("FREQBAND_CONFIG", "CONFIG").Replace(" ", "");
+                paramDvbBandCombo.Text = MyIni.Read("FREQBAND_CONFIG", "CONFIG").Replace(" ", "");
             // [PARAMETER]CRYSTAL: 要在 DATARATE 之前套用, 因為切 xtalCombo 會連動換掉 txDRCombo
             // 的候選清單 (40MHz->drList / 38.4MHz->drList384, 見 xtalCombo_SelectedIndexChanged),
             // 晚套用的話 DATARATE 會拿舊清單去比對, 找不到 (例如 38.4MHz 才有的 "96.000") 就悄悄跳過。
@@ -1307,11 +1306,11 @@ namespace ER41xxTestTool
                 tmpRead = MyIni.Read("CRYSTAL", "PARAMETER");
                 if (double.TryParse(tmpRead.Replace(" ", ""), out tmpDouble))
                 {
-                    for (int i = 0; i < xtalCombo.Items.Count; i++)
+                    for (int i = 0; i < paramXtalCombo.Items.Count; i++)
                     {
-                        if (double.TryParse(xtalCombo.Items[i].ToString(), out double itemVal) && itemVal == tmpDouble)
+                        if (double.TryParse(paramXtalCombo.Items[i].ToString(), out double itemVal) && itemVal == tmpDouble)
                         {
-                            xtalCombo.SelectedIndex = i;
+                            paramXtalCombo.SelectedIndex = i;
                             break;
                         }
                     }
@@ -1323,7 +1322,7 @@ namespace ER41xxTestTool
             {
                 tmpRead = MyIni.Read("CAPIO", "PARAMETER");
                 if (int.TryParse(tmpRead.Replace(" ", ""), out tmpInt))
-                    capioStr.Text = tmpInt.ToString();
+                    paramCapIoText.Text = tmpInt.ToString();
                 else
                     GenMsg.Show("[PARAMETER]CAPIO value is wrong");
             }
@@ -1331,7 +1330,7 @@ namespace ER41xxTestTool
             {
                 tmpRead = MyIni.Read("FREQUENCY", "PARAMETER");
                 if (double.TryParse(tmpRead.Replace(" ", ""), out tmpDouble))
-                    txFreqText.Text = tmpDouble.ToString();
+                    paramBaseFreqText.Text = tmpDouble.ToString();
                 else
                     GenMsg.Show("[PARAMETER]FREQUENCY value is wrong");
             }
@@ -1341,11 +1340,11 @@ namespace ER41xxTestTool
                 // 以數值比對 (EzCodeGen 存 "100", RF TOOL 顯示 "100.000")
                 if (double.TryParse(tmpRead.Replace(" ", ""), out tmpDouble))
                 {
-                    for (int i = 0; i < txDRCombo.Items.Count; i++)
+                    for (int i = 0; i < paramDataRateCombo.Items.Count; i++)
                     {
-                        if (double.TryParse(txDRCombo.Items[i].ToString(), out double itemVal) && itemVal == tmpDouble)
+                        if (double.TryParse(paramDataRateCombo.Items[i].ToString(), out double itemVal) && itemVal == tmpDouble)
                         {
-                            txDRCombo.SelectedIndex = i;
+                            paramDataRateCombo.SelectedIndex = i;
                             break;
                         }
                     }
@@ -1355,20 +1354,20 @@ namespace ER41xxTestTool
             {
                 tmpRead = MyIni.Read("DEVIATION", "PARAMETER");
                 if (double.TryParse(tmpRead.Replace(" ", ""), out tmpDouble))
-                    freqDev.Text = tmpDouble.ToString();
+                    paramDeviationText.Text = tmpDouble.ToString();
                 else
                     GenMsg.Show("[PARAMETER]FREQ DEV value is wrong");
             }
             if (MyIni.KeyExists("MODULATION", "PARAMETER"))
             {
                 tmpRead = MyIni.Read("MODULATION", "PARAMETER");
-                txModCombo.Text = tmpRead;
+                paramModulationCombo.Text = tmpRead;
             }
             if (MyIni.KeyExists("PACONFIG", "PARAMETER"))
             {
                 tmpRead = MyIni.Read("PACONFIG", "PARAMETER");
                 if (int.TryParse(tmpRead.Replace(" ", ""), out tmpInt))
-                    PAConfigCombo.Text = tmpInt.ToString();
+                    paramPAConfigCombo.Text = tmpInt.ToString();
                 else
                     GenMsg.Show("[PARAMETER]PACONFIG value is wrong");
             }
@@ -1376,7 +1375,7 @@ namespace ER41xxTestTool
             {
                 tmpRead = MyIni.Read("POWERLEVEL", "PARAMETER");
                 if (int.TryParse(tmpRead.Replace(" ", ""), out tmpInt))
-                    pwrlvl.Text = tmpInt.ToString();
+                    paramPwrLvText.Text = tmpInt.ToString();
                 else
                     GenMsg.Show("[PARAMETER]POWERLEVEL value is wrong");
             }
@@ -1384,13 +1383,13 @@ namespace ER41xxTestTool
             if (MyIni.KeyExists("CONTENT", "PREAMBLE"))
             {
                 tmpRead = MyIni.Read("CONTENT", "PREAMBLE");
-                preambleContent.Text = tmpRead;
+                paramPbContentText.Text = tmpRead;
             }
             if (MyIni.KeyExists("LEN", "PREAMBLE"))
             {
                 tmpRead = MyIni.Read("LEN", "PREAMBLE");
                 if (int.TryParse(tmpRead.Replace(" ", ""), out tmpInt))
-                    preambleLen.Text = tmpInt.ToString();
+                    paramPbLenText.Text = tmpInt.ToString();
                 else
                     GenMsg.Show("[PREAMBLE]LEN value is wrong");
             }
@@ -1399,63 +1398,63 @@ namespace ER41xxTestTool
             {
                 tmpRead = MyIni.Read("MSB", "PAYLOADORDER").ToUpper();
                 if (tmpRead.Equals("TRUE"))
-                    payloadMSB.Checked = true;
+                    paramFIFOBitOrderMSBRadioBtn.Checked = true;
                 else
-                    payloadLSB.Checked = true;
+                    paramFIFOBitOrderLSBRadioBtn.Checked = true;
             }
 
             if (MyIni.KeyExists("VALUE", "TXPAYLOADFORMAT"))
             {
                 tmpRead = MyIni.Read("VALUE", "TXPAYLOADFORMAT").ToUpper();
                 if (tmpRead.Equals("TRANSPARENT"))
-                    radioTransparent.Checked = true;
+                    paramTxFifoModeTransparentRadioBtn.Checked = true;
                 else if (tmpRead.Equals("802154"))
-                    radio802154.Checked = true;
+                    paramTxFifoMode802154RadioBtn.Checked = true;
                 else
-                    radioTransWithPresync.Checked = true;
+                    paramTxFifoModeTransPresyncRadioBtn.Checked = true;
             }
 
             if (MyIni.KeyExists("ENABLE", "PCRMU"))
             {
                 tmpRead = MyIni.Read("ENABLE", "PCRMU").ToUpper();
                 if (tmpRead.Equals("TRUE"))
-                    pcrmuEnable.Checked = true;
+                    paramPcrmuEnableRadioBtn.Checked = true;
                 else
-                    pcrmuDisable.Checked = true;
+                    paramPcrmuDisableRadioBtn.Checked = true;
             }
 
             if (MyIni.KeyExists("TXSYNCWORD", "SYNCWORD"))
             {
                 tmpRead = MyIni.Read("TXSYNCWORD", "SYNCWORD");
-                txSyncword.Text = tmpRead;
+                paramTxSyncText.Text = tmpRead;
             }
             if (MyIni.KeyExists("TXINVERT", "SYNCWORD"))
             {
                 tmpRead = MyIni.Read("TXINVERT", "SYNCWORD").ToUpper();
                 if (tmpRead.Equals("TRUE"))
-                    syncLSBCheckbox.Checked = true;
+                    paramTxSyncSoftInvertCheck.Checked = true;
                 else
-                    syncLSBCheckbox.Checked = false;
+                    paramTxSyncSoftInvertCheck.Checked = false;
             }
             if (MyIni.KeyExists("RXSYNCWORD", "SYNCWORD"))
             {
                 tmpRead = MyIni.Read("RXSYNCWORD", "SYNCWORD");
-                rxSyncword.Text = tmpRead;
+                paramRxSyncText.Text = tmpRead;
             }
             if (MyIni.KeyExists("RXINVERT", "SYNCWORD"))
             {
                 tmpRead = MyIni.Read("RXINVERT", "SYNCWORD").ToUpper();
                 if (tmpRead.Equals("TRUE"))
-                    rxsyncInvertCheckbox.Checked = true;
+                    paramRxSyncSoftInvertCheck.Checked = true;
                 else
-                    rxsyncInvertCheckbox.Checked = false;
+                    paramRxSyncSoftInvertCheck.Checked = false;
             }
 
             if (MyIni.KeyExists("ALLOWBITERROR", "SYNCWORD"))
             {
                 tmpRead = MyIni.Read("ALLOWBITERROR", "SYNCWORD");
                 if (int.TryParse(tmpRead.Replace(" ", ""), out tmpInt))
-                    allowBitError.Text = tmpInt.ToString();
+                    paramRxSyncAllowBitErrText.Text = tmpInt.ToString();
                 else
                     GenMsg.Show("[SYNCWORD]ALLOWBITERROR value is wrong");
             }
@@ -1475,7 +1474,7 @@ namespace ER41xxTestTool
             {
                 tmpRead = MyIni.Read("VALUE", "TX_AEMPTY_THR");
                 if (int.TryParse(tmpRead.Replace(" ", ""), out tmpInt))
-                    txAemptyThr.Text = tmpInt.ToString();
+                    paramIntModeTxAemptyText.Text = tmpInt.ToString();
                 else
                     GenMsg.Show("[TX_AEMPTY_THR]VALUE value is wrong");
             }
@@ -1484,7 +1483,7 @@ namespace ER41xxTestTool
             {
                 tmpRead = MyIni.Read("VALUE", "RX_AFULL_THR");
                 if (int.TryParse(tmpRead.Replace(" ", ""), out tmpInt))
-                    rxFullThr.Text = tmpInt.ToString();
+                    paramIntModeRxAfullText.Text = tmpInt.ToString();
                 else
                     GenMsg.Show("[RX_AFULL_THR]VALUE value is wrong");
             }
@@ -1492,33 +1491,33 @@ namespace ER41xxTestTool
             if (MyIni.KeyExists("ENABLE", "GPIO0"))
             {
                 tmpRead = MyIni.Read("ENABLE", "GPIO0").ToUpper();
-                GPIO0_Enable.Checked = tmpRead.Equals("TRUE");
+                paramGpio0EnableCheck.Checked = tmpRead.Equals("TRUE");
             }
             if (MyIni.KeyExists("VALUE", "GPIO0"))
             {
                 tmpRead = MyIni.Read("VALUE", "GPIO0");
                 if (Enum.TryParse<TRx_GPIOMode>(tmpRead, out var mode))
-                    gpio0_Combo.SelectedItem = mode;
+                    paramGpio0Combo.SelectedItem = mode;
                 else
-                    gpio0_Combo.SelectedItem = TRx_GPIOMode.TR_BSY;
+                    paramGpio0Combo.SelectedItem = TRx_GPIOMode.TR_BSY;
             }
 
             if (MyIni.KeyExists("ENABLE", "GPIO1"))
             {
                 tmpRead = MyIni.Read("ENABLE", "GPIO1").ToUpper();
-                GPIO1_Enable.Checked = tmpRead.Equals("TRUE");
+                paramGpio1EnableCheck.Checked = tmpRead.Equals("TRUE");
             }
             if (MyIni.KeyExists("VALUE", "GPIO1"))
             {
                 tmpRead = MyIni.Read("VALUE", "GPIO1");
                 if (Enum.TryParse<TRx_GPIOMode>(tmpRead, out var mode))
-                    gpio1_Combo.SelectedItem = mode;
+                    paramGpio1Combo.SelectedItem = mode;
                 else
-                    gpio1_Combo.SelectedItem = TRx_GPIOMode.TR_BSY;
+                    paramGpio1Combo.SelectedItem = TRx_GPIOMode.TR_BSY;
             }
 
             freqData.Clear();
-            freqList.Items.Clear();
+            paramFreqTableList.Items.Clear();
             if (MyIni.KeyExists("NUM", "FREQUENCYTABLE"))
             {
                 tmpRead = MyIni.Read("NUM", "FREQUENCYTABLE");
@@ -1537,7 +1536,7 @@ namespace ER41xxTestTool
                                 {
                                     freqData.Add(tmpDouble);
                                     ListViewItem item = new ListViewItem(tmpDouble.ToString());
-                                    freqList.Items.Add(item);
+                                    paramFreqTableList.Items.Add(item);
                                 }
                                 else
                                 {
@@ -1589,39 +1588,39 @@ namespace ER41xxTestTool
             File.AppendAllText(filePath, Environment.NewLine);
             MyIni.Write("BR", baudRateNumber.ToString(), "BAUDRATE");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("FREQBAND_CONFIG", DVBBandCombo.Text, "CONFIG");
+            MyIni.Write("FREQBAND_CONFIG", paramDvbBandCombo.Text, "CONFIG");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("CRYSTAL", xtalCombo.Text, "PARAMETER");
-            MyIni.Write("CAPIO", capioStr.Text, "PARAMETER");
-            MyIni.Write("FREQUENCY", txFreqText.Text, "PARAMETER");
-            MyIni.Write("DATARATE", txDRCombo.Text, "PARAMETER");
-            MyIni.Write("DEVIATION", freqDev.Text, "PARAMETER");
-            MyIni.Write("MODULATION", txModCombo.Text, "PARAMETER");
-            MyIni.Write("PACONFIG", PAConfigCombo.Text, "PARAMETER");
-            MyIni.Write("POWERLEVEL", pwrlvl.Text, "PARAMETER");
+            MyIni.Write("CRYSTAL", paramXtalCombo.Text, "PARAMETER");
+            MyIni.Write("CAPIO", paramCapIoText.Text, "PARAMETER");
+            MyIni.Write("FREQUENCY", paramBaseFreqText.Text, "PARAMETER");
+            MyIni.Write("DATARATE", paramDataRateCombo.Text, "PARAMETER");
+            MyIni.Write("DEVIATION", paramDeviationText.Text, "PARAMETER");
+            MyIni.Write("MODULATION", paramModulationCombo.Text, "PARAMETER");
+            MyIni.Write("PACONFIG", paramPAConfigCombo.Text, "PARAMETER");
+            MyIni.Write("POWERLEVEL", paramPwrLvText.Text, "PARAMETER");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("CONTENT", preambleContent.Text, "PREAMBLE");
-            MyIni.Write("LEN", preambleLen.Text, "PREAMBLE");
+            MyIni.Write("CONTENT", paramPbContentText.Text, "PREAMBLE");
+            MyIni.Write("LEN", paramPbLenText.Text, "PREAMBLE");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("MSB", (payloadMSB.Checked ? "true" : "false"), "PAYLOADORDER");
+            MyIni.Write("MSB", (paramFIFOBitOrderMSBRadioBtn.Checked ? "true" : "false"), "PAYLOADORDER");
             File.AppendAllText(filePath, Environment.NewLine);
             string val = "";
-            if (radioTransparent.Checked)
+            if (paramTxFifoModeTransparentRadioBtn.Checked)
                 val = "TRANSPARENT";
-            else if (radioTransWithPresync.Checked)
+            else if (paramTxFifoModeTransPresyncRadioBtn.Checked)
                 val = "TRANSPARENTwithPRESYNC";
-            else if (radio802154.Checked)
+            else if (paramTxFifoMode802154RadioBtn.Checked)
                 val = "802154";
 
             MyIni.Write("VALUE", val, "TXPAYLOADFORMAT");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("ENABLE", (pcrmuEnable.Checked ? "true" : "false"), "PCRMU");
+            MyIni.Write("ENABLE", (paramPcrmuEnableRadioBtn.Checked ? "true" : "false"), "PCRMU");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("TXSYNCWORD", txSyncword.Text, "SYNCWORD");
-            MyIni.Write("TXINVERT", (syncLSBCheckbox.Checked ? "true" : "false"), "SYNCWORD");
-            MyIni.Write("RXSYNCWORD", rxSyncword.Text, "SYNCWORD");
-            MyIni.Write("RXINVERT", (rxsyncInvertCheckbox.Checked ? "true" : "false"), "SYNCWORD");
-            MyIni.Write("ALLOWBITERROR", allowBitError.Text, "SYNCWORD");
+            MyIni.Write("TXSYNCWORD", paramTxSyncText.Text, "SYNCWORD");
+            MyIni.Write("TXINVERT", (paramTxSyncSoftInvertCheck.Checked ? "true" : "false"), "SYNCWORD");
+            MyIni.Write("RXSYNCWORD", paramRxSyncText.Text, "SYNCWORD");
+            MyIni.Write("RXINVERT", (paramRxSyncSoftInvertCheck.Checked ? "true" : "false"), "SYNCWORD");
+            MyIni.Write("ALLOWBITERROR", paramRxSyncAllowBitErrText.Text, "SYNCWORD");
             File.AppendAllText(filePath, Environment.NewLine);
             for (int i = 0; i < intModeCheckedList.Items.Count; i++)
             {
@@ -1630,15 +1629,15 @@ namespace ER41xxTestTool
                 MyIni.Write(intModeCheckedList.Items[i].ToString(), val, "INTERRUPT");
             }
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("VALUE", txAemptyThr.Text, "TX_AEMPTY_THR");
+            MyIni.Write("VALUE", paramIntModeTxAemptyText.Text, "TX_AEMPTY_THR");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("VALUE", rxFullThr.Text, "RX_AFULL_THR");
+            MyIni.Write("VALUE", paramIntModeRxAfullText.Text, "RX_AFULL_THR");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("ENABLE", (GPIO0_Enable.Checked ? "true" : "false"), "GPIO0");
-            MyIni.Write("VALUE", gpio0_Combo.Text, "GPIO0");
+            MyIni.Write("ENABLE", (paramGpio0EnableCheck.Checked ? "true" : "false"), "GPIO0");
+            MyIni.Write("VALUE", paramGpio0Combo.Text, "GPIO0");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("ENABLE", (GPIO1_Enable.Checked ? "true" : "false"), "GPIO1");
-            MyIni.Write("VALUE", gpio1_Combo.Text, "GPIO1");
+            MyIni.Write("ENABLE", (paramGpio1EnableCheck.Checked ? "true" : "false"), "GPIO1");
+            MyIni.Write("VALUE", paramGpio1Combo.Text, "GPIO1");
             File.AppendAllText(filePath, Environment.NewLine);
             int freqListNum = freqData.Count;
             MyIni.Write("NUM", freqListNum.ToString(), "FREQUENCYTABLE");
