@@ -46,7 +46,7 @@ Read/Write DVB Register、PARAMETER分頁的 DVBBandCombo，這些功能本質�
 ◆ Layer 3: ER4100存在 (FT232 <-> MCU <-> ER4100)
   - 目前【只有部分驗證, 而且驗證失敗不會真的擋下功能】。
   - CheckICPowerType() (TESTTOOL/View/MainForm.cs:256-272):
-      送 "rr 0xf104\r", 用 ReadICTypeAndAnalysis() 解析回應,
+      送 "rr 0xf104\r", 用 CmdReadDVB() 解析回應,
       取 rdData[3] 的 bit1 當作 highlowICType (0=低功率IC/1=高功率IC)。
       解析失敗 -> highlowICType = -1。
   - 連線流程裡 highlowICType == -1 時的處理
@@ -65,7 +65,7 @@ Read/Write DVB Register、PARAMETER分頁的 DVBBandCombo，這些功能本質�
 --------------------------------------------------------
 【可重用的既有工具】
 --------------------------------------------------------
-- ReadICTypeAndAnalysis(string cmd, out byte[] rdData)
+- CmdReadDVB(string cmd, out byte[] rdData)
   已經是通用的「送rr指令 -> 解析4 byte回應」函式, CheckICPowerType() 就是拿它讀
   0xf104。要加 0xf100(PRODUCT_ID_REG) 的檢查, 技術上直接照抄 CheckICPowerType()
   的寫法換個位址跟位元解讀規則即可, 不用另外造輪子。

@@ -186,35 +186,6 @@ namespace ER41xxTestTool
             this.paramPAConfigCombo = new System.Windows.Forms.ComboBox();
             this.paramPAConfigLabel = new System.Windows.Forms.Label();
             this.btnTxSet = new System.Windows.Forms.Button();
-            this.regPage = new System.Windows.Forms.TabPage();
-            this.label23 = new System.Windows.Forms.Label();
-            this.label22 = new System.Windows.Forms.Label();
-            this.initialDataPath = new System.Windows.Forms.Label();
-            this.label21 = new System.Windows.Forms.Label();
-            this.searchTxt = new System.Windows.Forms.TextBox();
-            this.btnClrListview = new System.Windows.Forms.Button();
-            this.wrAllRegGrp = new System.Windows.Forms.GroupBox();
-            this.btnTableConnect = new System.Windows.Forms.Button();
-            this.btnTableComRefresh = new System.Windows.Forms.Button();
-            this.tableCombobox = new System.Windows.Forms.ComboBox();
-            this.btnWriteAll = new System.Windows.Forms.Button();
-            this.regRead = new System.Windows.Forms.Button();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.nameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.bitColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.insertValue = new System.Windows.Forms.TextBox();
-            this.btnRead1 = new System.Windows.Forms.Button();
-            this.hexTxt = new System.Windows.Forms.TextBox();
-            this.txtValue = new System.Windows.Forms.TextBox();
-            this.btnRegWrite = new System.Windows.Forms.Button();
-            this.txtName = new System.Windows.Forms.TextBox();
-            this.txtID = new System.Windows.Forms.TextBox();
-            this.listView1 = new System.Windows.Forms.ListView();
-            this.regPage2 = new System.Windows.Forms.TabPage();
-            this.registerList = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.registerName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.registerValue = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileHdlrToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -222,7 +193,6 @@ namespace ER41xxTestTool
             this.SaveInitValueToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sendDataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadFileMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.loadInitFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadParameterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveParameterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -287,9 +257,6 @@ namespace ER41xxTestTool
             this.paramIntModeTxAemptyGroup.SuspendLayout();
             this.paramIntModeRxAfullGroup.SuspendLayout();
             this.paramGpioGroup.SuspendLayout();
-            this.regPage.SuspendLayout();
-            this.wrAllRegGrp.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.paramZoneTab.SuspendLayout();
             this.pageParameter.SuspendLayout();
@@ -646,8 +613,9 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxDgmPayloadLabel
             // 
-            this.dvbTstPktTxDgmPayloadLabel.BackColor = System.Drawing.Color.LightBlue;
+            this.dvbTstPktTxDgmPayloadLabel.BackColor = System.Drawing.Color.Black;
             this.dvbTstPktTxDgmPayloadLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.dvbTstPktTxDgmPayloadLabel.ForeColor = System.Drawing.Color.White;
             this.dvbTstPktTxDgmPayloadLabel.Location = new System.Drawing.Point(537, 45);
             this.dvbTstPktTxDgmPayloadLabel.Name = "dvbTstPktTxDgmPayloadLabel";
             this.dvbTstPktTxDgmPayloadLabel.Size = new System.Drawing.Size(111, 27);
@@ -688,7 +656,7 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxDgmLengthLabel
             // 
-            this.dvbTstPktTxDgmLengthLabel.BackColor = System.Drawing.Color.LightBlue;
+            this.dvbTstPktTxDgmLengthLabel.BackColor = System.Drawing.Color.PaleGoldenrod;
             this.dvbTstPktTxDgmLengthLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.dvbTstPktTxDgmLengthLabel.Location = new System.Drawing.Point(307, 45);
             this.dvbTstPktTxDgmLengthLabel.Name = "dvbTstPktTxDgmLengthLabel";
@@ -897,7 +865,7 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxPayloadText
             // 
-            this.dvbTstPktTxPayloadText.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.dvbTstPktTxPayloadText.BackColor = System.Drawing.Color.Black;
             this.dvbTstPktTxPayloadText.Font = new System.Drawing.Font("Consolas", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.dvbTstPktTxPayloadText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
             this.dvbTstPktTxPayloadText.Location = new System.Drawing.Point(18, 138);
@@ -2206,298 +2174,6 @@ namespace ER41xxTestTool
             this.btnTxSet.Visible = false;
             this.btnTxSet.Click += new System.EventHandler(this.btnSetER4100_Click);
             // 
-            // regPage
-            // 
-            this.regPage.AutoScroll = true;
-            this.regPage.Controls.Add(this.label23);
-            this.regPage.Controls.Add(this.label22);
-            this.regPage.Controls.Add(this.initialDataPath);
-            this.regPage.Controls.Add(this.label21);
-            this.regPage.Controls.Add(this.searchTxt);
-            this.regPage.Controls.Add(this.btnClrListview);
-            this.regPage.Controls.Add(this.wrAllRegGrp);
-            this.regPage.Controls.Add(this.dataGridView1);
-            this.regPage.Controls.Add(this.insertValue);
-            this.regPage.Controls.Add(this.btnRead1);
-            this.regPage.Controls.Add(this.hexTxt);
-            this.regPage.Controls.Add(this.txtValue);
-            this.regPage.Controls.Add(this.btnRegWrite);
-            this.regPage.Controls.Add(this.txtName);
-            this.regPage.Controls.Add(this.txtID);
-            this.regPage.Controls.Add(this.listView1);
-            this.regPage.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.regPage.Location = new System.Drawing.Point(4, 34);
-            this.regPage.Name = "regPage";
-            this.regPage.Size = new System.Drawing.Size(1204, 769);
-            this.regPage.TabIndex = 2;
-            this.regPage.Text = "   Register Table   ";
-            // 
-            // label23
-            // 
-            this.label23.AutoSize = true;
-            this.label23.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label23.Location = new System.Drawing.Point(127, 550);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(23, 18);
-            this.label23.TabIndex = 24;
-            this.label23.Text = "0x";
-            // 
-            // label22
-            // 
-            this.label22.AutoSize = true;
-            this.label22.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label22.Location = new System.Drawing.Point(127, 503);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(23, 18);
-            this.label22.TabIndex = 23;
-            this.label22.Text = "0x";
-            // 
-            // initialDataPath
-            // 
-            this.initialDataPath.Font = new System.Drawing.Font("Footlight MT Light", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.initialDataPath.Location = new System.Drawing.Point(7, 8);
-            this.initialDataPath.Name = "initialDataPath";
-            this.initialDataPath.Size = new System.Drawing.Size(1008, 19);
-            this.initialDataPath.TabIndex = 22;
-            this.initialDataPath.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label21
-            // 
-            this.label21.AutoSize = true;
-            this.label21.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.label21.Location = new System.Drawing.Point(423, 455);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(58, 18);
-            this.label21.TabIndex = 21;
-            this.label21.Text = "Search:";
-            // 
-            // searchTxt
-            // 
-            this.searchTxt.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.searchTxt.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.searchTxt.ForeColor = System.Drawing.SystemColors.MenuHighlight;
-            this.searchTxt.Location = new System.Drawing.Point(514, 449);
-            this.searchTxt.Name = "searchTxt";
-            this.searchTxt.Size = new System.Drawing.Size(502, 25);
-            this.searchTxt.TabIndex = 20;
-            this.searchTxt.TextChanged += new System.EventHandler(this.searchTxt_TextChanged);
-            // 
-            // btnClrListview
-            // 
-            this.btnClrListview.Location = new System.Drawing.Point(1042, 563);
-            this.btnClrListview.Name = "btnClrListview";
-            this.btnClrListview.Size = new System.Drawing.Size(130, 41);
-            this.btnClrListview.TabIndex = 3;
-            this.btnClrListview.Text = "Clear";
-            this.btnClrListview.UseVisualStyleBackColor = true;
-            this.btnClrListview.Visible = false;
-            this.btnClrListview.Click += new System.EventHandler(this.btnClrListview_Click);
-            // 
-            // wrAllRegGrp
-            // 
-            this.wrAllRegGrp.Controls.Add(this.btnTableConnect);
-            this.wrAllRegGrp.Controls.Add(this.btnTableComRefresh);
-            this.wrAllRegGrp.Controls.Add(this.tableCombobox);
-            this.wrAllRegGrp.Controls.Add(this.btnWriteAll);
-            this.wrAllRegGrp.Controls.Add(this.regRead);
-            this.wrAllRegGrp.Location = new System.Drawing.Point(1025, 28);
-            this.wrAllRegGrp.Name = "wrAllRegGrp";
-            this.wrAllRegGrp.Size = new System.Drawing.Size(165, 413);
-            this.wrAllRegGrp.TabIndex = 1;
-            this.wrAllRegGrp.TabStop = false;
-            // 
-            // btnTableConnect
-            // 
-            this.btnTableConnect.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btnTableConnect.Location = new System.Drawing.Point(6, 141);
-            this.btnTableConnect.Name = "btnTableConnect";
-            this.btnTableConnect.Size = new System.Drawing.Size(146, 52);
-            this.btnTableConnect.TabIndex = 29;
-            this.btnTableConnect.Text = "Connect";
-            this.btnTableConnect.UseVisualStyleBackColor = true;
-            this.btnTableConnect.Click += new System.EventHandler(this.btnTableConnect_Click);
-            // 
-            // btnTableComRefresh
-            // 
-            this.btnTableComRefresh.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btnTableComRefresh.Location = new System.Drawing.Point(6, 32);
-            this.btnTableComRefresh.Name = "btnTableComRefresh";
-            this.btnTableComRefresh.Size = new System.Drawing.Size(146, 52);
-            this.btnTableComRefresh.TabIndex = 28;
-            this.btnTableComRefresh.Text = "Resfresh";
-            this.btnTableComRefresh.UseVisualStyleBackColor = true;
-            this.btnTableComRefresh.Click += new System.EventHandler(this.btnTableComRefresh_Click);
-            // 
-            // tableCombobox
-            // 
-            this.tableCombobox.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tableCombobox.FormattingEnabled = true;
-            this.tableCombobox.Location = new System.Drawing.Point(6, 90);
-            this.tableCombobox.Name = "tableCombobox";
-            this.tableCombobox.Size = new System.Drawing.Size(146, 26);
-            this.tableCombobox.TabIndex = 27;
-            // 
-            // btnWriteAll
-            // 
-            this.btnWriteAll.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btnWriteAll.Location = new System.Drawing.Point(6, 293);
-            this.btnWriteAll.Name = "btnWriteAll";
-            this.btnWriteAll.Size = new System.Drawing.Size(146, 52);
-            this.btnWriteAll.TabIndex = 2;
-            this.btnWriteAll.Text = "Write All";
-            this.btnWriteAll.UseVisualStyleBackColor = true;
-            this.btnWriteAll.Click += new System.EventHandler(this.btnWriteAll_Click);
-            // 
-            // regRead
-            // 
-            this.regRead.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.regRead.Location = new System.Drawing.Point(6, 218);
-            this.regRead.Name = "regRead";
-            this.regRead.Size = new System.Drawing.Size(146, 52);
-            this.regRead.TabIndex = 0;
-            this.regRead.Text = "Read All";
-            this.regRead.UseVisualStyleBackColor = true;
-            this.regRead.Click += new System.EventHandler(this.regRead_Click);
-            // 
-            // dataGridView1
-            // 
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.nameColumn,
-            this.bitColumn,
-            this.valueColumn});
-            this.dataGridView1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
-            this.dataGridView1.Location = new System.Drawing.Point(421, 495);
-            this.dataGridView1.MultiSelect = false;
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowHeadersWidth = 51;
-            this.dataGridView1.RowTemplate.Height = 24;
-            this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(594, 264);
-            this.dataGridView1.TabIndex = 19;
-            // 
-            // nameColumn
-            // 
-            this.nameColumn.FillWeight = 130F;
-            this.nameColumn.HeaderText = "Location";
-            this.nameColumn.MinimumWidth = 6;
-            this.nameColumn.Name = "nameColumn";
-            this.nameColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.nameColumn.Width = 280;
-            // 
-            // bitColumn
-            // 
-            this.bitColumn.HeaderText = "Bit";
-            this.bitColumn.MinimumWidth = 6;
-            this.bitColumn.Name = "bitColumn";
-            this.bitColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.bitColumn.Width = 80;
-            // 
-            // valueColumn
-            // 
-            this.valueColumn.FillWeight = 70F;
-            this.valueColumn.HeaderText = "Value";
-            this.valueColumn.MinimumWidth = 6;
-            this.valueColumn.Name = "valueColumn";
-            this.valueColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.valueColumn.Width = 150;
-            // 
-            // insertValue
-            // 
-            this.insertValue.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.insertValue.Location = new System.Drawing.Point(7, 590);
-            this.insertValue.Multiline = true;
-            this.insertValue.Name = "insertValue";
-            this.insertValue.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.insertValue.Size = new System.Drawing.Size(408, 169);
-            this.insertValue.TabIndex = 18;
-            // 
-            // btnRead1
-            // 
-            this.btnRead1.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRead1.Location = new System.Drawing.Point(7, 541);
-            this.btnRead1.Name = "btnRead1";
-            this.btnRead1.Size = new System.Drawing.Size(114, 42);
-            this.btnRead1.TabIndex = 17;
-            this.btnRead1.Text = "Read";
-            this.btnRead1.UseVisualStyleBackColor = true;
-            this.btnRead1.Click += new System.EventHandler(this.btnTree_Click);
-            // 
-            // hexTxt
-            // 
-            this.hexTxt.BackColor = System.Drawing.SystemColors.Info;
-            this.hexTxt.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.hexTxt.ForeColor = System.Drawing.SystemColors.Highlight;
-            this.hexTxt.Location = new System.Drawing.Point(160, 546);
-            this.hexTxt.Name = "hexTxt";
-            this.hexTxt.Size = new System.Drawing.Size(255, 25);
-            this.hexTxt.TabIndex = 16;
-            // 
-            // txtValue
-            // 
-            this.txtValue.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtValue.Location = new System.Drawing.Point(160, 500);
-            this.txtValue.Name = "txtValue";
-            this.txtValue.Size = new System.Drawing.Size(255, 25);
-            this.txtValue.TabIndex = 14;
-            // 
-            // btnRegWrite
-            // 
-            this.btnRegWrite.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRegWrite.Location = new System.Drawing.Point(7, 495);
-            this.btnRegWrite.Name = "btnRegWrite";
-            this.btnRegWrite.Size = new System.Drawing.Size(114, 41);
-            this.btnRegWrite.TabIndex = 15;
-            this.btnRegWrite.Text = "Write";
-            this.btnRegWrite.UseVisualStyleBackColor = true;
-            this.btnRegWrite.Click += new System.EventHandler(this.btnRegWrite_Click);
-            // 
-            // txtName
-            // 
-            this.txtName.Enabled = false;
-            this.txtName.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.txtName.Location = new System.Drawing.Point(127, 447);
-            this.txtName.Multiline = true;
-            this.txtName.Name = "txtName";
-            this.txtName.Size = new System.Drawing.Size(288, 42);
-            this.txtName.TabIndex = 13;
-            // 
-            // txtID
-            // 
-            this.txtID.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.txtID.Font = new System.Drawing.Font("Book Antiqua", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtID.Location = new System.Drawing.Point(7, 447);
-            this.txtID.MaxLength = 4;
-            this.txtID.Multiline = true;
-            this.txtID.Name = "txtID";
-            this.txtID.Size = new System.Drawing.Size(114, 43);
-            this.txtID.TabIndex = 12;
-            this.txtID.TextChanged += new System.EventHandler(this.txtID_TextChanged);
-            // 
-            // listView1
-            // 
-            this.listView1.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.listView1.FullRowSelect = true;
-            this.listView1.GridLines = true;
-            this.listView1.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.listView1.HideSelection = false;
-            this.listView1.Location = new System.Drawing.Point(10, 39);
-            this.listView1.MultiSelect = false;
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(1009, 402);
-            this.listView1.TabIndex = 0;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            // 
-            // regPage2
-            // 
-            this.regPage2.Location = new System.Drawing.Point(4, 26);
-            this.regPage2.Name = "regPage2";
-            this.regPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.regPage2.Size = new System.Drawing.Size(1028, 717);
-            this.regPage2.TabIndex = 1;
-            this.regPage2.Text = "     F000-B000     ";
-            this.regPage2.UseVisualStyleBackColor = true;
-            // 
             // menuStrip1
             // 
             this.menuStrip1.AutoSize = false;
@@ -2535,7 +2211,7 @@ namespace ER41xxTestTool
             this.sendDataToolStripMenuItem});
             this.saveToolStripMenuItem.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(192, 26);
             this.saveToolStripMenuItem.Text = "Save";
             this.saveToolStripMenuItem.Visible = false;
             // 
@@ -2555,32 +2231,23 @@ namespace ER41xxTestTool
             // 
             // loadFileMenuItem
             // 
-            this.loadFileMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadInitFileToolStripMenuItem});
             this.loadFileMenuItem.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.loadFileMenuItem.Name = "loadFileMenuItem";
-            this.loadFileMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.loadFileMenuItem.Size = new System.Drawing.Size(192, 26);
             this.loadFileMenuItem.Text = "Load";
             this.loadFileMenuItem.Visible = false;
-            // 
-            // loadInitFileToolStripMenuItem
-            // 
-            this.loadInitFileToolStripMenuItem.Name = "loadInitFileToolStripMenuItem";
-            this.loadInitFileToolStripMenuItem.Size = new System.Drawing.Size(170, 26);
-            this.loadInitFileToolStripMenuItem.Text = "Load Init File";
-            this.loadInitFileToolStripMenuItem.Click += new System.EventHandler(this.loadInitFileToolStripMenuItem_Click);
             // 
             // loadParameterToolStripMenuItem
             // 
             this.loadParameterToolStripMenuItem.Name = "loadParameterToolStripMenuItem";
-            this.loadParameterToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.loadParameterToolStripMenuItem.Size = new System.Drawing.Size(192, 26);
             this.loadParameterToolStripMenuItem.Text = "Load Parameter";
             this.loadParameterToolStripMenuItem.Click += new System.EventHandler(this.loadParameterToolStripMenuItem_Click);
             // 
             // saveParameterToolStripMenuItem
             // 
             this.saveParameterToolStripMenuItem.Name = "saveParameterToolStripMenuItem";
-            this.saveParameterToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.saveParameterToolStripMenuItem.Size = new System.Drawing.Size(192, 26);
             this.saveParameterToolStripMenuItem.Text = "Save Parameter";
             this.saveParameterToolStripMenuItem.Click += new System.EventHandler(this.saveParameterToolStripMenuItem_Click);
             // 
@@ -2588,7 +2255,7 @@ namespace ER41xxTestTool
             // 
             this.quitToolStripMenuItem.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-            this.quitToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+            this.quitToolStripMenuItem.Size = new System.Drawing.Size(192, 26);
             this.quitToolStripMenuItem.Text = "Exit";
             this.quitToolStripMenuItem.Click += new System.EventHandler(this.QuitToolStripMenuItem_Click_1);
             // 
@@ -3089,10 +2756,6 @@ namespace ER41xxTestTool
             this.paramIntModeRxAfullGroup.PerformLayout();
             this.paramGpioGroup.ResumeLayout(false);
             this.paramGpioGroup.PerformLayout();
-            this.regPage.ResumeLayout(false);
-            this.regPage.PerformLayout();
-            this.wrAllRegGrp.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.paramZoneTab.ResumeLayout(false);
@@ -3142,32 +2805,6 @@ namespace ER41xxTestTool
         private System.Windows.Forms.CheckBox autoSendcbx;
         private System.Windows.Forms.TabControl dvbTstZoneTab;
         private System.Windows.Forms.TabPage dvbTstContiTxPage;
-        private System.Windows.Forms.TabPage regPage;
-        private System.Windows.Forms.TabPage regPage2;
-        private System.Windows.Forms.GroupBox wrAllRegGrp;
-        private System.Windows.Forms.Button regRead;
-        private System.Windows.Forms.ColumnHeader registerList;
-        private System.Windows.Forms.ColumnHeader registerName;
-        private System.Windows.Forms.ColumnHeader registerValue;
-        private System.Windows.Forms.Button btnClrListview;
-        private System.Windows.Forms.ListView listView1;
-        private System.Windows.Forms.Button btnWriteAll;
-        private System.Windows.Forms.Label label21;
-        private System.Windows.Forms.TextBox searchTxt;
-        private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.TextBox insertValue;
-        private System.Windows.Forms.Button btnRead1;
-        private System.Windows.Forms.TextBox hexTxt;
-        private System.Windows.Forms.TextBox txtValue;
-        private System.Windows.Forms.Button btnRegWrite;
-        private System.Windows.Forms.TextBox txtName;
-        private System.Windows.Forms.TextBox txtID;
-        private System.Windows.Forms.Label initialDataPath;
-        private System.Windows.Forms.Label label23;
-        private System.Windows.Forms.Label label22;
-        private System.Windows.Forms.DataGridViewTextBoxColumn nameColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn bitColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn valueColumn;
         private System.IO.Ports.SerialPort serialPort1;
         private System.Windows.Forms.TabPage dvbTstPktTxPage;
         private System.Windows.Forms.TextBox logResultText;
@@ -3187,13 +2824,9 @@ namespace ER41xxTestTool
         private System.Windows.Forms.ToolStripMenuItem SaveInitValueToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sendDataToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadFileMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem loadInitFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ComboBox tableCombobox;
-        private System.Windows.Forms.Button btnTableComRefresh;
         private System.Windows.Forms.TextBox paramTxSyncText;
-        private System.Windows.Forms.Button btnTableConnect;
         private System.IO.Ports.SerialPort serialPort2;
         private System.Windows.Forms.ComboBox paramDataRateCombo;
         private System.IO.Ports.SerialPort serialPort3;

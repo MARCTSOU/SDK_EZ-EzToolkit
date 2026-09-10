@@ -18,9 +18,9 @@ namespace ER41xxTestTool
     public partial class MainForm : Form
     {
         private ListView regDumpView;
-        private Button btnRegDump;
-        private Button btnRegTableWrite;
-        private Label lblRegDumpStatus;
+        //private Button btnRegDump;
+        //private Button btnRegTableWrite;
+        //private Label lblRegDumpStatus;
         private Button btnCategoryFilter;
         private CheckedListBox categoryFilterCheckedList;
         private ToolStripDropDown categoryFilterDropDown;
@@ -175,43 +175,43 @@ namespace ER41xxTestTool
 
             int inner = regTableTopicGroup.ClientSize.Width;      // 約 314
 
-            /* ----- 生成DVB讀按鈕，但將之隱藏，由main form的按鈕驅動 ----------*/
-            btnRegDump = new Button();
-            btnRegDump.Text = "Read DVB";
-            btnRegDump.Font = new Font("Microsoft Sans Serif", 8F);
-            //btnRegDump.Location = new Point(8, 20);
-            //btnRegDump.Size = new Size(80, 24);
-            btnRegDump.Location = new Point(0, 0);
-            btnRegDump.Size = new Size(0, 0);
-            btnRegDump.Click += btnRegDump_Click;
-            btnRegDump.Visible = false;
-            EnhanceButton(btnRegDump);
+            ///* ----- 生成DVB讀按鈕，但先將之隱藏，由main form的按鈕驅動 ----------*/
+            //btnRegDumpr = new Button();
+            //btnRegDump.Text = "Read DVB";
+            //btnRegDump.Font = new Font("Microsoft Sans Serif", 8F);
+            ////btnRegDump.Location = new Point(8, 20);
+            ////btnRegDump.Size = new Size(80, 24);
+            //btnRegDump.Location = new Point(0, 0);
+            //btnRegDump.Size = new Size(0, 0);
+            //btnRegDump.Click += btnRegDump_Click;
+            //btnRegDump.Visible = false;
+            //EnhanceButton(btnRegDump);
 
-            /* ----- 生成DVB寫按鈕，但將之隱藏，由main form的按鈕驅動 ---------*/
-            btnRegTableWrite = new Button();
-            btnRegTableWrite.Text = "Wrtie DVB";
-            btnRegTableWrite.Font = new Font("Microsoft Sans Serif", 8F);
-            //btnRegTableWrite.Location = new Point(100, 20);
-            //btnRegTableWrite.Size = new Size(80, 24);
-            btnRegTableWrite.Location = new Point(0, 0);
-            btnRegTableWrite.Size = new Size(0, 0);
-            btnRegTableWrite.Click += btnRegTableWrite_Click;
-            btnRegTableWrite.Visible = false;
-            EnhanceButton(btnRegTableWrite);
+            ///* ----- 生成DVB寫按鈕，但將之隱藏，由main form的按鈕驅動 ---------*/
+            //btnRegTableWrite = new Button();
+            //btnRegTableWrite.Text = "Wrtie DVB";
+            //btnRegTableWrite.Font = new Font("Microsoft Sans Serif", 8F);
+            ////btnRegTableWrite.Location = new Point(100, 20);
+            ////btnRegTableWrite.Size = new Size(80, 24);
+            //btnRegTableWrite.Location = new Point(0, 0);
+            //btnRegTableWrite.Size = new Size(0, 0);
+            //btnRegTableWrite.Click += btnRegTableWrite_Click;
+            //btnRegTableWrite.Visible = false;
+            //EnhanceButton(btnRegTableWrite);
 
             /* ----- 生成Register table 標籤以顯示數量，但將之隱藏 ----------*/
-            lblRegDumpStatus = new Label();
-            lblRegDumpStatus.AutoSize = false;
-            //lblRegDumpStatus.Location = new Point(190, 20);
+            //lblRegDumpStatus = new Label();
+            //lblRegDumpStatus.AutoSize = false;
+            ////lblRegDumpStatus.Location = new Point(190, 20);
+            ////lblRegDumpStatus.Size = new Size(inner - 152, 16);
+            //lblRegDumpStatus.Location = new Point(0, 0);
             //lblRegDumpStatus.Size = new Size(inner - 152, 16);
-            lblRegDumpStatus.Location = new Point(0, 0);
-            lblRegDumpStatus.Size = new Size(inner - 152, 16);
-            lblRegDumpStatus.Font = new Font("Microsoft Sans Serif", 8F);
-            lblRegDumpStatus.ForeColor = Color.Black;
-            lblRegDumpStatus.TextAlign = ContentAlignment.MiddleLeft;
-            lblRegDumpStatus.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            lblRegDumpStatus.Visible = false;
-            lblRegDumpStatus.Text = "";
+            //lblRegDumpStatus.Font = new Font("Microsoft Sans Serif", 8F);
+            //lblRegDumpStatus.ForeColor = Color.Black;
+            //lblRegDumpStatus.TextAlign = ContentAlignment.MiddleLeft;
+            //lblRegDumpStatus.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            //lblRegDumpStatus.Visible = false;
+            //lblRegDumpStatus.Text = "";
 
             /* ===== 生成Register table 過瀘器, 搜尋器 =====================*/
             // 兩個過濾按鈕 (Topic/DependsOn, 外觀都像 ComboBox) + 依名稱/位址搜尋, 放在原 READ/WRITE
@@ -369,9 +369,9 @@ namespace ER41xxTestTool
                 regDumpView.Groups.Add(grp);
             }
 
-            regTableTopicGroup.Controls.Add(btnRegDump);
-            regTableTopicGroup.Controls.Add(btnRegTableWrite);
-            regTableTopicGroup.Controls.Add(lblRegDumpStatus);
+            //regTableTopicGroup.Controls.Add(btnRegDump);
+            //regTableTopicGroup.Controls.Add(btnRegTableWrite);
+            //regTableTopicGroup.Controls.Add(lblRegDumpStatus);
             regTableTopicGroup.Controls.Add(btnCategoryFilter);
             regTableTopicGroup.Controls.Add(btnDependsOnFilter);
             regTableTopicGroup.Controls.Add(lblSearchHint);
@@ -877,7 +877,7 @@ namespace ER41xxTestTool
                     RawValue = it.Value });
 
             RenderRegisterRows(rows, "default value from .h");
-            lblRegDumpStatus.Text = "default " + rows.Count + " regs";
+            //lblRegDumpStatus.Text = "default " + rows.Count + " regs";
             
         }
 
@@ -1008,7 +1008,10 @@ namespace ER41xxTestTool
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter && parameterControls != null && parameterControls.Contains(ActiveControl))
+            {
                 RefreshRegisterListFromUi();
+                this.ActiveControl = null; //取消焦點，比如原本在填頻率，按下enter後會讓游標離開
+            }
         }
 
         /// <summary>
@@ -1044,7 +1047,7 @@ namespace ER41xxTestTool
             }
 
             RenderRegisterRows(rows, "calculated from parameters");
-            lblRegDumpStatus.Text = rows.Count + " regs (UI)";
+            //lblRegDumpStatus.Text = rows.Count + " regs (UI)";
         }
 
         /// <summary>
@@ -1193,7 +1196,7 @@ namespace ER41xxTestTool
             return true;
         }
 
-        private void btnRegDump_Click(object sender, EventArgs e)
+        private void btnRegDumpFromDVB()//object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {
@@ -1201,10 +1204,10 @@ namespace ER41xxTestTool
                 return;
             }
 
-            btnRegDump.Enabled = false;
-            btnRegTableWrite.Enabled = false;
-            lblRegDumpStatus.Text = "Reading ...";
-            lblRegDumpStatus.Update();
+            //btnRegDump.Enabled = false;
+            //btnRegTableWrite.Enabled = false;
+            //lblRegDumpStatus.Text = "Reading ...";
+            //lblRegDumpStatus.Update();
             regDumpView.Items.Clear();
             Cursor.Current = Cursors.WaitCursor;
 
@@ -1214,20 +1217,20 @@ namespace ER41xxTestTool
                 List<KeyValuePair<string, uint>> regs = ReadRegisterDump();
                 if (regs == null)
                 {
-                    lblRegDumpStatus.Text = "FAIL";
+                    //lblRegDumpStatus.Text = "FAIL";
                 }
                 else
                 {
                     ShowRegisterDump(regs);
                     TimeSpan t = DateTime.Now - start;
-                    lblRegDumpStatus.Text = regs.Count + " regs, " + t.TotalSeconds.ToString("0.00") + "s";
+                    //lblRegDumpStatus.Text = regs.Count + " regs, " + t.TotalSeconds.ToString("0.00") + "s";
                 }
             }
             finally
             {
                 Cursor.Current = Cursors.Default;
-                btnRegDump.Enabled = true;
-                btnRegTableWrite.Enabled = true;
+                //btnRegDump.Enabled = true;
+                //btnRegTableWrite.Enabled = true;
             }
         }
 
@@ -1269,10 +1272,10 @@ namespace ER41xxTestTool
 
         private void PerformRegWrite(List<ushort> writeOrder)
         {
-            btnRegDump.Enabled = false;
-            btnRegTableWrite.Enabled = false;
-            lblRegDumpStatus.Text = "Writing ...";
-            lblRegDumpStatus.Update();
+            //btnRegDump.Enabled = false;
+            //btnRegTableWrite.Enabled = false;
+            //lblRegDumpStatus.Text = "Writing ...";
+            //lblRegDumpStatus.Update();
             Cursor.Current = Cursors.WaitCursor;
 
             DateTime start = DateTime.Now;
@@ -1291,19 +1294,19 @@ namespace ER41xxTestTool
                     Thread.Sleep(15);
                 }
                 TimeSpan t = DateTime.Now - start;
-                lblRegDumpStatus.Text = written + " regs written, " + t.TotalSeconds.ToString("0.00") + "s";
+                //lblRegDumpStatus.Text = written + " regs written, " + t.TotalSeconds.ToString("0.00") + "s";
                 ShowInsLog("REG WRITE: " + written + " regs written\r\n");
                 bRegTableDirty = false;
             }
             finally
             {
                 Cursor.Current = Cursors.Default;
-                btnRegDump.Enabled = true;
-                btnRegTableWrite.Enabled = true;
+                //btnRegDump.Enabled = true;
+                //btnRegTableWrite.Enabled = true;
             }
         }
 
-        private void btnRegTableWrite_Click(object sender, EventArgs e)
+        private void btnRegWriteToDVB()//object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {

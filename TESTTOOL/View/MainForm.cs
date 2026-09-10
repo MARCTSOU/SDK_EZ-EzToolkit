@@ -168,7 +168,6 @@ namespace ER41xxTestTool
         {
             InitializeComponent();
             this.AutoScaleMode = AutoScaleMode.Dpi; // 或 Font
-            InitializeCOMCombox();
             RefreshDvbComPortList();     //刷新DVB Connection頁面中的com port list
             InitParamZoneUI();   // PARAMETER 分頁的動態控制項生成(INTERRUPT下拉勾選清單)+元件間即時連動邏輯
             InitRegDumpUI();   // REG WR 分頁的 REGISTER DUMP 功能初始化
@@ -205,15 +204,25 @@ namespace ER41xxTestTool
             bitRange    = new BitRange();
            
             this.statusTimeLabel.Text = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
-            txtName.BackColor = Color.White;
-            txtName.ForeColor = Color.Black;
             //ShowInsLog(PAConfigCombo.Text+"\r\n");
         }
 
-        /// <summary>
-        /// 下 command 並嘗試讀取 8位 hex string → 轉成 byte[4]
-        /// </summary>
-        public bool ReadICTypeAndAnalysis(string cmd, out byte[] rdData)
+        /*-------------------------------------------------------------
+         *  CmdReadDVB
+         * 透過Serial port對DVB下命令，並且讀取回字串訊息，最多重試MaxRetry(3)次，
+         * 每次讀回後會執行以下作業:
+         *  (1) 過濾第一個CRLF符號及其後的所有內容 (只取第一行)
+         *  (2) 過濾頭尾空格
+         *  (3) 驗證長度為8個字元、且為合法16進位字串 (表示字串為32bit資料的ascii)
+         *  驗證通過就轉成byte[4] (大端序, MSB在前) 回傳true；重試MaxRetry次都失敗則回傳false。
+         * Param :
+         *   cmd    - 要送給DVB的serial指令字串 (需含結尾的換行符號)
+         *   rdData - 輸出參數；成功時為轉換後的4-byte大端序資料，失敗時為null
+         * Return:
+         *   true  - 成功讀到合法的32bit hex字串並轉換成功
+         *   false - 重試MaxRetry次後仍未讀到合法回應
+         *-------------------------------------------------------------*/
+        public bool CmdReadDVB(string cmd, out byte[] rdData)
         {
             rdData = null;
             const int MaxRetry = 3;
@@ -255,12 +264,26 @@ namespace ER41xxTestTool
             return false;
         }       
 
+        /*-------------------------------------------------------------
+         *  CheckICPowerType
+         * 呼叫CmdReadDVB()讀取暫存器0xF104，從讀回的4-byte(大端序)資料中，
+         * 取最低位元組(rdData[3], 即暫存器bits[7:0])的bit1，
+         * 判斷目前連接的DVB子板是High Power還是Low Power的IC。
+         * (依呼叫端用法對照: 0=Low Power, 1=High Power)
+         * 讀取失敗(CmdReadDVB回傳false)時會印出錯誤訊息、回傳-1當作"讀取失敗"的旗標值，
+         * 呼叫端要另外處理-1這個特殊情況 (不能直接當成0或1用)。
+         * Param :
+         *   (無)
+         * Return:
+         *   0/1 - 讀取成功，IC為Low Power(0)或High Power(1)
+         *   -1  - 讀取失敗 (CmdReadDVB重試多次仍讀不到合法回應)
+         *-------------------------------------------------------------*/
         public int CheckICPowerType()
         {
             int type = -1;
             byte[] rdData = new byte[4];
             string scmd = "rr 0xf104\r";
-            if (ReadICTypeAndAnalysis(scmd, out rdData))
+            if (CmdReadDVB(scmd, out rdData))
             {
                 //ShowInsLog(BitConverter.ToString(rdData)+"\r\n"); // 00-00-00-02
                 //ShowInsLog("[0]" + rdData[0] + " [1]" + rdData[1] + " [2]" + rdData[2] + "- Type[3]: " + rdData[3] + "\r\n");
@@ -273,6 +296,17 @@ namespace ER41xxTestTool
             return type;
         }
 
+        /*-------------------------------------------------------------
+         *  InitialCRCList
+         * [物件控制] - 刷新dvbTstPktTxCrcCombo, dvbTstPktRxCrcCombo
+         * 把固定清單crcList({"CCIT","CRC16_IBM","No CRC"})填進PACKET TX/RX
+         * 兩個分頁各自的CRC Polynomial下拉選單(dvbTstPktTxCrcCombo/dvbTstPktRxCrcCombo)，
+         * 預設都選第0項("CCIT")。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InitialCRCList()
         {
             int i = 0;
@@ -285,6 +319,18 @@ namespace ER41xxTestTool
             dvbTstPktRxCrcCombo.SelectedIndex = 0;
         }
 
+        /*-------------------------------------------------------------
+         *  InitialTxDatarate
+         * [物件控制] - 刷新paramDataRateCombo
+         * 把固定清單drList(40MHz Xtal用的Data Rate選項, "2000.000"~"0.625"共24項)
+         * 填進PARAMETER分頁的Data Rate下拉選單(paramDataRateCombo)，
+         * 預設選第6項("100.000", 100kbps)。
+         * (38.4MHz Xtal用的清單是drList384，另外在xtalCombo切換時才重新填。)
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InitialTxDatarate()
         {
             int i = 0;
@@ -295,6 +341,17 @@ namespace ER41xxTestTool
             paramDataRateCombo.SelectedIndex = 6;
         }
 
+        /*-------------------------------------------------------------
+         *  InitialMaxPowerSelectList
+         * [物件控制] - 刷新paramPAConfigCombo
+         * 把固定清單MaxPwrSelList({"10","14","16","20","23"}, 單位dBm)的前len項
+         * 填進PA CONFIG下拉選單(paramPAConfigCombo)，填之前先清空舊選項，
+         * 預設選第0項。len依連線後讀到的PA/IC類型而定，不同IC支援的dBm選項數量不同。
+         * Param :
+         *   len - 要填入的選項數量 (從MaxPwrSelList開頭取len項)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InitialMaxPowerSelectList(int len)
         {
             int i = 0;
@@ -305,6 +362,17 @@ namespace ER41xxTestTool
             }
             paramPAConfigCombo.SelectedIndex = 0;
         }
+        /*-------------------------------------------------------------
+         *  InitialTxMod
+         * [物件控制] - 刷新paramModulationCombo
+         * 把固定清單modList(目前只有"GFSK"一項, 這個工具目前只支援GFSK調變)
+         * 填進PARAMETER分頁的Modulation下拉選單(paramModulationCombo)，
+         * 填之前先清空舊選項，預設選第0項。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InitialTxMod()
         {
             paramModulationCombo.Items.Clear();
@@ -433,112 +501,6 @@ namespace ER41xxTestTool
             {
                 GetDataRightNow(stmp, 3); // 3 -- for auto freq calibration 2
             }
-            if (isTableReadReg)
-            {
-                isTableReadReg = false;
-                regValue[selIdx] = stmp;
-                //txreceivetbx.Text += "[" + selIdx + "]= " + regValue[selIdx] + "\r\n ";
-                hexTxt.Text = stmp;
-
-                ClearDataGridView();
-                try
-                {               
-                    listView1.Items[selIdx].SubItems[2].Text = stmp; // owen bug
-                }
-                catch (Exception ex)
-                {
-                    //insertValue.Text += ex.ToString();
-                    //insertValue.Text += "\r\n";
-                }
-                ShowDataGrid(selIdx);
-
-                try
-                {
-                    //regValueInt[idx] = int.Parse(stmp, System.Globalization.NumberStyles.HexNumber);
-                    stmp = "0x" + stmp;
-                    regValueInt[selIdx] = (uint)Convert.ToInt32(stmp, 16);
-                }
-                catch (InvalidCastException e){
-                    // recover from exception
-                    txtValue.Text += e.Message + " Transfer tr to int ==> Fail!\r\n";
-                }
-
-            }
-
-        }
-
-        //  "@ .....所有register value....... &&"
-        //  "64 .............................38 38"
-        public void RcvDataToArray()
-        {
-            int j = 0;
-            int idx = 0;
-            string stmp = "";
-            int startFlag = 64;  // 64=@"
-
-            //txreceivetbx.Text += "rcvIdx=" + rcvIdx + "; end=" + rcvEnd + "\r\n";
-            for (int i = 0; i < rcvIdx; i++)
-            {
-                if (rcvRegArray[i] == startFlag)
-                {
-                    j = i;
-                    break;
-                }
-            }
-            //txreceivetbx.Text += "St=" + j + " ";
-
-            for (int i = (j + 1); i < rcvEnd; i += 8)
-            {
-                stmp = "";
-                stmp = System.Text.Encoding.UTF8.GetString(rcvRegArray, i, 8);
-                // * 可以用以下方法每8bytes剪一下, 再每一個bytes轉成str, 也可以只用一條command:
-                // * 一次將8bytes轉成 str 
-                // * stmp =  System.Text.Encoding.UTF8.GetString(rcvRegArray, i, 8);
-                //byte[] bytes = new byte[1];
-                //for (int k=i; k<i+8; k++){
-                //    bytes[0] = rcvRegArray[k];
-                //    stmp += System.Text.Encoding.ASCII.GetString(bytes);                   
-                //} 
-                regValue[idx] = stmp;
-                try
-                {
-                    //regValueInt[idx] = int.Parse(stmp, System.Globalization.NumberStyles.HexNumber);
-                    stmp = "0x" + stmp;
-                    regValueInt[idx] = (uint)Convert.ToInt32(stmp, 16);
-                }
-                catch (InvalidCastException e)
-                {
-                    // recover from exception
-                    txtValue.Text += e.Message + " Transfer tr to int ==> Fail!\r\n";
-                }
-                //tmpSt = System.Text.Encoding.UTF8.GetString(dataRcv, 2, 3);
-                idx++;
-            }
-        }
-        
-        public void ShowAllRegisterData()
-        {           
-            ClearRegisterList();
-            TableCreate();    // OWen check
-            for (int i = 0; i < regList.Length; i++){
-                viewItem = new ListViewItem(regList[i]);
-                viewItem.SubItems.Add(regName[i]);
-                viewItem.SubItems.Add(regValue[i]);
-                listView1.Items.Add(viewItem);
-            }
-        }
-
-        public void ShowPartialRegisterData()
-        {
-            ClearRegisterList();
-            TableCreate();    // OWen check
-            for (int i=0; i<searchRegName.Count; i++)
-            {
-                viewItem = new ListViewItem(regList[searchRegName[i]]);
-                viewItem.SubItems.Add(regName[searchRegName[i]]);
-                viewItem.SubItems.Add(regValue[searchRegName[i]]);
-                listView1.Items.Add(viewItem);
-            }
         }
 
         // 當第一次收到interrupt時,直接貼在rcvRegArray[0],
@@ -609,26 +571,6 @@ namespace ER41xxTestTool
 //                                                                                    :  0  x   0  0  0  0  0  1  1  A
 // 114 100 114 32 48 120 48 48 48 52 13 13 10 13 91 82 68 82 93 58 48 120 48 48 48 52 58 48 120 48 48 48 48 48 49 49 65 10 13 79 75 10 13 13 10 13 67 77 68 62 32 
             */
-        public void ReadAllRegisterProcess(byte[] dataR)
-        {
-            if (isReadAllRegister){
-                for (int i=0; i< dataR.Length; i++){
-                    if (rcvIdx < rcvRegArray.Length){
-                        rcvRegArray[rcvIdx] = dataR[i];
-                        rcvIdx++;
-                    }
-                    
-                    if ((dataR[i] == 38) && (dataR[i - 1] == 38))   // @ = 38
-                    {
-                        rcvEnd = (rcvIdx - 2);
-                        RcvDataToArray();
-                        ShowAllRegisterData();
-                        isReadAllRegister = false;                        
-                    }                       
-                }               
-            }           
-        }
-
         public void ReadRegisterProcess(byte[] dataR)
         {
             if ((isReadRegister) && ((rcvIdx+ dataR.Length)< rcvRegArray.Length))
@@ -648,30 +590,6 @@ namespace ER41xxTestTool
                 }
             }
 
-        }
-
-        /// <summary>
-        /// Initialize serial port information
-        /// </summary>
-        private void InitializeCOMCombox()
-        {            
-            //Com Ports
-            string[] ArrayComPortsNames = SerialPort.GetPortNames().Distinct().ToArray();
-            if (ArrayComPortsNames.Length == 0)
-            {
-                //statuslabel.Text = "No COM found !";
-                //txopenCloseSpbtn.Enabled = false;
-            }
-            else
-            {
-                Array.Sort(ArrayComPortsNames);
-                for (int i = 0; i < ArrayComPortsNames.Length; i++)
-                {
-                    tableCombobox.Items.Add(ArrayComPortsNames[i]);
-                }
-                tableCombobox.Text = ArrayComPortsNames[0];
-                //txopenCloseSpbtn.Enabled = true;
-            }
         }
 
         /// <summary>
@@ -970,7 +888,6 @@ namespace ER41xxTestTool
                 }
                 //sw.Write("};");
             }
-            insertValue.Text += "Save OK\r\n";
         }
      
         public byte[] tRpt = { 58, 67, 65, 76, 67, 58, 77, 65, 82, 75, 49, 58, 89, 63,
@@ -1007,791 +924,6 @@ namespace ER41xxTestTool
             imgList.ImageSize = new Size(1, height);
             listView.SmallImageList = imgList;
         }*/
-        private void TableCreate()
-        {
-            listView1.View = View.Details;
-            ColumnHeader columnHeader1 = new ColumnHeader();
-            columnHeader1.TextAlign = HorizontalAlignment.Left;
-            columnHeader1.Text = "Register ID";
-            columnHeader1.Width = 150;
-            ColumnHeader columnHeader2 = new ColumnHeader();
-            columnHeader2.TextAlign = HorizontalAlignment.Left;
-            columnHeader2.Text = "Name";
-            columnHeader2.Width = 500;
-            ColumnHeader columnHeader3 = new ColumnHeader();
-            columnHeader3.TextAlign = HorizontalAlignment.Left;
-            columnHeader3.Text = "Value (Hex)";
-            columnHeader3.Width = 150;
-            //ColumnHeader columnHeader4 = new ColumnHeader();
-            //columnHeader4.TextAlign = HorizontalAlignment.Center;
-            //columnHeader4.Text = "Description";
-            //columnHeader4.Width = 300;
-            listView1.Columns.Add(columnHeader1);
-            listView1.Columns.Add(columnHeader2);
-            listView1.Columns.Add(columnHeader3);
-            //listView1.Columns.Add(columnHeader4);  
-            //SetHeight(listView1, 30);   //因為ListView compile 時出er5or, 暫時 closed
-        }
-        // Owen OLD method for ReadRegister
-        private bool ReadRegister()
-        {
-            string scmd = "rd1 0x";
-            isReadRegister = true;
-            bool flag = false;
-            rcvIdx = 0;
-            rcvEnd = 0;
-            for (int i = 0; i < 50; i++){
-                rcvRegArray[i] = 0x00;}
-            
-            try
-            {
-                scmd = scmd + txtID.Text;
-                flag = txSerial.SendDataToCom(scmd + '\r');
-                //if (flag)
-                //    ShowWriteAllRegLog(("Read [REG]" + txtID.Text + " " + hexTxt.Text + "\r\n"), true);
-                //else
-                //    ShowWriteAllRegLog(("Read [REG]" + txtID.Text + " FAIL\r\n"), true);
-            }
-            catch (Exception ex)
-            {
-                //insertValue.Text += ex.ToString();
-                //insertValue.Text += "\r\n";
-            }           
-            return flag;
-        }
-
-        public string readRegReturnStr(string str)
-        {
-            string stmp = "";
-            int endIdx = 0;
-            byte[] tmp = Encoding.Default.GetBytes(str);
-            int len = tmp.Length;
-            if (len > 0)
-            {
-                for (int i = 8; i < len; i++)
-                {
-                    if ((tmp[i] == 64) && (tmp[i - 1] == 64))   // @ = 64
-                        endIdx = (i - 2);
-                }
-                //ShowInsLog("len=" + len + "; endIdx=" + endIdx + "\r\n");
-                if (endIdx >= 8)
-                {
-                    int startIdx = (endIdx - 8 + 1);
-                    stmp = System.Text.Encoding.UTF8.GetString(tmp, startIdx, 8);
-                    
-                    //ShowInsLog("Data=" + stmp + "; " + BitConverter.ToString(resu) + "\r\n");
-                }
-                else
-                {
-                    ShowInsLog("Read Register Error\r\n");
-                }
-            }
-            return stmp;
-
-        }
-
-        public byte[] stringTo4bytes(string stmp)
-        {
-            byte[] rdData = new byte[4];
-            uint value = 0;
-            // 1. 將字串當作 16進位數轉成 UInt32
-            try
-            {
-                value = Convert.ToUInt32(stmp, 16);
-                // 2. 拆成 4 bytes (BitConverter 預設 little-endian)
-                rdData = BitConverter.GetBytes(value);
-                // 3. 如果要大端序 (像你例子 00000002 -> {00,00,00,02})
-                Array.Reverse(rdData);
-            }
-            catch (Exception ex)
-            {
-                ;
-            }
-            // 測試輸出
-            ShowInsLog(BitConverter.ToString(rdData)+"\r\n"); // 00-00-00-02
-
-            return rdData;
-
-        }
-        public byte[] readRegAnalysis(string str)
-        {
-            byte[] resu = new byte[4];
-            //char[] charArr = str.ToCharArray();
-            //int len = charArr.Length;
-            int endIdx = 0;
-            byte[] tmp = Encoding.Default.GetBytes(str);
-            int len = tmp.Length;
-            if (len > 0)
-            {
-                for (int i = 8; i < len; i++)
-                {
-                    if ((tmp[i] == 64) && (tmp[i - 1] == 64))   // @ = 64
-                        endIdx = (i - 2);
-                }
-                //ShowInsLog("len=" + len + "; endIdx=" + endIdx + "\r\n");
-                if (endIdx >= 8){
-                    int startIdx = (endIdx - 8 + 1);
-                    string stmp = System.Text.Encoding.UTF8.GetString(tmp, startIdx, 8);
-                    uint regValue = (UInt32)Convert.ToInt32(stmp, 16);
-                    resu[0] = (byte)(regValue >> 24);
-                    resu[1] = (byte)(regValue >> 16);
-                    resu[2] = (byte)(regValue >> 8);
-                    resu[3] = (byte)regValue;
-                    //ShowInsLog("Data=" + stmp + "; " + BitConverter.ToString(resu) + "\r\n");
-                }
-                else{
-                    ShowInsLog("Read Register Error\r\n");
-                }
-            }
-            return resu;
-        }
-
-        public bool ConnectSerial2()
-        {
-            bool res = false;
-            serialPort1.BaudRate = baudRateNumber;
-            serialPort1.PortName = tableCombobox.Text;
-            try
-            {
-                serialPort1.Open();
-                ShowInsLog(tableCombobox.Text + " connected\r\n");
-                res = true;
-            }
-            catch (Exception ex)
-            {
-                //ShowInsLog(ex.ToString() + "\r\n");
-                ShowInsLog(tableCombobox.Text + " connect failed\r\n");
-            }
-
-            return res;
-        }
-
-        public bool ConnectSerial3()
-        {
-            bool res = false;
-            serialPort1.BaudRate = baudRateNumber;
-            serialPort1.PortName = comPortToolStripComboBox.Text;
-            try
-            {
-                serialPort1.Open();
-                ShowInsLog(comPortToolStripComboBox.Text + " connected\r\n");
-                res = true;
-            }
-            catch (Exception ex)
-            {
-                //ShowInsLog(ex.ToString() + "\r\n");
-                ShowInsLog(comPortToolStripComboBox.Text + " connect failed\r\n");
-            }
-            return res;
-        }
-
-        public bool ConnectSerial4()
-        {
-            bool res = false;
-            serialPort3.BaudRate = baudRateNumber;
-            try
-            {
-                serialPort3.Open();
-                res = true;
-            }
-            catch (Exception ex)
-            {
-            }
-            return res;
-        }
-
-        
-        //private byte[] ReadRegister2(string regID)
-        private string ReadRegister2(string regID)
-        {
-            bool flag = false;
-            //byte[] rdData = new byte[4];
-            string stmp = "";
-            if (!serialPort1.IsOpen)
-            {
-                flag = ConnectSerial2();
-                Thread.Sleep(50);
-            }
-            if (serialPort1.IsOpen)
-            {
-                serialPort1.WriteLine("rr 0x" + regID + '\r');
-                Thread.Sleep(10);
-                string strTmp = serialPort1.ReadExisting();
-                //ShowInsLog(strTmp + "\r\n");
-                if (!string.IsNullOrEmpty(strTmp))
-                    stmp = readRegReturnStr(strTmp);  // rdData = readRegAnalysis(strTmp);
-            }
-            //ShowInsLog("Data=" + BitConverter.ToString(rdData) + "\r\n");
-            return stmp; // rdData;
-        }
-       
-
-        private bool ReadAllRegister()
-        {
-            rcvIdx = 0;
-            rcvEnd = 0;
-            for (int i = 0; i< rcvRegArray.Length; i++){
-                rcvRegArray[i] = 0x00;}
-            
-            isReadAllRegister = true;
-            string scmd = "rd2";
-            bool flag = txSerial.SendDataToCom(scmd + '\r');
-
-            return flag;
-        }
-
-        public bool ReadAllRegister2()
-        {
-            bool res = false;
-            string stmp = "";
-            int i = 0;
-            int completePercent = 0;
-            for (i = 0; i< regList.Length; i++)
-            {
-                if ((i % 69 == 0) && (i>0) && (i< 340))
-                {
-                    completePercent = (i * 100)/ regList.Length ;
-                    //regRead.Text = completePercent + "%";
-                    //regRead.Update();
-                    ShowInsLog("..."+ completePercent + "%\r\n");
-                }
-
-                stmp = ReadRegister2(regList[i]);
-                //ShowInsLog("["+i+"]="+stmp+"\r\n");
-                regValue[i] = stmp;
-                try
-                {
-                    //regValueInt[idx] = int.Parse(stmp, System.Globalization.NumberStyles.HexNumber);
-                    stmp = "0x" + stmp;
-                    regValueInt[i] = (uint)Convert.ToInt32(stmp, 16);
-                    res = true;
-                }
-                catch (InvalidCastException e)
-                {
-                    // recover from exception
-                    insertValue.Text += e.Message + " Transfer tr to int ==> Fail!\r\n";
-                }
-            }
-            ShowAllRegisterData();
-            return res;
-        }
-
-        //           Read all Register
-        private void regRead_Click(object sender, EventArgs e)//Read all Register
-        {
-            bSearchReg = false;
-            searchTxt.Text = "";
-            rcvIdx = 0;
-            rcvEnd = 0;
-            btnTableConnect.Enabled = false;
-            btnTableConnect.Update();
-            btnWriteAll.Enabled = false;
-            btnWriteAll.Update();
-            regRead.Enabled = false;
-            regRead.Update();
-
-            btnRead1.Enabled = false;
-            btnRead1.Update();
-            btnRegWrite.Enabled = false;
-            btnRegWrite.Update();
-
-            //bool res = ReadAllRegister();     // Owen 原本方式
-            DateTime start;
-            TimeSpan time;
-            start = DateTime.Now;
-            ShowInsLog("Reading now ....... \r\n");
-            
-            bool res = ReadAllRegister2();
-            time = DateTime.Now - start;
-
-            btnTableConnect.Enabled = true;
-            btnTableConnect.Update();
-            btnRead1.Enabled = true;
-            btnRead1.Update();
-            btnRegWrite.Enabled = true;
-            btnRegWrite.Update();
-            btnWriteAll.Enabled = true;
-            btnWriteAll.Update();
-            regRead.Enabled = true;
-            regRead.Update();
-            if (res == false)
-                ShowInsLog("Read Error: Check UART Connection\r\n");
-            else
-                ShowInsLog("Read All Register Finished!\r\n");// + String.Format("{0}.{1}", time.Seconds, time.Milliseconds.ToString().PadLeft(3, '0')) + "\r\n");
-        }
-
-        public static string cutRegID(string t)
-        {
-            return t.Substring(0, 4);
-        }
-        public static string cutRegName(string t)
-        {
-            return t.Substring(8, 25);
-        }
-        public static string cutRegValue(string t)
-        {
-            return t.Substring(38, 8);
-        }
-
-        private bool LoadRegValue()
-        {
-            // Data from 30th for each row
-            OpenFileDialog fileDialog = new OpenFileDialog();
-            fileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal); //Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            fileDialog.Filter = "txt file|*.txt";
-            fileDialog.DefaultExt = ".txt";
-            string tmpStr = "";
-            int lineCount = 0;
-            if (fileDialog.ShowDialog() == DialogResult.OK)
-            {
-                lineCount = File.ReadLines(fileDialog.FileName).Count();
-                initialDataPath.Text = fileDialog.FileName;
-            }
-            else
-                return false;
-
-            if (lineCount > 2)
-            {
-                ShowInsLog("Load: " + fileDialog.FileName + " now......\r\n");
-                //string[] readRegValue = new string[lineCount];                                      
-                string str = "";
-                using (var sr = new StreamReader(fileDialog.FileName))
-                {
-                    tmpStr = sr.ReadLine();
-                    if (!initTitle.Equals(tmpStr))
-                    {
-                        ShowInsLog("Wrong initial data file format!\r\n");
-                        return false;
-                    }
-                    else
-                    {
-                        regTableSize = (lineCount - 1);
-                        for (int i = 1; i < lineCount; i++)
-                        {
-                            str = sr.ReadLine();
-                            regValue[i - 1] = cutRegValue(str);
-                            regName[i - 1] = cutRegName(str);
-                            regList[i - 1] = cutRegID(str);
-                        }
-                        ShowInsLog("Load: " + fileDialog.FileName + " OK......\r\n");
-                    }
-
-                }
-                return true;
-            }
-            else
-                return false;
-                     
-        }
-        
-        private void ClearRegisterList()
-        {
-            listView1.Clear();
-        }
-        private void btnSetValue_Click(object sender, EventArgs e)
-        {
-            string prefixedHex = hexTxt.Text;
-            uint intValue =(UInt32) Convert.ToInt32(prefixedHex, 16);
-            txtValue.Text += "0x"+prefixedHex +"= " + intValue + "\r\n";
-        }
-
-        private void ShowRegister()
-        {
-            for (int i=0; i<regTableSize; i++)
-            {
-                //ListViewItem viewItem = new ListViewItem(regList[i]);
-                viewItem = new ListViewItem(regList[i]);
-                viewItem.SubItems.Add(regName[i]);
-                viewItem.SubItems.Add(regValue[i]);
-                //viewItem.SubItems.Add(reg);
-                listView1.Items.Add(viewItem);
-            }
-
-        }
-
-        public void RegisterIDList()
-        {
-            regIDs = new RegIDs();
-            regList = regIDs.RegisterList();
-        }
-
-        private void RegisterNameList()
-        {
-            regNames = new RegNames();
-            regName = regNames.RegisterNameList();
-            int regSize = regName.Length;
-            regTableSize = regSize;       
-
-        }
-
-        public bool FindSelectedIDIdxWhenSearchReg()
-        {
-            string id = txtID.Text.ToUpper();
-            Boolean flag = false;
-            for (int i = 0; i < searchRegName.Count; i++)
-            {
-                if (id.Equals(regList[searchRegName[i]]))
-                {
-                    selIdx = i;             // selIdxIs
-                    
-                    flag = true;
-                }
-            }
-            return flag;
-
-        }
-        public bool FindSelectedIDIdx()
-        {
-            string id = txtID.Text.ToUpper();
-            Boolean flag = false;
-            for (int i = 0; i < regList.Length; i++)
-            {
-                if (id.Equals(regList[i]))
-                {
-                    selIdx = i;             // selIdxIs                  
-                    flag = true;
-                }
-            }
-            return flag;
-
-        }
-
-        public void Do_SearchRegisterIDIdx()
-        {
-            bool flag = false;
-            if (bSearchReg == false)
-                flag = FindSelectedIDIdx();
-            else
-                flag = FindSelectedIDIdxWhenSearchReg();
-
-            if (flag){
-                //bSearchID = true;
-                ClearDataGridView();
-                listView1.EnsureVisible(selIdx);        // here is selIdx err
-                listView1.Select();
-                listView1.Items[selIdx].Selected = true;
-                if (bSearchReg == false)
-                    ShowDataGrid(selIdx);
-                else
-                    ShowDataGrid(searchRegName[selIdx]);
-            }
-            else
-            {
-                //insertValue.Text = "????? \r\n";
-                if (bSearchReg == true){
-                    bSearchReg = false;
-                    ShowAllRegisterData();
-                    Do_SearchRegisterIDIdx();
-                }                
-            }
-                
-        }
-        private void btnClrListview_Click(object sender, EventArgs e)
-        {
-            //Do_SearchRegisterIDIdx();
-            //insertValue.Text += "bSearchID="+bSearchID+"\r\n";
-            //insertValue.Text += "bSearchReg=" + bSearchReg + "\r\n";
-            string str = txtValue.Text;
-            insertValue.Text = str + "-->  ";
-            str = clearStrSpace(str);
-            insertValue.Text += str + "\r\n";
-        }
-
-        private bool WriteReg2(string reg, string sData)
-        {
-            string cmd = "wr 0x" + reg + " 0x" + sData+"\r";
-            bool flag = false;
-            flag = serialPort1.IsOpen;
-            if (flag)
-                serialPort1.WriteLine(cmd);
-
-            return flag;
-
-        }
-        private void WriteReg(string reg, string sData, bool bRead)
-        {
-            string cmd = "wrr 0x" + reg + " 0x" + sData;
-            bool flag = txSerial.SendDataToCom(cmd + '\r');
-            //if (flag == false)
-            //    insertValue.Text += "WR: Error \r\n";
-            //else
-            if ((flag)&& (bRead))
-            {
-                insertValue.Text += ": OK \r\n";            
-            }
-        }
-
-        public void ReadOneRegister()
-        {
-            string reg = txtID.Text;
-            string sdata = txtValue.Text;
-            string stmp = "";
-            bool flag = WriteReg2(reg, sdata);
-            if (flag)
-            {
-                ShowInsLog("write [REG]" + reg + " 0x" + sdata + "\r\n");
-                Thread.Sleep(100);
-                stmp = ReadRegister2(reg);
-                AfterReadProcess(stmp);
-            }
-            else
-            {
-                ShowInsLog("write [REG]" + reg + " 0x" + sdata + " FAILED \r\n");
-            }
-        }
-
-        private void btnRegWrite_Click(object sender, EventArgs e)
-        {
-            ReadOneRegister();
-            /*
-            string reg = txtID.Text;
-            string sdata = txtValue.Text;
-            string stmp = "";
-            ShowInsLog("write [REG]" + reg + " 0x" + sdata+"\r\n");
-            isTableReadReg = true;
-            WriteReg(reg, sdata, true);   // Owen 原本方式
-            */
-        }       
-      
-        public uint CalMaskValue(int val)
-        {
-            uint res = 0;
-            res = (uint) Math.Pow(2, val);
-            return (res-1);
-        }
-        public void ShowDataGrid(int idx)
-        {
-            //string hexData = "3FCD02A0";
-            uint intValue = (UInt32)Convert.ToInt32(regValue[idx], 16);
-            //insertValue.Text = intValue.ToString() + "\r\n";
-            int len = regCont[idx].Length;
-            uint[] FS_Data = new uint[len];
-            /*
-            //if (idx == 39)
-            {
-                int[] FS_MASK = { 0x1, 0x2, 0x1c, 0xe0, 0x700, 0x800, 0x1000, 0x7e000, 0xff80000, 0x10000000, 0x20000000 };
-                int[] FS_POS = { 0, 1, 2, 5, 8, 11, 12, 13, 19, 28, 29 };
-                int[] FS_MASK2 = { 0x1, 0x1, 0x7, 0x7, 0x7, 0x1, 0x1, 0x3F, 0x1FF, 0x1, 0x1 };
-                for (int i = 0; i < FS_MASK.Length; i++)
-                {
-                    FS_Data[i] = (int)(intValue & FS_MASK[i]) >> FS_POS[i];
-                    //FS_Data[i] = (int)(intValue  >> FS_POS[i]) & FS_MASK2[i];
-                    //insertValue.Text += regCont[idx][i] + "= " + FS_Data[i] + "\r\n";
-                }
-            }*/
-            for (int i = 0; i < fsMaskMatrix[idx].Length; i++)
-            {
-                if (fsMaskMatrix[idx][i] == 32)
-                    FS_Data[i] = (uint) intValue;
-                else
-                    FS_Data[i] = (uint)(intValue  >> fsPosMatrix[idx][i]) & CalMaskValue(fsMaskMatrix[idx][i]);
-                //insertValue.Text += regCont[idx][i] + "= " + FS_Data[i] + "\r\n";
-            }
-            for (int i = 0; i < len; i++)
-            {
-                DataGridViewRow row = (DataGridViewRow)dataGridView1.Rows[i].Clone();
-                row.Cells[0].Value = regCont[idx][i];
-                row.Cells[1].Value = bitRangeMatrix[idx][i];
-                //row.Cells[2].Value = CalMaskValue(fsMaskMatrix[idx][i]);
-                row.Cells[2].Value = "0x"+FS_Data[i].ToString("X");
-                dataGridView1.Rows.Add(row);
-                if (row.Cells[0].Value.Equals("RESERVED")) { 
-                    //dataGridView1.Rows[i].ReadOnly = true;
-                    dataGridView1.Rows[i].Visible = false;
-                    //dataGridView1.Rows[i].DefaultCellStyle.BackColor = Color.DimGray;
-                }
-                dataGridView1.Columns[0].ReadOnly = true;
-                dataGridView1.Columns[1].ReadOnly = true;
-                
-            }
-            dataGridView1.Rows[len].DefaultCellStyle.BackColor = Color.DimGray;
-            dataGridView1.Rows[len].ReadOnly = true;
-        }
-
-        private void ClearDataGridView()
-        {
-            dataGridView1.Rows.Clear();
-        }
-
-        public void AfterReadProcess(string stmp)
-        {
-            //isTableReadReg = false;
-            regValue[selIdx] = stmp;
-            //txreceivetbx.Text += "[" + selIdx + "]= " + regValue[selIdx] + "\r\n ";
-            hexTxt.Text = stmp;
-
-            ClearDataGridView();
-            try
-            {
-                listView1.Items[selIdx].SubItems[2].Text = stmp; // owen bug
-                stmp = "0x" + stmp;
-                regValueInt[selIdx] = (uint)Convert.ToInt32(stmp, 16);
-            }
-            catch (Exception ex) { insertValue.Text += ex.ToString() + "\r\n"; }
-                
-            ShowDataGrid(selIdx);
-            /*
-            try
-            {
-                //regValueInt[idx] = int.Parse(stmp, System.Globalization.NumberStyles.HexNumber);
-                stmp = "0x" + stmp;
-                regValueInt[selIdx] = (uint)Convert.ToInt32(stmp, 16);
-            }
-            catch (InvalidCastException ex)
-            {
-                // recover from exception
-                insertValue.Text += ex.Message + "-> Transfer tr to int ==> Fail!\r\n";
-            }
-            */
-        }
-        //           btnRead1
-        private void btnTree_Click(object sender, EventArgs e)  // Owen Read 1 Reg
-        {
-            //isTableReadReg = true;
-            string stmp = "";
-            bool flag = false;
-            if (bSearchReg == false)
-                flag = FindSelectedIDIdx();
-            else
-                flag = FindSelectedIDIdxWhenSearchReg();
-            //if (flag)
-            //    ReadRegister();  //Owen: 原本方法
-            if (flag)
-                stmp = ReadRegister2(txtID.Text);
-
-            //if (isTableReadReg)
-            AfterReadProcess(stmp);
-            
-        }
-
-        private bool ckStrIsHex(string str)
-        {
-            bool res = false;
-            string spaceInput = " ";
-            if (str.Contains(spaceInput))
-                return res;
-            else
-            {
-                ;
-            }
-            return res;
-        }
-
-        private string clearStrSpace(string str)
-        {
-            string spaceInput = " ";
-            string str2 = str;
-            if (str.Contains(spaceInput))
-            {
-                //insertValue.Text += "HAS SPACE ==> ";
-                str2 = str.Replace(spaceInput, "");
-            }                         
-            return str2;
-        }
-        private void calDataGridValue()
-        {
-            uint regData = 0;
-            int len = (dataGridView1.Rows.Count) - 1; // 因為尾部有addrow(), 所以要-1
-            //insertValue.Text = "Row count=" + len +"\r\n";
-            uint[] rowData = new uint[len];
-            string str = "";
-            uint maxRange = 0;
-            const string PATTERN = @"[A-Fa-f0-9]+$";
-            /*
-            int[] FS_MASK   = { 0x1, 0x2, 0x1c, 0xe0, 0x700, 0x800, 0x1000, 0x7e000, 0xff80000, 0x10000000, 0x20000000 };           
-            int[] FS_POS    = {    0,  1,  2,      5,      8,      11,   12,      13,     19,       28,          29 };
-            //int[] FS_MASK2  = { 0x1, 0x1, 0x7,  0x7,  0x7,   0x1,   0x1,    0x3F,    0x1FF,     0x1,        0x1 };
-            for (int i=0; i<(len-1); i++)
-            {
-                str = dataGridView1.Rows[i].Cells[1].Value as string;
-                rowData[i] = (UInt32)Convert.ToInt32(str, 16);
-                //insertValue.Text += regCont[39][i]+"=" + rowData[i] + "\r\n";                
-                //regData = regData | (UInt32)((rowData[i] & FS_MASK2[i]) << FS_POS[i]);
-                regData = regData | (UInt32)((rowData[i] & (FS_MASK[i] >> FS_POS[i])) << FS_POS[i]);
-            }
-            */
-            
-            for (int i = 0; i < len; i++)    //fsPosMatrix[selIdx].Length
-            {
-                try
-                {
-                    str = dataGridView1.Rows[i].Cells[2].Value as string;
-                    str = clearStrSpace(str);
-                    dataGridView1.Rows[i].Cells[2].Value = str;
-                    if (str.Equals("")){
-                        // Owen: over range
-                        break;
-                    }
-                    else if ((str.Length > 2) && (str.Substring(0, 2).ToLower() == "0x"))
-                    {
-                        str = str.Substring(2, (str.Length - 2));
-                        if (str.Equals("")){
-                            insertValue.Text += "Wrong input " + str + "\r\n";
-                            break;
-                        }
-                        else if (System.Text.RegularExpressions.Regex.IsMatch(str, PATTERN))
-                            rowData[i] = (uint)Convert.ToInt32(str, 16);
-                        else
-                        {
-                            insertValue.Text += "Wrong input " + str + "\r\n";
-                            break;
-                        }
-                    }
-                    else {
-                        if (str.All(char.IsDigit))
-                            rowData[i] = (uint)Int32.Parse(str);
-                        else
-                        {
-                            insertValue.Text += "Wrong input "+str+"\r\n";
-                            break;
-                        }
-                            
-                    }
-                        if (dataGridView1.Rows[i].Cells[0].Value.Equals("RESERVED") == false)
-                        {
-                            if (bSearchReg == false)
-                                maxRange = CalMaskValue(fsMaskMatrix[selIdx][i]);
-                            else
-                                maxRange = CalMaskValue(fsMaskMatrix[searchRegName[selIdx]][i]);
-                  
-                            if (rowData[i] > maxRange)
-                            {
-                                if (MessageBox.Show(("Max Value of " + dataGridView1.Rows[i].Cells[0].Value + " = " + maxRange + "\r\n Do you want to change it?"), "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                                {
-                                    dataGridView1.Rows[i].Cells[2].Value = "0x"+maxRange.ToString("X");
-                                }                                
-                            }
-                        }
-                        if (bSearchReg == false)
-                            regData = regData | (uint)((rowData[i] & maxRange) << fsPosMatrix[selIdx][i]);
-                        else
-                            regData = regData | (uint)((rowData[i] & maxRange) << fsPosMatrix[searchRegName[selIdx]][i]);
-                       
-
-                }
-                catch (Exception ex){
-                    insertValue.Text += "Please input number\r\n";
-                    //insertValue.Text += "ex: sel="+selIdx+"\r\n";
-                    //insertValue.Text += ex.ToString();
-                    //insertValue.Text += "\r\n";
-                }
-            }
-            //insertValue.Text += "Final = " + regData+ "=  0x"+ regData.ToString("X")+"\r\n";
-            txtValue.Text = regData.ToString("X8");
-        }
-        private void valueSet_Click(object sender, EventArgs e)
-        {
-            calDataGridValue();      
-        }
-
-        private void txtID_TextChanged(object sender, EventArgs e)
-        {
-            if (txtID.Text.Length == 4)
-            {
-                //bSearchID = true;
-                Do_SearchRegisterIDIdx();
-            }
-        }
         private void FullInSearchRegName()
         {
             for (int i=0; i< regList.Length; i++)
@@ -1800,175 +932,7 @@ namespace ER41xxTestTool
             }
         }
 
-        private void Do_SearchRegisterName()
-        {
-            string str = searchTxt.Text;
-            searchRegName.Clear();
-            //int num = 0;
-            bool res = false;
-            for (int i=0; i<regName.Length; i++){
-                res = regName[i].Contains(str);
-                if (res)
-                {
-                    //insertValue.Text += "[" + i + "]-[" + regList[i] + "] = {" + regName[i] + "}\r\n";
-                    searchRegName.Add(i);
-                    //num++;
-                }                   
-            }
-            ShowPartialRegisterData();
-        }
-
-        private void searchTxt_TextChanged(object sender, EventArgs e)
-        {
-            
-            //ClearDataGridView();
-            if ((searchTxt.Text.Length >= 2) && (searchTxt.Text.Length <= 26)){
-                string str = searchTxt.Text;
-                string spaceInput = " ";
-                bool res = false;
-                res = str.Contains(spaceInput);
-                if (res)
-                    insertValue.Text += "String can not has 'Space'\r\n";
-                else
-                {
-                    bSearchReg = true;
-                    txtID.Enabled = false;
-                    insertValue.Text = "";
-                    Do_SearchRegisterName();
-                }
-                
-            }
-            else if(searchTxt.Text.Length == 0)
-            {
-                bSearchReg = false;
-                FullInSearchRegName();
-                insertValue.Text = "";
-                ShowAllRegisterData();
-                txtID.Enabled = true;
-            }
-        }
-
-        private bool writeProc(string regid, string wrValue)
-        {
-            bool res = false;
-            string cmd = "wra 0x" + regid + " 0x" + wrValue;
-            //insertValue.Text += "write [REG]" + regid + " 0x" + wrValue;
-            res = txSerial.SendDataToCom(cmd + '\r');
-            return res;
-        }       
-
-        public void WriteAllRegProc2()
-        {
-            DateTime start;  
-            TimeSpan time;
-            
-            ShowInsLog("Write All Register Start -----\r\n");
-            int i = 0;
-            int completePercent = 0;
-            string cmd = "";
-            if (serialPort1.IsOpen)
-            {
-                start = DateTime.Now;
-                btnWriteAll.Enabled = false;
-                btnWriteAll.Update();
-                for (i = 0; i < regList.Length; i++)
-                {
-                    if ((i % 69 == 0) && (i > 0) && (i < 340))
-                    {
-                        completePercent = (i * 100)/ regList.Length ;
-                        //regRead.Text = completePercent + "%";
-                        //regRead.Update();
-                        ShowInsLog("..." + completePercent + "%\r\n");
-                    }
-                    cmd = "wr 0x" + regList[i] + " 0x" + regValue[i] + "\r";
-                    serialPort1.WriteLine(cmd);
-                    Thread.Sleep(15);
-                }
-                time = DateTime.Now - start;
-                btnWriteAll.Enabled = true;
-                btnWriteAll.Update();
-                ShowInsLog("Write All Register Finished! \r\n"); //+ String.Format("{0}.{1}", time.Seconds, time.Milliseconds.ToString().PadLeft(3, '0')) + "\r\n");
-            }
-            else
-                ShowInsLog("COM PORT ERROR\r\n");
-        }
-        private void btnWriteAll_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show(("Do you really want to write all register now?"), "Message", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                btnTableConnect.Enabled = false;
-                btnTableConnect.Update();
-                regRead.Enabled = false;
-                regRead.Update();
-                btnRead1.Enabled = false;
-                btnRead1.Update();
-                btnRegWrite.Enabled = false;
-                btnRegWrite.Update();
-
-                WriteAllRegProc2();
-
-                regRead.Enabled = true;
-                regRead.Update();
-                btnTableConnect.Enabled = true;
-                btnTableConnect.Update();
-                btnRead1.Enabled = true;
-                btnRead1.Update();
-                btnRegWrite.Enabled = true;
-                btnRegWrite.Update();
-            }
-        }
-        private void loadInitFileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            bool flag = false;
-            flag = LoadRegValue();
-            if (flag)
-            {
-                bSearchReg = false;
-                searchTxt.Text = "";
-                ShowAllRegisterData();
-            }
-            else
-            {
-                ShowInsLog("Load file error!\r\n");
-            }           
-        }        
-        private bool ReadReg(string reg)
-        {
-            rcvIdx = 0;
-            rcvEnd = 0;
-            for (int i = 0; i < 50; i++){
-                rcvRegArray[i] = 0x00;
-            }
-            readBackData = "";
-            isReadRegister = true;
-            string scmd = "rd1 0x" + reg;
-            
-            bool flag = txSerial.SendDataToCom(scmd + '\r');
-
-            return flag;
-        }
-        private void TryRead()
-        {
-            isWaitingData = true;
-            bool flag = ReadReg("1580");
-            int i = 0;
-            while (isWaitingData==false)
-            {
-                Thread.Sleep(5);
-                //ShowLogOnTxtBox(1, (i+": "+readBackData + ": " + isWaitingData), true);
-                i++;
-            }           
-        }
-
-        private void GetBackDataAndWrite(string regStr, bool bWrite)
-        {
-            if (bWrite)
-                isGetBackData = true;
-            else
-                isShowIOData = true;
-            bool flag = ReadReg(regStr);           
-        }
-            /*                                            
+         /*
         public void ShowInsLog(string str)
         {
             insertValue.Text = insertValue.Text.Insert(0, str);
@@ -2273,39 +1237,6 @@ namespace ER41xxTestTool
             SaveInitValue();
         }
 
-        private void loadInitFileToolStripMenuItem_Click_1(object sender, EventArgs e)
-        {
-            bool flag = false;
-            
-            flag = LoadRegValue();
-            if (flag)
-            {
-                bSearchReg = false;
-                searchTxt.Text = "";
-                ShowAllRegisterData();
-            }
-        }
-
-         private void btnTableComRefresh_Click(object sender, EventArgs e)
-        {
-            tableCombobox.Items.Clear();
-            string[] ArrayComPortsNames = SerialPort.GetPortNames().Distinct().ToArray();
-            if (ArrayComPortsNames.Length == 0)
-            {
-                //connectComToolStripMenuItem.Enabled = false;
-            }
-            else
-            {
-                Array.Sort(ArrayComPortsNames);
-                for (int i = 0; i < ArrayComPortsNames.Length; i++)
-                {
-                    tableCombobox.Items.Add(ArrayComPortsNames[i]);
-                }
-                tableCombobox.Text = ArrayComPortsNames[0];
-                //connectComToolStripMenuItem.Enabled = true;
-            }
-        }
-
         System.Threading.Thread CloseDown1;
         //private void connectComToolStripMenuItem_Click(object sender, EventArgs e)
         private void dvbConnectionProcess()
@@ -2572,38 +1503,6 @@ namespace ER41xxTestTool
             }
             serialPort2.DiscardInBuffer();
             //serialPort2.DiscardOutBuffer();
-        }
-
-        private void btnTableConnect_Click(object sender, EventArgs e)
-        {
-            if (btnTableConnect.Text == "Connect")
-            {
-                if (!serialPort1.IsOpen)
-                {
-                    ConnectSerial2();
-                }
-                Thread.Sleep(100);
-
-                if (serialPort1.IsOpen)
-                {
-                    btnTableConnect.Text = "Close";
-                    btnTableComRefresh.Enabled = false;
-                    tableCombobox.Enabled = false;
-                    Thread.Sleep(20);
-                    serialPort1.WriteLine("settestst 1\r");
-                }
-            }
-            else
-            {
-                if (serialPort1.IsOpen)
-                {
-                    serialPort1.Close();
-                }
-                btnTableConnect.Text = "Connect";
-                btnTableComRefresh.Enabled = true;
-                tableCombobox.Enabled = true;
-
-            }
         }
 
         private void aboutToolStripMenuItem1_Click_1(object sender, EventArgs e)
@@ -4084,12 +2983,12 @@ namespace ER41xxTestTool
 
         private void btnReadDVB_Click(object sender, EventArgs e)
         {
-            btnRegDump_Click(sender, e);
+            btnRegDumpFromDVB();// sender, e);
         }
 
         private void btnWriteDVB_Click(object sender, EventArgs e)
         {
-            btnRegTableWrite_Click(sender, e);
+            btnRegWriteToDVB();// sender, e);
         }
 
         /*
