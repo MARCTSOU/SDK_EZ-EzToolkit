@@ -13,6 +13,7 @@ using System.Net;
 using System.Threading;
 using System.Timers;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Text.RegularExpressions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
@@ -22,6 +23,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Microsoft.Vbe.Interop;
 using ER41xxTestTool.Properties;
+
 //using Microsoft.Office.Interop.Excel;
 
 //using Agilent.CommandExpert.ScpiNet.Ag90x0_VMA_A_30_00;
@@ -55,17 +57,33 @@ namespace ER41xxTestTool
         private delegate void DelShowRxRcvNum(string sNum, string sRssi);
         private delegate void DelDisableSetting();
 
+        private string initTitle = "ER41xx EZ TOOLKIT";
+
+        // 產品名稱/版本標籤: 視窗標題、About頁、存檔檔頭(ToolTitle)三個地方共用同一個來源,
+        // 避免像之前那樣各自維護版本號跟日期、結果三邊互相對不上。日期不手動維護,
+        // 直接取這次執行的exe/dll實際編譯連結(link)時間。
+        public const string ToolName = "ER41xx EzToolkit";
+        public const string ToolVersionLabel = "V1.20L";
+
+        private static string BuildToolTitle()
+        {
+            string exePath = Assembly.GetExecutingAssembly().Location;
+            DateTime buildDate = File.GetLastWriteTime(exePath);
+            return ToolName + " " + ToolVersionLabel + "     " + buildDate.ToString("yyyyMMdd") ;
+        }
+
+        public static readonly string ToolTitle = BuildToolTitle();
+
         private Controller txSerial;
         private Controller2 rxSerial;
         private Controller3 pcbSerial;
-        private string initTitle = "ER41xx TEST TOOL";
         RegIDs          regIDs;
         RegNames        regNames;
         RegContents     regContents;
         FsPos           fsPos;
         FSMask          fsMask;
         BitRange        bitRange;
-        public string ToolTitle = "ER4100 RF TEST TOOL 20260826 V1.20L";  // delete ER81Wx
+        
         public bool isIRQ = false;
         public bool isRxOldMethod = false;
         public int TX_BPSK_MODE     = 0;
@@ -159,11 +177,13 @@ namespace ER41xxTestTool
         public string[] crcList = { "CCIT", "CRC16_IBM", "No CRC"};
         
         public string[] xtalArray = { "40", "38.4" };   // v1.19L: 與 EzCodeGen 相同, 支援 38.4MHz
+        public string[] xtalGainCtrl = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15" };
         public const int NO_CRC_LEN_NO_SEQ = 127;
         public const int CRC_LEN_NO_SEQ = 125;
         public const int FIFO_MAX_LEN = 128;   // Length(1) + SeqNum(0/2) + Payload + CRC(0/2)
         public int highlowICType = -1;
         //TreeNode myTreeNode;
+
         public MainForm()
         {
             InitializeComponent();
@@ -177,6 +197,7 @@ namespace ER41xxTestTool
             InitialTxMod();
             //InitialMaxPowerSelectList(5);          
             InitialXtalList();
+            InitialXtalGainList();
             //InitialTxPwr();
             //this.dvbTstPktRxPage.Parent = null;//隱藏
             //this.dvbTstContiTxPage.Parent = null;//隱藏
@@ -207,6 +228,7 @@ namespace ER41xxTestTool
             //ShowInsLog(PAConfigCombo.Text+"\r\n");
         }
 
+       
         /*-------------------------------------------------------------
          *  CmdReadDVB
          * 透過Serial port對DVB下命令，並且讀取回字串訊息，最多重試MaxRetry(3)次，
@@ -380,6 +402,17 @@ namespace ER41xxTestTool
             paramModulationCombo.SelectedIndex = 0;
         }
 
+        /*-------------------------------------------------------------
+         *  InitialFreqBandList
+         * [物件控制] - 刷新paramDvbBandCombo
+         * 把dvbBandTable[idx]這组頻段選項填進DVB Band下拉選單(paramDvbBandCombo)，
+         * 填之前先清空舊選項，預設選第0項。idx=0為Low Power({"433","868","915"})，
+         * idx=1為High Power({"433","915"})，實際傳哪個值由連線後讀到的PA/IC類型決定。
+         * Param :
+         *   idx - dvbBandTable的索引 (0=Low Power, 1=High Power)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InitialFreqBandList(int idx)
         {
             paramDvbBandCombo.Items.Clear();
@@ -387,11 +420,17 @@ namespace ER41xxTestTool
             paramDvbBandCombo.SelectedIndex = 0;
         }
 
-        /// <summary>
-        /// DVBBandCombo 純粹反映 DVB 板子(EEPROM/IC類型)的狀態, 跟 PARAMETER/REG TABLE 的 register
-        /// 計算完全無關 (GenerateTxt() 不會讀它)。沒連線時這顆板子相關的資訊根本無意義, 鎖住並顯示
-        /// "Don't care", 避免使用者誤以為選它會影響任何計算結果。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  SetDVBBandComboDisconnected
+         * [物件控制] - 刷新paramDvbBandCombo
+         * DVBBandCombo純粹反映DVB板子(EEPROM/IC類型)的狀態，跟PARAMETER/REG TABLE的
+         * register計算完全無關(GenerateTxt()不會讀它)。沒連線時這顆板子相關的資訊
+         * 根本無意義，鎖住並顯示"Don't care"，避免使用者誤以為選它會影響任何計算結果。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void SetDVBBandComboDisconnected()
         {
             paramDvbBandCombo.Items.Clear();
@@ -399,19 +438,94 @@ namespace ER41xxTestTool
             paramDvbBandCombo.SelectedIndex = 0;
             paramDvbBandCombo.Enabled = false;
         }
+
+        /*-------------------------------------------------------------
+         *  UpdateDvbConnStateLabel
+         * [物件控制] - 刷新dvbTstConnStateLabel
+         * 依isDVBConnected目前的狀態更新DVB Tester分頁標題旁的連線狀態標籤:
+         * 已連線顯示"Connected"(深綠), 未連線顯示"[Disconnected]"(深紅)。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void UpdateDvbConnStateLabel()
+        {
+            if (isDVBConnected)
+            {
+                dvbTstConnStateLabel.Text = "[Connected]";
+                dvbTstConnStateLabel.ForeColor = Color.DarkGreen;
+            }
+            else
+            {
+                dvbTstConnStateLabel.Text = "[Disconnected]";
+                dvbTstConnStateLabel.ForeColor = Color.DarkRed;
+            }
+        }
+
+        /*-------------------------------------------------------------
+         *  InitialPAConfigList
+         * [物件控制] - 刷新paramPAConfigCombo
+         * 把PAConfigTable[idx]這组PA Config選項填進PA CONFIG下拉選單(paramPAConfigCombo)，
+         * 填之前先清空舊選項，預設選第0項。idx對應PA_TYPE列舉
+         * (0=PA_915433L→{"10"}, 1=PA_868L→{"14"}, 2=PA_915433H→{"20","23"})，
+         * 實際傳哪個值由連線後讀到的PA/IC類型決定。
+         * Param :
+         *   idx - PAConfigTable的索引 (對應PA_TYPE列舉值)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InitialPAConfigList(int idx)
         {
             paramPAConfigCombo.Items.Clear();
             paramPAConfigCombo.Items.AddRange(PAConfigTable[idx].ToArray());
             paramPAConfigCombo.SelectedIndex = 0;
         }
+        /*-------------------------------------------------------------
+         *  InitialXtalList
+         * [物件控制] - 刷新paramXtalCombo
+         * 把固定清單xtalArray({"40","38.4"}, 單位MHz)填進PARAMETER分頁的
+         * Xtal下拉選單(paramXtalCombo)，填之前先清空舊選項，預設選第0項(40MHz)。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InitialXtalList()
         {
             paramXtalCombo.Items.Clear();
             paramXtalCombo.Items.AddRange(xtalArray.ToArray());
             paramXtalCombo.SelectedIndex = 0;
-        }                          
-       
+        }
+
+        /*-------------------------------------------------------------
+         *  InitialXtalList
+         * [物件控制] - paramCapIoGainText
+         * xtalGainCtrl 填進PARAMETER分頁的
+         * Xtal下拉選單(paramCapIoGainText)，填之前先清空舊選項，預設選 4。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        public void InitialXtalGainList()
+        {
+            paramXtalGainCombo.Items.Clear();
+            paramXtalGainCombo.Items.AddRange(xtalGainCtrl.ToArray());
+            paramXtalGainCombo.SelectedItem = "4";
+        }
+
+        /*-------------------------------------------------------------
+         *  GetDataRightNow
+         * 舊版1580流程用的資料回呼: 依mode把讀回的字串存到readBackData, 並清對應的
+         * 等待旗標(isWaitingData/isGetBackData/isShowIOData)。非UI thread呼叫時用
+         * Invoke切回UI thread再執行一次。
+         * Param :
+         *   str - 讀回的資料字串
+         *   mode - 0=自動頻率校正 / 1=1580讀回 / 2=只顯示IO值
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void GetDataRightNow(string str, int mode)
         {
             if (this.InvokeRequired)
@@ -442,10 +556,14 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>
-        /// Set txSerial
-        /// </summary>
-        /// <param name="txSerial"></param>
+        /*-------------------------------------------------------------
+         *  SetController / SetController2 / SetController3
+         * 注入對應COM連線用的Controller/Controller2/Controller3物件, 供後續收發使用。
+         * Param :
+         *   txSerial/rxSerial/pcbSerial - 要注入的Controller物件
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void SetController(Controller txSerial)
         {
             this.txSerial = txSerial;
@@ -459,9 +577,18 @@ namespace ER41xxTestTool
         public void SetController3(Controller3 pcbSerial)
         {
             this.pcbSerial = pcbSerial;
-
         }
 
+        /*-------------------------------------------------------------
+         *  RcvDataToReg
+         * 從rcvRegArray(起始flag=64即'@')裡切出接續的8個byte當作讀到的register值字串,
+         * 依目前是哪個等待旗標(isWaitingData/isGetBackData/isShowIOData/isAutoFreqCal2)
+         * 轉呼叫GetDataRightNow()對應的mode。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void RcvDataToReg()
         {
             int j = 0;
@@ -507,6 +634,15 @@ namespace ER41xxTestTool
         // 之後在 rcvRegArrar 判斷有幾個 "$xxx#&"
         // 找到最後一個#&, Ex: &在[10],然後將[11]後的所有data往前貼在[0]
         // 
+        /*-------------------------------------------------------------
+         *  rcvRSSIProcess2
+         * 把收到的byte逐一塞進rcvRegArray, 遇到連續兩個'&'(38)判定為結尾, 記下rcvEnd。
+         * 目前呼叫端(RcvDataToArray)已刪除, 保留原始邏輯未變動。
+         * Param :
+         *   dataR - 這次收到的原始byte
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void rcvRSSIProcess2(byte[] dataR)
         {
             for (int i = 0; i < dataR.Length; i++)
@@ -525,6 +661,17 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  rcvRSSIProcess
+         * [物件控制] - 刷新dvbTstPktRxOkCntText/dvbTstPktRxRssiText
+         * 解析Packet RX收到的"$xxx#&"格式資料: 每收到一組"#&"就算一包, 累加收包計數
+         * (dvbTstPktRxOkCntText), 並從"&"前4個byte取出RSSI值(取負號後)顯示到
+         * dvbTstPktRxRssiText。
+         * Param :
+         *   dataR - 這次收到的原始byte
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void rcvRSSIProcess(byte[] dataR)
         {
             // "$xxx#&"
@@ -571,6 +718,15 @@ namespace ER41xxTestTool
 //                                                                                    :  0  x   0  0  0  0  0  1  1  A
 // 114 100 114 32 48 120 48 48 48 52 13 13 10 13 91 82 68 82 93 58 48 120 48 48 48 52 58 48 120 48 48 48 48 48 49 49 65 10 13 79 75 10 13 13 10 13 67 77 68 62 32 
             */
+        /*-------------------------------------------------------------
+         *  ReadRegisterProcess
+         * 舊版讀register流程: isReadRegister為true期間, 把收到的byte塞進rcvRegArray,
+         * 遇到連續兩個'&'(38)判定為結尾, 呼叫RcvDataToReg()解析並關掉isReadRegister。
+         * Param :
+         *   dataR - 這次收到的原始byte
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ReadRegisterProcess(byte[] dataR)
         {
             if ((isReadRegister) && ((rcvIdx+ dataR.Length)< rcvRegArray.Length))
@@ -592,12 +748,17 @@ namespace ER41xxTestTool
 
         }
 
-        /// <summary>
-        /// update status bar
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// Rx COM 接受 data
+        /*-------------------------------------------------------------
+         *  OpenComEvent
+         * [物件控制] - 刷新autoSendcbx/autoReplyCbx
+         * txSerial (COM1)開啟結果的回呼: 開成功就啟用auto send/auto reply checkbox,
+         * 失敗則停用。非UI thread呼叫時用Invoke切回UI thread再執行一次。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含isOpend (是否開啟成功)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void OpenComEvent(Object sender, SerialPortEventArgs e)
         {
             if (this.InvokeRequired)
@@ -630,6 +791,16 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  OpenComEvent2
+         * rxSerial (COM2)開啟結果的回呼, 目前兩個分支都是空的(舊版3-COM架構的殘留), 只保留
+         * InvokeRequired轉UI thread的骨架。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含isOpend (是否開啟成功)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void OpenComEvent2(Object sender, SerialPortEventArgs2 e)
         {
             if (this.InvokeRequired)
@@ -647,6 +818,17 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  OpenComEvent3
+         * [物件控制] - 刷新autoSendcbx/autoReplyCbx
+         * pcbSerial (COM3)開啟結果的回呼: 開成功就啟用auto send/auto reply checkbox,
+         * 失敗則不處理。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含isOpend (是否開啟成功)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void OpenComEvent3(Object sender, SerialPortEventArgs3 e)
         {
             if (this.InvokeRequired)
@@ -670,11 +852,16 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>
-        /// update status bar
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /*-------------------------------------------------------------
+         *  CloseComEvent
+         * [物件控制] - 刷新autoSendcbx (停用+停止autoSendtimer)
+         * txSerial (COM1)關閉結果的回呼: 關成功就停用auto send checkbox並停掉自動送出計時器。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含isOpend (關閉後應為false)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void CloseComEvent(Object sender, SerialPortEventArgs e)
         {
             if (this.InvokeRequired)
@@ -694,6 +881,16 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  CloseComEvent2
+         * rxSerial (COM2)關閉結果的回呼, 目前分支是空的(舊版3-COM架構的殘留), 只保留
+         * InvokeRequired轉UI thread的骨架。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含isOpend (關閉後應為false)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void CloseComEvent2(Object sender, SerialPortEventArgs2 e)
         {
             if (this.InvokeRequired)
@@ -708,6 +905,16 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  CloseComEvent3
+         * pcbSerial (COM3)關閉結果的回呼, 分支內容已全部註解掉(舊版3-COM架構的殘留),
+         * 只保留InvokeRequired轉UI thread的骨架。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含isOpend (關閉後應為false)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void CloseComEvent3(Object sender, SerialPortEventArgs3 e)
         {
             if (this.InvokeRequired)
@@ -725,12 +932,16 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>
-        /// Display received data
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// Rx COM 接受 data
+        /*-------------------------------------------------------------
+         *  ComReceiveDataEvent
+         * txSerial (COM1)收到資料的回呼: 字串顯示模式(recStrRadiobtn勾選)下, isRSSIAnalysis
+         * 開啟時轉呼叫rcvRSSIProcess()解析RSSI封包; hex顯示模式的分支目前已註解掉。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含receivedBytes (收到的原始資料)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ComReceiveDataEvent(Object sender, SerialPortEventArgs e)
         {
             if (this.InvokeRequired)
@@ -765,6 +976,16 @@ namespace ER41xxTestTool
                 //txreceivetbx.AppendText(Controller.Bytes2Hex(e.receivedBytes));
             }           
         }
+        /*-------------------------------------------------------------
+         *  ComReceiveDataEvent2
+         * rxSerial (COM2)收到資料的回呼, 目前body是空的(舊版3-COM架構的殘留), 只保留
+         * InvokeRequired轉UI thread的骨架。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含receivedBytes (收到的原始資料)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ComReceiveDataEvent2(Object sender, SerialPortEventArgs2 e)
         {
             if (this.InvokeRequired)
@@ -782,6 +1003,16 @@ namespace ER41xxTestTool
             
         }
 
+        /*-------------------------------------------------------------
+         *  ComReceiveDataEvent3
+         * pcbSerial (COM3)收到資料的回呼, 兩個顯示模式分支內容都已註解掉(舊版3-COM架構的
+         * 殘留), 只保留InvokeRequired轉UI thread的骨架。
+         * Param :
+         *   sender - 未使用
+         *   e - 內含receivedBytes (收到的原始資料)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ComReceiveDataEvent3(Object sender, SerialPortEventArgs3 e)
         {
             if (this.InvokeRequired)
@@ -813,27 +1044,42 @@ namespace ER41xxTestTool
             
         }        
 
-        /// <summary>
-        /// update time in status bar
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /*-------------------------------------------------------------
+         *  statustimer_Tick
+         * [物件控制] - 刷新statusTimeLabel
+         * 狀態列時鐘計時器: 每次Tick把statusTimeLabel更新成目前系統時間。
+         * Param :
+         *   sender, e - Tick事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void statustimer_Tick(object sender, EventArgs e)
         {
             this.statusTimeLabel.Text = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
         }
 
-
+        /*-------------------------------------------------------------
+         *  autoSendtimer_Tick
+         * 舊版自動送出計時器的Tick處理, 內容已註解掉, 目前是空函式。
+         * Param :
+         *   sender, e - Tick事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void autoSendtimer_Tick(object sender, EventArgs e)
         {
             //txsendbtn_Click(sender, e);
         }
 
-        /// <summary>
-        /// filter illegal input of auto send interval time
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /*-------------------------------------------------------------
+         *  sendIntervalTimetbx_KeyPress
+         * 過濾自動送出間隔輸入框的按鍵: 只放行數字跟Backspace, 其餘按鍵吃掉。
+         * Param :
+         *   sender - 未使用
+         *   e - KeyPress事件參數, 取其KeyChar判斷/設定Handled
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void sendIntervalTimetbx_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (char.IsDigit(e.KeyChar) || e.KeyChar == '\b')
@@ -846,16 +1092,29 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>
-        /// Add CRC checkbox changed
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /*-------------------------------------------------------------
+         *  addCRCcbx_CheckedChanged
+         * Add CRC checkbox變動的處理, 目前是空函式(尚未實作)。
+         * Param :
+         *   sender, e - CheckedChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void addCRCcbx_CheckedChanged(object sender, EventArgs e)
         {
-            
+
         }
 
+        /*-------------------------------------------------------------
+         *  SaveInitValue
+         * 跳出存檔對話框, 把regList/regName/regValue(舊版REG WR子系統的資料)整理成
+         * 對齊欄位的文字檔存檔。由SaveInitValueToolStripMenuItem_Click呼叫, 但其父選單
+         * saveToolStripMenuItem("Save")的Visible=false, 目前UI上點不到。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void SaveInitValue()
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -895,10 +1154,24 @@ namespace ER41xxTestTool
                                 10, 83, 67, 80, 73, 62, 32 };
                 
 
+        /*-------------------------------------------------------------
+         *  MainForm_Load
+         * [物件控制] - 刷新this.Text(視窗標題)/PARAMETER分頁/REG TABLE/dvbTstPktTxDgm等
+         * 封包格式圖
+         * 開機第二階段: 用ToolTitle蓋掉Designer.cs寫死的視窗標題、套上官方預設參數
+         * (ApplyDefaultParameters)、用畫面參數重算REG TABLE(ApplyUiValuesToRegisterList)、
+         * 掛上參數變動自動重算(HookParameterChangeEvents)、刷新封包格式圖
+         * (RefreshPacketFormatDiagram)。細節見各行內註解。
+         * Param :
+         *   sender, e - Load事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void MainForm_Load(object sender, EventArgs e)
         {
+            this.Text = ToolTitle;   // 蓋掉Designer.cs裡寫死的舊標題文字, 改用ToolTitle這個唯一來源
             FitToScreen();   // v1.19L: 螢幕夠大就維持原始大小(無捲軸), 螢幕不夠大才啟用捲軸
-            dvbTstContiTxPatternGroup.Visible = false;
+            dvbTstContiTxPatternGroup.Enabled = false;
 
             // PARAMETER 等分頁先套上官方預設值 (38.4MHz/435MHz/96kbps/48kHz/PA23dBm, 見
             // DefaultParameters.cs), 這組值已驗證跟 REG TABLE 內建預設值 (RegTableItems.cs)
@@ -924,6 +1197,14 @@ namespace ER41xxTestTool
             imgList.ImageSize = new Size(1, height);
             listView.SmallImageList = imgList;
         }*/
+        /*-------------------------------------------------------------
+         *  FullInSearchRegName
+         * 把regList的每個索引(0~長度-1)填進searchRegName, 供舊版REG WR子系統的搜尋功能用。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void FullInSearchRegName()
         {
             for (int i=0; i< regList.Length; i++)
@@ -939,6 +1220,17 @@ namespace ER41xxTestTool
             insertValue.Update();
         }*/
 
+        /*-------------------------------------------------------------
+         *  ShowInsLog
+         * [物件控制] - 刷新logResultText
+         * 把str追加到底部Log(logResultText), 超過MAX_LENGTH字元會從前面截掉舊內容並自動
+         * 捲到最後。bQuietLog開啟時(開機REG TABLE初始化期間)整個跳過, 避免洗版。非UI
+         * thread呼叫時用BeginInvoke切回UI thread再執行一次。
+         * Param :
+         *   str - 要追加顯示的文字
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ShowInsLog(string str)
         {
             if (bQuietLog)      // 開機時的 REG TABLE 初始化不要洗版 (見 RegDumpProcess.cs)
@@ -966,14 +1258,32 @@ namespace ER41xxTestTool
             }
         }       
         
+        /*-------------------------------------------------------------
+         *  btnTxClear_Click
+         * [物件控制] - 清空logResultText
+         * 清空底部Log顯示框。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnTxClear_Click(object sender, EventArgs e)
         {
             logResultText.Clear();
-        }       
-                
+        }
+
         System.Threading.Thread CloseDown2;
 
-        // Set Tx Parameter
+        /*-------------------------------------------------------------
+         *  btnSetER4100_Click
+         * Set Tx Parameter鈕: 實際寫入呼叫(ER4100_SetParameter)已於2026-09-03暫時關閉,
+         * 改成使用者自己先按Write DVB Register再操作 (見dvbTstPktTxStartBtn_Click同樣說明),
+         * 目前只做COM port是否開啟的檢查。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnSetER4100_Click(object sender, EventArgs e)
         {
             bool res = false;
@@ -990,6 +1300,15 @@ namespace ER41xxTestTool
 
         }
 
+        /*-------------------------------------------------------------
+         *  CloseSerial2OnExit
+         * 關閉serialPort2 (rxSerial所用的COM口): 先拆掉RxReceiveData事件、清收發緩衝區,
+         * 再Close, 例外時記錄到Log。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void CloseSerial2OnExit()
         {
             try
@@ -1015,6 +1334,14 @@ namespace ER41xxTestTool
         // RF ON
 
 
+        /*-------------------------------------------------------------
+         *  ER4100_SendCmdThread
+         * 透過txSerial(Controller)送出命令字串。
+         * Param :
+         *   cmd - 要送出的命令
+         * Return:
+         *   true - 送出成功 / false - 失敗
+         *-------------------------------------------------------------*/
         public bool ER4100_SendCmdThread(string cmd)
         {
             bool res = false;
@@ -1022,6 +1349,14 @@ namespace ER41xxTestTool
             return res;
         }
 
+        /*-------------------------------------------------------------
+         *  ER4100_RxSendCmd
+         * 若serialPort2已開啟, 直接用WriteLine送出命令字串。
+         * Param :
+         *   cmd - 要送出的命令
+         * Return:
+         *   true - serialPort2已開啟且已送出 / false - 未開啟
+         *-------------------------------------------------------------*/
         public bool ER4100_RxSendCmd(string cmd)
         {
             bool res = false;
@@ -1034,6 +1369,14 @@ namespace ER41xxTestTool
             return res;
         }
 
+        /*-------------------------------------------------------------
+         *  ER4100_SendCmd
+         * 若serialPort1已開啟, 直接用Write送出命令字串。
+         * Param :
+         *   cmd - 要送出的命令
+         * Return:
+         *   true - serialPort1已開啟且已送出 / false - 未開啟
+         *-------------------------------------------------------------*/
         public bool ER4100_SendCmd(string cmd)
         {
             bool res = false;
@@ -1042,10 +1385,18 @@ namespace ER41xxTestTool
             {
                 serialPort1.Write(cmd);
                 res = true;
-            }            
+            }
             return res;
         }
 
+        /*-------------------------------------------------------------
+         *  ER4100_SendModeCmd
+         * 若serialPort3已開啟, 直接用WriteLine送出命令字串。
+         * Param :
+         *   cmd - 要送出的命令
+         * Return:
+         *   true - serialPort3已開啟且已送出 / false - 未開啟
+         *-------------------------------------------------------------*/
         public bool ER4100_SendModeCmd(string cmd)
         {
             bool res = false;
@@ -1058,6 +1409,15 @@ namespace ER41xxTestTool
             return res;
         }
 
+        /*-------------------------------------------------------------
+         *  SetRxTestMode
+         * 送"settestst <rOn>"命令切換RX Test Mode, 依isRxOldMethod選擇走
+         * ER4100_SendCmdThread(舊方式)或ER4100_RxSendCmd(新方式)。
+         * Param :
+         *   rOn - 1=開啟test mode / 0=關閉
+         * Return:
+         *   true - 送出成功 / false - 失敗
+         *-------------------------------------------------------------*/
         public bool SetRxTestMode(int rOn)
         {
             bool res = false;
@@ -1068,31 +1428,63 @@ namespace ER41xxTestTool
             return res;
         }
 
+        /*-------------------------------------------------------------
+         *  SetRxPerMode
+         * 送"setperst <rOn>"命令切換PER統計模式, 依isRxOldMethod選擇送出方式(同SetRxTestMode)。
+         * Param :
+         *   rOn - 1=開啟PER統計 / 0=關閉
+         * Return:
+         *   true - 送出成功 / false - 失敗
+         *-------------------------------------------------------------*/
         public bool SetRxPerMode(int rOn)
         {
             bool res = false;
-            if (isRxOldMethod) 
+            if (isRxOldMethod)
                 res = ER4100_SendCmdThread("setperst " + rOn + "\r");
             else
                 res = ER4100_RxSendCmd("setperst " + rOn + "\r");
             return res;
         }
 
+        /*-------------------------------------------------------------
+         *  ClrRxResult
+         * 送"perclr"命令清除PER統計結果, 依isRxOldMethod選擇送出方式(同SetRxTestMode)。
+         * Param :
+         *   (無)
+         * Return:
+         *   true - 送出成功 / false - 失敗
+         *-------------------------------------------------------------*/
         public bool ClrRxResult()
         {
             bool res = false;
-            if (isRxOldMethod) 
+            if (isRxOldMethod)
                 res = ER4100_SendCmdThread("perclr\r");
             else
                 res = ER4100_RxSendCmd("perclr\r");
             return res;
-        }        
+        }
 
+        /*-------------------------------------------------------------
+         *  btnRxResultClr_Click
+         * 清除PER結果鈕: 呼叫ClrRxResult()。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnRxResultClr_Click(object sender, EventArgs e)
         {
             ClrRxResult();
         }
-        
+
+        /*-------------------------------------------------------------
+         *  GetRxResult
+         * 送"pernum"命令查詢PER結果, 等100ms後讀回serialPort1的內容並顯示到Log。
+         * Param :
+         *   (無)
+         * Return:
+         *   true - 送出成功 / false - serialPort1未開啟
+         *-------------------------------------------------------------*/
         public bool GetRxResult()
         {
             bool res = false;
@@ -1107,11 +1499,29 @@ namespace ER41xxTestTool
             return res;
         }
 
+        /*-------------------------------------------------------------
+         *  btnRxGetResult_Click
+         * 取得PER結果鈕: 呼叫GetRxResult()。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnRxGetResult_Click(object sender, EventArgs e)
         {
             GetRxResult();
         }
 
+        /*-------------------------------------------------------------
+         *  btnRxStart_Click
+         * [物件控制] - 刷新dvbTstPktRxStartBtn
+         * RX Start/Stop鈕: 依目前按鈕文字判斷Start或Stop。Start時送出喚醒/測試命令,
+         * 開啟RX Test Mode跟PER統計, 按鈕文字切成"Stop"; Stop分支見後續程式碼。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnRxStart_Click(object sender, EventArgs e)
         {
             bool res = false;
@@ -1174,6 +1584,16 @@ namespace ER41xxTestTool
                           
         }
 
+        /*-------------------------------------------------------------
+         *  RefreshDvbComPortList
+         * [物件控制] - 刷新comPortToolStripComboBox / connectComToolStripMenuItem
+         * 重新列出系統目前的COM port到comPortToolStripComboBox。沒有任何COM port時停用
+         * "CONNECT"選單項; 有的話依名稱排序、預設選第一個, 並啟用選單項。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void RefreshDvbComPortList()
         {
             comPortToolStripComboBox.Items.Clear();
@@ -1196,13 +1616,30 @@ namespace ER41xxTestTool
         }        
 
         // ===== v1.19L: COM PORT 選單 =====
+        /*-------------------------------------------------------------
+         *  refreshComToolStripMenuItem_Click
+         * COM PORT選單的Refresh項: 呼叫RefreshDvbComPortList()重新列出COM port。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void refreshComToolStripMenuItem_Click(object sender, EventArgs e)
         {
             RefreshDvbComPortList();
         }
 
-        // 呼叫Menu上的DVB Connection小視窗，讓使用者選擇DVB Port相關資訊
-        // v1.21L: 點「COM PORT」-> 已連線時直接斷線, 未連線時彈出 ComPortSelectDialog 選 port 後直接連線
+        /*-------------------------------------------------------------
+         *  comPortToolStripMenuItem_Click
+         * [物件控制] - 開啟ComPortSelectDialog / 刷新comPortToolStripComboBox
+         * 呼叫Menu上的DVB Connection小視窗，讓使用者選擇DVB Port相關資訊。
+         * v1.21L: 點「COM PORT」-> 已連線時直接斷線, 未連線時彈出ComPortSelectDialog選port
+         * 後直接連線(dvbConnectionProcess), 並重算REG TABLE。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void comPortToolStripMenuItem_Click(object sender, EventArgs e)
         {
             bool isConnected = isDVBConnected;// (connectComToolStripMenuItem.Text == "CLOSE");
@@ -1227,11 +1664,29 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  RxSenTextClr_Click_1
+         * [物件控制] - 清空dvbTstPktRxLogText
+         * 清空DVB Tester RX分頁的Log顯示框。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void RxSenTextClr_Click_1(object sender, EventArgs e)
         {
             dvbTstPktRxLogText.Text = "";
         }
 
+        /*-------------------------------------------------------------
+         *  SaveInitValueToolStripMenuItem_Click
+         * "Save > Initial Data"選單項: 呼叫SaveInitValue()。父選單saveToolStripMenuItem
+         * ("Save")的Visible=false, 目前UI上點不到這個選單項。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void SaveInitValueToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveInitValue();
@@ -1239,6 +1694,19 @@ namespace ER41xxTestTool
 
         System.Threading.Thread CloseDown1;
         //private void connectComToolStripMenuItem_Click(object sender, EventArgs e)
+        /*-------------------------------------------------------------
+         *  dvbConnectionProcess
+         * [物件控制] - 刷新isDVBConnected/paramDvbBandCombo/paramPAConfigCombo/
+         * paramPwrLvText/paramPwrLvLabel等連線後才確定的PARAMETER控制項
+         * COM PORT選單「CONNECT/DISCONNECT」的實際動作。未連線時: 開serialPort1
+         * (ConnectWithIRQ)、送測試命令確認通、呼叫CheckICPowerType()判斷Low/High Power IC
+         * 並依結果套用對應的頻段/PA Config/Power Level預設值; 讀不到IC類型則不斷線,
+         * 提示使用者手動選PA CONFIG。已連線時走斷線分支(見後續程式碼)。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbConnectionProcess()
         {
             bool res = false;
@@ -1254,20 +1722,39 @@ namespace ER41xxTestTool
                 
                 if ((serialPort1.IsOpen) && (res))
                 {
+                    string stmp;
+                    /* 開始處理DVB的前期作業 */
                     ShowInsLog($"{comPortToolStripComboBox.Text} connected\r\n");
                     refreshComToolStripMenuItem.Enabled = false;
                     comPortToolStripComboBox.Enabled = false;
                     Thread.Sleep(50);
                     serialPort1.Write("\r");
                     Thread.Sleep(50);
-                    string stmp = serialPort1.ReadExisting();
+                    stmp = serialPort1.ReadExisting();
+                    //if (stmp.IndexOf("CMD>") > 0)
+                    //    ShowInsLog("ERR: DVB is not ready?\r\n");
                     Thread.Sleep(50);
                     serialPort1.Write("settestst 1\r"); // Owen tmp Closed
- 
                     Thread.Sleep(50);
                     stmp = serialPort1.ReadExisting();
-                   // connectComToolStripMenuItem.Text = "CLOSE";
+
+                    /* 先讀ER4100 BBP ID確認它存不存在 */
+                    Thread.Sleep(50);
+                    serialPort1.Write("rr 0xf100\r"); // Owen tmp Closed
+                    Thread.Sleep(50);
+                    stmp = serialPort1.ReadExisting();
+                    if (stmp.IndexOf("9000000") >= 0)
+                        ShowInsLog("Chip ID :" + stmp + "\r");
+                    else
+                    {
+                        isDVBConnected = false;
+                        ShowInsLog("ERR: Chip is No Exist : " + stmp + "\r");
+                        CloseComPortProcess();
+                        return;
+                    }
+                    // connectComToolStripMenuItem.Text = "CLOSE";
                     isDVBConnected = true;
+                    UpdateDvbConnStateLabel();
 
                     highlowICType = CheckICPowerType();
 
@@ -1367,7 +1854,10 @@ namespace ER41xxTestTool
                             ShowInsLog("Read RF Band Fail: " + frequencyBand + "\r\n");
                             paramDvbBandCombo.Enabled = true;
                         }
-                    }                            
+                    }
+
+                    PacketRxBtnStopProcess();
+                    ShowInsLog("RX Reception Stop\r\n");
                 }
                
             }
@@ -1378,6 +1868,17 @@ namespace ER41xxTestTool
             }
         }
        
+        /*-------------------------------------------------------------
+         *  CloseComPortProcess
+         * [物件控制] - 刷新paramDvbBandCombo(鎖"Don't care")/paramPAConfigCombo
+         * 斷開DVB連線: 送出stopblink/rfg/setperst/settestst等收尾命令, 另起執行緒
+         * (CloseSerial1OnExit)真正Close serialPort1, 並把isDVBConnected設回false、
+         * 還原COM選單/下拉選單的Enabled狀態。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void CloseComPortProcess()
         {
             if (serialPort1.IsOpen)
@@ -1396,12 +1897,24 @@ namespace ER41xxTestTool
             }
             //connectComToolStripMenuItem.Text = "CONNECT";
             isDVBConnected = false;
+            
             refreshComToolStripMenuItem.Enabled = true;
             comPortToolStripComboBox.Enabled = true;
             SetDVBBandComboDisconnected();   // 斷線後 DVBBandCombo 跟 DVB 無關, 鎖住顯示 "Don't care"
             paramPAConfigCombo.Enabled = true;
+
+            UpdateDvbConnStateLabel();
         }
         
+        /*-------------------------------------------------------------
+         *  CloseSerial1OnExit
+         * 真正關閉serialPort1: 先拆掉Packet RX的接收處理常式(DetachUartRxHandler)再Close,
+         * 例外時靜默吞掉(結尾時不需要再跳訊息)。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void CloseSerial1OnExit()
         {
             try
@@ -1423,6 +1936,15 @@ namespace ER41xxTestTool
                 //ShowInsLog($"Close COM error: {ex.Message}\r\n");
             }
         }
+        /*-------------------------------------------------------------
+         *  SetSyncword
+         * 把paramTxSyncText目前的十六進位值送"rfg 7 <值>"命令寫到DVB。跟
+         * btnTxSetSyncword_Click內容完全相同, 目前找不到其他呼叫端。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void SetSyncword()
         {
             string txSyncwordHex = paramTxSyncText.Text;
@@ -1434,6 +1956,16 @@ namespace ER41xxTestTool
             else
                 ShowInsLog("Set Syncword OK\r\n");
         }
+
+        /*-------------------------------------------------------------
+         *  btnTxSetSyncword_Click
+         * Set Syncword鈕: 把paramTxSyncText目前的十六進位值送"rfg 7 <值>"命令寫到DVB
+         * (跟SetSyncword()內容完全相同, 是各自獨立維護的兩份copy)。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnTxSetSyncword_Click(object sender, EventArgs e)
         {
             string txSyncwordHex = paramTxSyncText.Text;
@@ -1446,6 +1978,16 @@ namespace ER41xxTestTool
                 ShowInsLog("Set Syncword OK\r\n");
         }       
 
+        /*-------------------------------------------------------------
+         *  ShowRxRcvNum
+         * [物件控制] - 刷新dvbTstPktRxOkCntText/dvbTstPktRxRssiText
+         * 顯示收包數/RSSI到畫面。非UI thread呼叫時用Invoke切回UI thread再執行一次。
+         * Param :
+         *   sNum - 收包數文字
+         *   sRssi - RSSI文字
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ShowRxRcvNum(string sNum, string sRssi)
         {
             if (this.InvokeRequired)
@@ -1464,6 +2006,18 @@ namespace ER41xxTestTool
         }
         //public int rnum = 0;
         public string lastRSSI = "";
+        /*-------------------------------------------------------------
+         *  RxReceiveData
+         * [物件控制] - 刷新dvbTstPktRxOkCntText/dvbTstPktRxRssiText (經由ShowRxRcvNum)
+         * serialPort2的DataReceived處理常式(舊版RX流程用): 逐行讀取, 含'#'視為收到一包
+         * (累加rxReceivedNum), 若同時含'$'和'&'則從'$'後3個字元解析RSSI(取負號)。
+         * isRxSenStart開啟時才更新畫面顯示。
+         * Param :
+         *   sender - 未使用
+         *   e - DataReceived事件參數 (未使用, 直接從serialPort2讀)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void RxReceiveData(object sender, SerialDataReceivedEventArgs e)
         {
             //string str = serialPort2.ReadExisting();
@@ -1505,6 +2059,15 @@ namespace ER41xxTestTool
             //serialPort2.DiscardOutBuffer();
         }
 
+        /*-------------------------------------------------------------
+         *  aboutToolStripMenuItem1_Click_1
+         * [物件控制] - 開啟AboutForm
+         * Help > About選單項: 開啟AboutForm並置中顯示於主視窗之上。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void aboutToolStripMenuItem1_Click_1(object sender, EventArgs e)
         {
             AboutForm about = new AboutForm();
@@ -1518,6 +2081,15 @@ namespace ER41xxTestTool
                 about.Location = new Point(Math.Max(x, 0), Math.Max(y, 0));
             }
         }
+        /*-------------------------------------------------------------
+         *  QuitToolStripMenuItem_Click_1
+         * File > Quit選單項: 若serialPort1/serialPort2開著, 各自另起執行緒關閉
+         * (CloseSerial1OnExit/CloseSerial2OnExit), 再關閉主視窗。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void QuitToolStripMenuItem_Click_1(object sender, EventArgs e)
         {
             if (serialPort2.IsOpen)
@@ -1535,6 +2107,16 @@ namespace ER41xxTestTool
             this.Close();
         }
 
+        /*-------------------------------------------------------------
+         *  crc16_ibm
+         * 計算CRC16-IBM (bit-reverse版本): 每個byte先做bit reverse再跟crc做XOR/移位運算,
+         * 最後把16-bit結果整體再bit-reverse一次才回傳。供ShowPktData()使用。
+         * Param :
+         *   data - 要算CRC的資料
+         *   length - 資料長度
+         * Return:
+         *   16-bit CRC值
+         *-------------------------------------------------------------*/
         ushort crc16_ibm(byte[] data, byte length)
         {
             ushort crc = 0xFFFF;
@@ -1587,6 +2169,15 @@ namespace ER41xxTestTool
             return crc;// ^ CRC_XOROUT;
         }
 
+        /*-------------------------------------------------------------
+         *  ComputeCrc16Ibm
+         * 標準CRC16-IBM(不做bit-reverse)。唯一呼叫處在ShowPktData()裡被註解掉,
+         * 目前沒有真正在用。
+         * Param :
+         *   data - 要算CRC的資料
+         * Return:
+         *   16-bit CRC值
+         *-------------------------------------------------------------*/
         static ushort ComputeCrc16Ibm(byte[] data)
         {
             ushort crc = 0x0000;
@@ -1609,6 +2200,16 @@ namespace ER41xxTestTool
             return crc;
 
         }
+        /*-------------------------------------------------------------
+         *  ShowPktData
+         * [物件控制] - 附加顯示到logResultText
+         * 除錯用: 組一組假封包資料(len bytes, 前3 byte固定填len/0x46/0x53, 其餘遞增),
+         * 逐byte印到Log, 再算CRC16-IBM(crc16_ibm)印在最後。
+         * Param :
+         *   len - 要產生的假封包長度
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ShowPktData(int len)
         {
             byte[] datas = new byte[len];
@@ -1634,16 +2235,40 @@ namespace ER41xxTestTool
         }
 
         
+        /*-------------------------------------------------------------
+         *  dvbTstPktRxSetPayloadBtn_Click
+         * Set Payload鈕: 呼叫SetPayloadProcess()。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktRxSetPayloadBtn_Click(object sender, EventArgs e)
         {
             SetPayloadProcess();
-            
+
         }
 
         //private const int MaxHexChars = 125 * 2;
         private bool isEditing = false;
         private List<byte> tmpArray = new List<byte>();
         
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxPayloadText_TextChanged
+         * [物件控制] - 刷新dvbTstPktTxPayloadText/dvbTstPktTxFilledLenText
+         * Packet TX Payload輸入框即時格式化: 依CRC選項(dvbTstPktTxCrcCombo)/是否
+         * PrependSeq(dvbTstPktTxPrependSeqCheck)算出上限字元數, 移除非十六進位字元、
+         * 超長截斷並嗶一聲提示, 每2位加空格重新格式化寫回輸入框, 同步更新tmpArray
+         * (byte陣列)跟已填長度顯示(dvbTstPktTxFilledLenText)。游標位置會依編輯前"游標
+         * 前面有幾個十六進位字元"反推回正確位置, 而不是每次都強制跳到最後面(舊版那樣寫
+         * 會導致在字串中間反白多字元編輯時, 第二個字元以後全部跑到最尾端)。
+         * dvbTstPktTxRandomPlCheck勾選(Random Payload模式)時整段跳過。isEditing旗標
+         * 防止TextChanged重入。
+         * Param :
+         *   sender, e - TextChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxPayloadText_TextChanged(object sender, EventArgs e)
         {
             int MaxHexChars = 123;
@@ -1666,6 +2291,12 @@ namespace ER41xxTestTool
                 if (isEditing) return;
                 isEditing = true;
 
+                // Step 0: 記錄目前游標前面有幾個十六進位字元, 格式化後用這個數字反推正確
+                // 的游標位置, 不要每次都直接跳到最後面
+                int caretPos = dvbTstPktTxPayloadText.SelectionStart;
+                string beforeCaret = dvbTstPktTxPayloadText.Text.Substring(0, Math.Min(caretPos, dvbTstPktTxPayloadText.Text.Length));
+                int hexCharsBeforeCaret = Regex.Replace(beforeCaret.ToUpper(), @"[^0-9A-F]", "").Length;
+
                 // Step 1: 移除非十六進位字元並轉大寫
                 string raw = Regex.Replace(dvbTstPktTxPayloadText.Text.ToUpper(), @"[^0-9A-F]", "");
                 if (dvbTstPktTxPrependSeqCheck.Checked)
@@ -1678,6 +2309,7 @@ namespace ER41xxTestTool
                     raw = raw.Substring(0, MaxHexChars);
                     System.Media.SystemSounds.Beep.Play(); // 警告音
                 }
+                hexCharsBeforeCaret = Math.Min(hexCharsBeforeCaret, raw.Length);
 
                 // Step 3: 重新格式化為每2位一組加空格
                 StringBuilder formatted = new StringBuilder();
@@ -1691,9 +2323,12 @@ namespace ER41xxTestTool
                         formatted.Append(" ");
                 }
 
-                // Step 4: 將格式化後的字串寫回 TextBoxInput
+                // Step 4: 將格式化後的字串寫回 TextBoxInput, 游標還原到編輯的位置
+                // (依Step 0算出來的hexCharsBeforeCaret反推, 每2個十六進位字元前面會多插入
+                // 1個空格, 不是每次都跳到最後面)
                 dvbTstPktTxPayloadText.Text = formatted.ToString();
-                dvbTstPktTxPayloadText.SelectionStart = dvbTstPktTxPayloadText.Text.Length;
+                int newCaretPos = hexCharsBeforeCaret == 0 ? 0 : hexCharsBeforeCaret + (hexCharsBeforeCaret - 1) / 2;
+                dvbTstPktTxPayloadText.SelectionStart = Math.Min(newCaretPos, dvbTstPktTxPayloadText.Text.Length);
 
                 // Step 5: 將完整兩位一組的 hex 字串轉成 byte
                 try
@@ -1724,6 +2359,14 @@ namespace ER41xxTestTool
             }
             
         }
+        /*-------------------------------------------------------------
+         *  ReverseBits
+         * 把32-bit值的位元順序整個反轉(bit 0變bit 31, 依此類推)。
+         * Param :
+         *   value - 要反轉的32-bit值
+         * Return:
+         *   位元順序反轉後的值
+         *-------------------------------------------------------------*/
         static uint ReverseBits(uint value)
         {
             uint result = 0;
@@ -1737,6 +2380,15 @@ namespace ER41xxTestTool
             return result;
         }
 
+        /*-------------------------------------------------------------
+         *  hexReverse
+         * 把十六進位字串解析成32-bit值、整個位元順序反轉(ReverseBits)、再轉回8位
+         * 十六進位字串。
+         * Param :
+         *   hexInput - 十六進位字串 (不含"0x"前綴)
+         * Return:
+         *   位元反轉後的8位十六進位字串
+         *-------------------------------------------------------------*/
         public string hexReverse(string hexInput)
         {
             string hexResult = "";
@@ -1745,9 +2397,19 @@ namespace ER41xxTestTool
             hexResult = reversed.ToString("X8");
             return hexResult;
         }
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxTestBtn_Click
+         * [物件控制] - 刷新logResultText
+         * 除錯用測試鈕(原btnCalCrc): 把paramTxSyncText目前值位元反轉(hexReverse)後印到
+         * Log對照, 底下另一段CRC測試程式碼已註解掉不執行。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxTestBtn_Click(object sender, EventArgs e)
         {
-            
+
             string hexInput = paramTxSyncText.Text;
             string hexResult = hexReverse(paramTxSyncText.Text);
             logResultText.Text = "0x"+hexInput + "=>" + hexResult;
@@ -1764,11 +2426,51 @@ namespace ER41xxTestTool
 
         }
 
-        /// <summary>
-        /// DEVIATION 欄位旁的 "?" 按鈕: 建議使用 h=1 (即 Deviation = DataRate/2, 見 H=2*Dev/DataRate 的定義),
-        /// 依目前 DATA RATE 算出建議值提示給使用者, 不會自動改欄位內容。
-        /// </summary>
-        private void btnDevComment_Click(object sender, EventArgs e)
+        private void paramXtalHelpBtn_Click(object sender, EventArgs e)
+        {
+            string msg =
+                "(1). Xtal: Must match the crystal actually fitted on the module. It determines which Data Rates are available.\r\n\r\n" +
+                "(2). Xtal Gain: Affects the crystal's startup time on wakeup / power-up. It also affects the current draw while NOT sleeping." +
+                "      e.g. approximately 1.8mA at Gain=4 vs 2.4mA at Gain=8.\r\n\r\n" +
+                "(3). Cap IO: Trims the crystal's internal load capacitance, used to fine-tune the actual Base Frequency offset.";
+            MessageBox.Show(this, msg, "Xtal / Cap IO Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void paramFreqHelpBtn_Click(object sender, EventArgs e)
+        {
+            string msg =
+                "(1). DVB Band: Only relevant to the DVB Tester. Determined by the ER4100 daughter-board's hardware and cannot be selected from software," +
+                "   it reflects the frequency band the daughter-board was built for. This setting does not limit the Base Frequency; " +
+                "   it only narrows down the PA Config options.\r\n\r\n" +
+                "(2). Frequency: The Base Frequency. ER4100 supports the following 5 bands:\r\n" +
+                "      99 - 125 MHz\r\n" +
+                "      196 - 253 MHz\r\n" +
+                "      391 - 508 MHz\r\n" +
+                "      780 - 1018 MHz";
+            MessageBox.Show(this, msg, "Frequency Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void paramPwrHelpBtn_Click(object sender, EventArgs e)
+        {
+            string msg =
+                "(1). PA Config: Selects the output power of the chip's internal High-Power PA (H-PA) or Low-Power PA (L-PA), and must match the external matching network design.\r\n" +
+                "      e.g. if the external matching is designed for 915MHz / 23dBm, select \"23\" here. " +
+                "           H-PA/L-PA itself is fixed at the factory and cannot be changed here - this only selects the corresponding dBm value.\r\n\r\n" +
+                "(2). Power LV: The range depends on PA Config - H-PA (23dBm) is 0~127, L-PA (10/14dBm) is 0~27. " +
+                "     e.g. with PA Config = 23dBm (H-PA), 127 is the theoretical value for full 23dBm output.";
+            MessageBox.Show(this, msg, "Power Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        /*-------------------------------------------------------------
+         *  btnDevComment_Click
+         * DEVIATION欄位旁的"?"按鈕: 建議使用h=1(即Deviation = DataRate/2, 見H=2*Dev/DataRate
+         * 的定義), 依目前DATA RATE算出建議值提示給使用者, 不會自動改欄位內容。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void paramDeviationHelpBtn_Click(object sender, EventArgs e)
         {
             double dataRateKbps;
             if (!double.TryParse(paramDataRateCombo.Text, out dataRateKbps))
@@ -1784,6 +2486,15 @@ namespace ER41xxTestTool
                 "DEVIATION");
         }
 
+        /*-------------------------------------------------------------
+         *  CRC_Calculation
+         * 對tmpArray(目前Packet TX Payload解析出來的byte陣列)算CRC16-IBM(bit-reverse版本,
+         * 邏輯跟crc16_ibm相同但用int運算)。
+         * Param :
+         *   (無)
+         * Return:
+         *   16-bit CRC值 (以int回傳)
+         *-------------------------------------------------------------*/
         public int CRC_Calculation()
         {
             int crc = 0xFFFF;
@@ -1833,6 +2544,22 @@ namespace ER41xxTestTool
             return crc;
         }
 
+        /*-------------------------------------------------------------
+         *  DisableSetting
+         * [物件控制] - 停用Packet TX相關的PARAMETER與Packet TX控制項 (paramBaseFreqText/
+         * paramDataRateCombo/paramDeviationText/paramModulationCombo/paramPwrLvText/
+         * paramCapIoText/paramTxSyncText/paramTxSyncSoftInvertCheck/
+         * dvbTstPktTxInfiniteCheck/dvbTstPktTxPrependSeqCheck/dvbTstPktTxRandomPlCheck/
+         * dvbTstPktTxRandomPlLenText/dvbTstPktTxCrcCombo)
+         * 送包期間鎖住這些控制項避免使用者中途修改。dvbTstPktTxPayloadText例外, 用
+         * ReadOnly=true而不是Enabled=false, 這樣還是保留設計時的黃字黑底樣式, 不會被
+         * WinForms停用狀態的預設灰階外觀蓋掉。非UI thread呼叫時用Invoke切回UI thread
+         * 再執行一次。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void DisableSetting()
         {
             if (this.InvokeRequired)
@@ -1852,6 +2579,8 @@ namespace ER41xxTestTool
                 paramModulationCombo.Update();
                 paramPwrLvText.Enabled = false;
                 paramPwrLvText.Update();
+                paramXtalGainCombo.Enabled = false;
+                paramXtalGainCombo.Update();
                 paramCapIoText.Enabled = false;
                 paramCapIoText.Update();
                 paramTxSyncText.Enabled = false;
@@ -1867,7 +2596,7 @@ namespace ER41xxTestTool
                 //dvbTstPktTxCntText.Enabled = false;
                 dvbTstPktTxRandomPlLenText.Enabled = false;
                 dvbTstPktTxRandomPlLenText.Update();
-                dvbTstPktTxPayloadText.Enabled = false;
+                dvbTstPktTxPayloadText.ReadOnly = true;
                 dvbTstPktTxPayloadText.Update();
                 dvbTstPktTxCrcCombo.Enabled = false;
                 dvbTstPktTxCrcCombo.Update();
@@ -1876,6 +2605,16 @@ namespace ER41xxTestTool
 
         }
 
+        /*-------------------------------------------------------------
+         *  EnableSetting
+         * [物件控制] - 還原DisableSetting()鎖住的控制項的Enabled狀態
+         * 送包結束後解鎖控制項。dvbTstPktTxRandomPlLenText/dvbTstPktTxPayloadText的
+         * Enabled/ReadOnly會依dvbTstPktTxRandomPlCheck目前是否勾選決定。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void EnableSetting()
         {
             paramBaseFreqText.Enabled = true;
@@ -1884,6 +2623,7 @@ namespace ER41xxTestTool
             paramModulationCombo.Enabled = true;
             paramPwrLvText.Enabled = true;
             paramCapIoText.Enabled=true;
+            paramXtalGainCombo.Enabled = true;
             paramTxSyncText.Enabled = true;
             paramTxSyncSoftInvertCheck.Enabled = true;
             dvbTstPktTxInfiniteCheck.Enabled = true;
@@ -1897,11 +2637,28 @@ namespace ER41xxTestTool
             dvbTstPktTxPayloadText.ReadOnly = dvbTstPktTxRandomPlCheck.Checked;
             dvbTstPktTxPayloadText.Update();
         }
+        /*-------------------------------------------------------------
+         *  InfiniteStop
+         * 送單一字元"t"命令停止Infinite模式的連續送包。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InfiniteStop()
         {
             if (serialPort1.IsOpen)
                 serialPort1.Write("t");
         }
+
+        /*-------------------------------------------------------------
+         *  btnStop_Click
+         * Stop鈕: COM port開著就呼叫InfiniteStop(), 否則印錯誤訊息到Log。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnStop_Click(object sender, EventArgs e)
         {
             if (serialPort1.IsOpen)
@@ -1909,14 +2666,33 @@ namespace ER41xxTestTool
             else
                 logResultText.Text += "COMPORT ERROR!\r\n";
         }
+
+        /*-------------------------------------------------------------
+         *  InfiniteStart
+         * 送"rfg 21"命令開始Infinite模式的連續送包, 送完等待100ms讓DVB處理。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void InfiniteStart()
-        {            
+        {
             serialPort1.Write("rfg 21\r");
             Thread.Sleep(100);
         }
 
         public bool isSending = false;
 
+        /*-------------------------------------------------------------
+         *  GetFifoLen
+         * 算目前這次要送的封包在FIFO裡的實際長度: Length欄位(1) + tmpArray的Payload
+         * byte數 + seqLen(PrependSeq開啟則+2) + crcLen(依dvbTstPktTxCrcCombo, NO_CRC=0
+         * 否則2)。
+         * Param :
+         *   (無)
+         * Return:
+         *   FIFO總長度 (byte數)
+         *-------------------------------------------------------------*/
         private int GetFifoLen()
         {
             int seqLen = dvbTstPktTxPrependSeqCheck.Checked ? 2 : 0;
@@ -1924,6 +2700,18 @@ namespace ER41xxTestTool
             return 1 + tmpArray.Count + seqLen + crcLen;  // 1 = Length field
         }
 
+        /*-------------------------------------------------------------
+         *  PacketSend
+         * [物件控制] - 刷新dvbTstPktTxStartBtn/dvbTstPktTxStopBtn (Enabled狀態)
+         * 連續送num次"cfg 14 1"觸發送包命令。依目前DATA RATE算送包間隔delayTime
+         * (低速率時間隔拉長, 避免FIFO來不及清空); 迴圈中isSending變false(按了STOP)就
+         * 立刻中止。送完/中止後還原按鈕狀態並呼叫EnableSetting()解鎖控制項。
+         * 這個方法本身在背景執行緒跑, UI操作都包在Invoke裡切回UI thread。
+         * Param :
+         *   num - 要送的封包數
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void PacketSend(int num)
         {
             int delayTime = 100;
@@ -1970,10 +2758,32 @@ namespace ER41xxTestTool
                 EnableSetting();
             }));
         }
+        /*-------------------------------------------------------------
+         *  IsAllNumber
+         * 判斷字串是否整串都是數字(regex "^\d+$")。
+         * Param :
+         *   s - 要檢查的字串
+         * Return:
+         *   true - 整串都是數字 / false - 含非數字字元或空字串
+         *-------------------------------------------------------------*/
         bool IsAllNumber(string s)
         {
             return System.Text.RegularExpressions.Regex.IsMatch(s, @"^\d+$");
         }
+
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxStartBtn_Click
+         * [物件控制] - 刷新dvbTstPktTxStartBtn等Packet TX控制項 (經由DisableSetting/PacketSend)
+         * Packet TX Start鈕: 檢查COM port已連線、REG TABLE無未寫回的變更
+         * (ConfirmRewriteIfRegTableDirty)、封包數(1~200)、Payload長度是否超過目前
+         * CRC/PrependSeq組合允許的上限, Random Payload模式會先產生隨機資料
+         * (GenerateRandomPayload)。檢查都過了才呼叫DisableSetting()鎖控制項並轉呼叫
+         * PacketSend()實際送包 (詳細分支見內文)。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxStartBtn_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
@@ -2070,10 +2880,10 @@ namespace ER41xxTestTool
                 res = true;
                 if (res)
                 {
-                    SetPayloadOrder();      // 0xA0A8: LSB=0 / MSB=1, 要在 cfg 之後才不會被蓋掉
-                    Thread.Sleep(50);
-                    SetAllowBitError();     // 0xB104: RX syncword 允許的 bit error 數
-                    Thread.Sleep(50);
+                    //SetPayloadOrder();      // 0xA0A8: LSB=0 / MSB=1, 要在 cfg 之後才不會被蓋掉
+                    //Thread.Sleep(50);
+                    //SetAllowBitError();     // 0xB104: RX syncword 允許的 bit error 數
+                    //Thread.Sleep(50);
                     SetPayloadProcess();
                     Thread.Sleep(50);
                     serialPort1.Write("rfg 31 1\r");  // enable IRQ
@@ -2116,6 +2926,15 @@ namespace ER41xxTestTool
                 
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxInfiniteCheck_CheckedChanged
+         * [物件控制] - 刷新dvbTstPktTxCntText
+         * 勾選Infinite模式時停用封包數輸入框(Infinite不需要指定次數), 取消勾選則還原。
+         * Param :
+         *   sender, e - CheckedChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxInfiniteCheck_CheckedChanged(object sender, EventArgs e)
         {
             if (dvbTstPktTxInfiniteCheck.Checked)
@@ -2126,6 +2945,16 @@ namespace ER41xxTestTool
                 dvbTstPktTxCntText.Enabled = true;
         }
 
+        /*-------------------------------------------------------------
+         *  HexGenerate
+         * [物件控制] - 刷新dvbTstPktTxPayloadText
+         * 依dvbTstPktTxRandomPlLenText指定的長度產生亂數byte, 存進tmpArray並以
+         * 十六進位格式顯示到dvbTstPktTxPayloadText。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void HexGenerate()
         {
             int byteLength = 0;
@@ -2162,13 +2991,25 @@ namespace ER41xxTestTool
         // dvbTstPktTxRandomPlCheck/dvbTstPktTxRandomPlLenText 兩個一起作用就好: 勾選當下直接產生一次隨機payload(不用再另外按按鈕確認),
         // dvbTstPktTxRandomPlLenText 改變長度時(Leave事件, 見下面 dvbTstPktTxRandomPlLenText_Leave)也會直接重新產生。
         // dvbTstPktTxRandomPlLenText/dvbTstPktTxRandomPlLenUnitLabel 一律保持可見, 只依checkbox狀態切換Enabled, 不再Visible顯示/隱藏來回切換。
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxRandomPlCheck_CheckedChanged
+         * [物件控制] - 刷新dvbTstPktTxPayloadText/dvbTstPktTxRandomPlLenText/
+         * dvbTstPktTxFilledLenText/dvbTstPktTxFilledLenDescLabel
+         * 勾選Random Payload: Payload輸入框清空並改唯讀(灰底), 長度輸入框啟用預設填5,
+         * 隱藏FilledLen顯示改立刻產生一次隨機payload(GenerateRandomPayload)。
+         * 取消勾選: 還原Payload輸入框可編輯、顯示FilledLen, 清空tmpArray。
+         * Param :
+         *   sender, e - CheckedChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxRandomPlCheck_CheckedChanged(object sender, EventArgs e)
         {
             dvbTstPktTxRandomPlLenText.Enabled = dvbTstPktTxRandomPlCheck.Checked;
             if (dvbTstPktTxRandomPlCheck.Checked) {
                 dvbTstPktTxPayloadText.Clear();
                 dvbTstPktTxPayloadText.ReadOnly = true;
-                dvbTstPktTxPayloadText.BackColor = Color.FromArgb(32, 32, 32);
+                dvbTstPktTxPayloadText.BackColor = Color.Black;
                 dvbTstPktTxPayloadText.Update();
                 tmpArray.Clear();
                 dvbTstPktTxFilledLenText.Text = "0";
@@ -2184,7 +3025,7 @@ namespace ER41xxTestTool
                 dvbTstPktTxFilledLenText.Visible = true;
                 dvbTstPktTxFilledLenText.Text = "0";
                 dvbTstPktTxFilledLenDescLabel.Visible = true;
-                dvbTstPktTxPayloadText.BackColor = Color.FromArgb(32, 32, 32);
+                dvbTstPktTxPayloadText.BackColor = Color.Black;
                 dvbTstPktTxPayloadText.ReadOnly = false;
                 dvbTstPktTxPayloadText.Update();
                 dvbTstPktTxPayloadText.Clear();
@@ -2192,6 +3033,14 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxRandomPlLenText_Leave
+         * 離開長度輸入框時, 若Random Payload模式已勾選, 依新長度重新產生一次隨機payload。
+         * Param :
+         *   sender, e - Leave事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxRandomPlLenText_Leave(object sender, EventArgs e)
         {
             if (dvbTstPktTxRandomPlCheck.Checked)
@@ -2200,6 +3049,16 @@ namespace ER41xxTestTool
 
         // 焦點還在 dvbTstPktTxRandomPlLenText 裡直接按 Enter 也重新產生一次, 不用先點別的地方讓焦點離開觸發 Leave。
         // SuppressKeyPress 擋掉 Enter 在單行 TextBox 上預設的警示音。
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxRandomPlLenText_KeyDown
+         * 在長度輸入框裡直接按Enter等同Leave的效果, 立即重新產生隨機payload(若已勾選),
+         * 並吃掉Enter避免單行TextBox預設的警示音。
+         * Param :
+         *   sender - 未使用
+         *   e - KeyDown事件參數, 取其KeyCode判斷是否為Enter
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxRandomPlLenText_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -2210,7 +3069,18 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>依 dvbTstPktTxRandomPlLenText 目前的長度重新產生一次隨機payload, 存進 tmpArray; randomCheckbox沒勾時不做事。原本是獨立的"Apply"按鈕(btnRandomGenerate)才會觸發, 現在勾選/改長度時直接呼叫。</summary>
+        /*-------------------------------------------------------------
+         *  GenerateRandomPayload
+         * [物件控制] - 刷新dvbTstPktTxPayloadText (經由HexGenerate)
+         * 依dvbTstPktTxRandomPlLenText目前的長度重新產生一次隨機payload, 存進tmpArray;
+         * dvbTstPktTxRandomPlCheck沒勾時不做事。長度(含PrependSeq +2後)超出目前
+         * CRC選項允許的上限會跳警告訊息。原本是獨立的"Apply"按鈕(btnRandomGenerate)才會
+         * 觸發, 現在勾選/改長度時直接呼叫。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void GenerateRandomPayload()
         {
             if (!dvbTstPktTxRandomPlCheck.Checked)
@@ -2264,6 +3134,16 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxStopBtn_Click
+         * [物件控制] - 刷新dvbTstPktTxStopBtn/dvbTstPktTxStartBtn (經由EnableSetting)
+         * Packet TX Stop鈕: Infinite模式開著就先送停止命令(InfiniteStop), 關閉isSending
+         * 旗標讓PacketSend()迴圈中止, 還原按鈕Enabled狀態並解鎖控制項(EnableSetting)。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxStopBtn_Click(object sender, EventArgs e)
         {
             if (dvbTstPktTxInfiniteCheck.Checked)
@@ -2277,10 +3157,31 @@ namespace ER41xxTestTool
             ShowInsLog("Packet Stop\r\n");
             EnableSetting();
         }
+        /*-------------------------------------------------------------
+         *  cutTitle
+         * 取字串前len個字元。
+         * Param :
+         *   t - 原始字串
+         *   len - 要取的長度
+         * Return:
+         *   t的前len個字元
+         *-------------------------------------------------------------*/
         public static string cutTitle(string t, int len)
         {
             return t.Substring(0, len);
         }
+
+        /*-------------------------------------------------------------
+         *  ApplyPASetting
+         * [物件控制] - 刷新paramPAConfigCombo
+         * 檢查setPA是否在mode對應的PAConfigTable合法清單裡, 合法就套到paramPAConfigCombo,
+         * 不合法跳錯誤訊息。
+         * Param :
+         *   mode - PA_TYPE (決定要用PAConfigTable的哪一組清單)
+         *   setPA - 要套用的PA Config字串
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ApplyPASetting(PA_TYPE mode, string setPA)
         {
             List<string> allowList = PAConfigTable[(int)mode];
@@ -2295,6 +3196,14 @@ namespace ER41xxTestTool
             paramPAConfigCombo.Text = setPA.ToString();
         }
 
+        /*-------------------------------------------------------------
+         *  getOneByteData
+         * 把字串解析成整數, 失敗時記Log並回傳-1。
+         * Param :
+         *   stmp - 要解析的字串
+         * Return:
+         *   解析出的整數; 失敗回傳-1
+         *-------------------------------------------------------------*/
         public int getOneByteData(string stmp)
         {
             int ans = -1;
@@ -2309,6 +3218,14 @@ namespace ER41xxTestTool
             }
             return ans;
         }
+        /*-------------------------------------------------------------
+         *  CheckEepromExist
+         * 送"romexist"命令查詢DVB板子是否有EEPROM (ER81Wx沒有), 讀回結果去掉換行後解析成整數。
+         * Param :
+         *   (無)
+         * Return:
+         *   1 - 有EEPROM / 0 - 沒有 / -1 - 解析失敗
+         *-------------------------------------------------------------*/
         public int CheckEepromExist()
         {
             int res = 0;
@@ -2326,6 +3243,14 @@ namespace ER41xxTestTool
             return res;
         }
 
+        /*-------------------------------------------------------------
+         *  ReadMaxPwrFromEeprom
+         * 送"user 6 27"命令從EEPROM讀回PA Power索引(0=10dBm,1=14dBm,2=16dBm,3=20dBm,4=23dBm)。
+         * Param :
+         *   (無)
+         * Return:
+         *   讀到的PA Power索引; 解析失敗回傳-1
+         *-------------------------------------------------------------*/
         public int ReadMaxPwrFromEeprom()
         {
             int pwrIdx = -1;
@@ -2343,6 +3268,14 @@ namespace ER41xxTestTool
             return pwrIdx;
         }
 
+        /*-------------------------------------------------------------
+         *  ReadFreqBandFromEeprom
+         * 送"user 6 15"/"user 6 16"命令分別讀回RF-band的高低byte, 組成16-bit rfBand值。
+         * Param :
+         *   (無)
+         * Return:
+         *   組合後的RF Band值 (band_H<<8 | band_L)
+         *-------------------------------------------------------------*/
         public int ReadFreqBandFromEeprom()
         {
             int rfBand = -1;
@@ -2368,11 +3301,30 @@ namespace ER41xxTestTool
             return rfBand;
         }
 
+        /*-------------------------------------------------------------
+         *  btnClearInsLog_Click
+         * [物件控制] - 清空logResultText
+         * 清空底部Log顯示框。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnClearInsLog_Click(object sender, EventArgs e)
         {
             logResultText.Clear();
         }
 
+        /*-------------------------------------------------------------
+         *  cwOnProcess
+         * 依目前Continuous TX的Pattern選項(dvbTstContiTxSingleToneRadioBtn/
+         * dvbTstContiTxBit0101RadioBtn/dvbTstContiTxPrbs9RadioBtn)送出對應的CW命令
+         * ("txst 1"/"txpr55"/"txprbs")。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void cwOnProcess()
         {
             string cmd = "txst 1\r";
@@ -2395,12 +3347,32 @@ namespace ER41xxTestTool
             serialPort1.Write(cmd);
             
         }
+        /*-------------------------------------------------------------
+         *  cwOffProcess
+         * 送"txst 0"命令關閉CW輸出。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void cwOffProcess()
         {
             string cmd = "txst 0\r";
             serialPort1.Write(cmd);
             ShowInsLog("CW OFF\r\n");
         }
+
+        /*-------------------------------------------------------------
+         *  dvbTstContiTxStartBtn_Click
+         * [物件控制] - 停用dvbTstContiTxSingleToneRadioBtn等Pattern選項並刷新按鈕狀態
+         * Continuous TX Start鈕: 檢查COM port已連線、REG TABLE無未寫回的變更
+         * (ConfirmRewriteIfRegTableDirty), 送出"tx 1 30 0"進TX模式後呼叫cwOnProcess()
+         * 依Pattern選項送CW命令, 並鎖住Pattern選項避免送出中途切換。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstContiTxStartBtn_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
@@ -2439,6 +3411,17 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstContiTxStopBtn_Click
+         * [物件控制] - 刷新dvbTstContiTxStartBtn/dvbTstContiTxStopBtn/
+         * dvbTstContiTxSingleToneRadioBtn/dvbTstContiTxPatternRadioBtn
+         * Continuous TX Stop鈕: 呼叫cwOffProcess()關閉CW輸出, 還原按鈕/Pattern選項的
+         * Enabled狀態。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstContiTxStopBtn_Click(object sender, EventArgs e)
         {
             if (serialPort1.IsOpen)
@@ -2460,6 +3443,16 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  DVBBandCombo_SelectedIndexChanged
+         * [物件控制] - 刷新paramPAConfigCombo
+         * highlowICType未知時不動作。Low Power IC下, 依paramDvbBandCombo選的頻段套用
+         * 對應的PA Config清單(433/915→PA_915433L, 868→PA_868L)。
+         * Param :
+         *   sender, e - SelectedIndexChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void DVBBandCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (highlowICType < 0)
@@ -2485,6 +3478,16 @@ namespace ER41xxTestTool
             }         
         }
 
+        /*-------------------------------------------------------------
+         *  PacketRxBtnStopProcess
+         * [物件控制] - 刷新Packet RX相關控制項 (經由EnableRxControlsAfterStop)
+         * 停止Packet RX: 送"rx 0"命令、拆掉Packet RX的位元組接收處理常式
+         * (DetachUartRxHandler), 再解鎖RX相關控制項(EnableRxControlsAfterStop)。
+         * Param :
+         *   (無)
+         * Return:
+         *   固定回傳false (保留欄位, 目前呼叫端未使用回傳值)
+         *-------------------------------------------------------------*/
         public bool PacketRxBtnStopProcess()
         {
             bool res = false;
@@ -2530,8 +3533,18 @@ namespace ER41xxTestTool
             return res;
         }
 
-        // Packet Rx 沒在開啟中(尚未開始 或 已停止/失敗)時,把所有相關參數控制項恢復成可設定狀態。
-        // 供 PacketRxBtnStopProcess() 及 PacketRxStartProcess() 的失敗路徑共用,避免兩邊各自維護一份清單而漏改。
+        /*-------------------------------------------------------------
+         *  EnableRxControlsAfterStop
+         * [物件控制] - 刷新paramRxSyncSoftInvertCheck/dvbTstPktRxScanBtn/
+         * dvbTstPktRxStartBtn/dvbTstPktRxCrcCombo等PARAMETER/Packet RX控制項
+         * Packet Rx沒在開啟中(尚未開始或已停止/失敗)時, 把所有相關參數控制項恢復成可設定
+         * 狀態。供PacketRxBtnStopProcess()及PacketRxStartProcess()的失敗路徑共用, 避免
+         * 兩邊各自維護一份清單而漏改。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void EnableRxControlsAfterStop()
         {
             paramRxSyncSoftInvertCheck.Enabled = true;
@@ -2545,6 +3558,15 @@ namespace ER41xxTestTool
             dvbTstPktRxCntText.Enabled = dvbTstPktRxCntLimitRadioBtn.Checked;
         }
 
+        /*-------------------------------------------------------------
+         *  DisconnectUartProcess
+         * [物件控制] - 刷新dvbTstPktRxStartBtn
+         * 送"setperst 0"/"settestst 0"關閉PER統計跟test mode, 重新啟用Start RX鈕。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void DisconnectUartProcess()
         {
             string cmd = "";
@@ -2559,6 +3581,16 @@ namespace ER41xxTestTool
 
             dvbTstPktRxStartBtn.Enabled = true;
         }
+        /*-------------------------------------------------------------
+         *  SetStateButton
+         * [物件控制] - 依enable改變btn的視覺樣式(FlatStyle)
+         * 把按鈕改成扁平樣式並依enable切換配色: 可點狀態用淺藍, 鎖定/執行中用灰色。
+         * Param :
+         *   btn - 要設定樣式的按鈕
+         *   enable - true=可點(淺藍) / false=鎖定(灰色)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         void SetStateButton(System.Windows.Forms.Button btn, bool enable)
         {
             btn.Enabled = enable;
@@ -2584,6 +3616,20 @@ namespace ER41xxTestTool
                 btn.FlatAppearance.MouseDownBackColor = btn.BackColor;
             }
         }
+        /*-------------------------------------------------------------
+         *  dvbTstPktRxStartBtn_Click
+         * [物件控制] - 刷新dvbTstPktRxLogText/dvbTstPktRxOkCntText/dvbTstPktRxErrCntText/
+         * dvbTstPktRxRssiText/dvbTstPktRxScanBtn/dvbTstPktRxStartBtn
+         * Start RX/Stop RX鈕(同一顆依文字判斷): Start時歸零統計、清Log、鎖住Scan RSSI跟
+         * PARAMETER控制項(DisableParameterSetting)、檢查REG TABLE未寫回的變更
+         * (ConfirmRewriteIfRegTableDirty), 再呼叫PacketRxStartProcess()真正開始收包,
+         * 成功則按鈕文字切成"Stop RX"。Stop時呼叫PacketRxBtnStopProcess()並把文字
+         * 切回"Start RX"。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktRxStartBtn_Click(object sender, EventArgs e)
         {
             bool res = false;
@@ -2633,44 +3679,120 @@ namespace ER41xxTestTool
             }
             
         }
-        // dvbTstPktRxCntLimitRadioBtn("Max Packet Count")/dvbTstPktRxCntNoLimitRadioBtn("No limitation") 共用同一個handler,
-        // 兩顆 RadioButton 的 CheckedChanged 都會掛這個 —— 選了 Max Packet Count 才讓 dvbTstPktRxCntText 可編輯。
+        /*-------------------------------------------------------------
+         *  packetRxCountMode_CheckedChanged
+         * [物件控制] - 刷新dvbTstPktRxCntText
+         * dvbTstPktRxCntLimitRadioBtn("Max Packet Count")/dvbTstPktRxCntNoLimitRadioBtn
+         * ("No limitation")共用同一個handler, 兩顆RadioButton的CheckedChanged都會掛這個
+         * ——選了Max Packet Count才讓dvbTstPktRxCntText可編輯。
+         * Param :
+         *   sender, e - CheckedChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void packetRxCountMode_CheckedChanged(object sender, EventArgs e)
         {
             dvbTstPktRxCntText.Enabled = dvbTstPktRxCntLimitRadioBtn.Checked;
         }
 
+        /*-------------------------------------------------------------
+         *  btnRxResultClr_Click_1
+         * [物件控制] - 清空dvbTstPktRxLogText
+         * 清空Packet RX的Log顯示框。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnRxResultClr_Click_1(object sender, EventArgs e)
         {
             dvbTstPktRxLogText.Clear();
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstContiTxPatternRadioBtn_CheckedChanged
+         * [物件控制] - 刷新dvbTstContiTxPatternGroup
+         * 選到Pattern模式時顯示Pattern選項群組(0101/PRBS9)。
+         * Param :
+         *   sender, e - CheckedChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstContiTxPatternRadioBtn_CheckedChanged(object sender, EventArgs e)
         {
-            dvbTstContiTxPatternGroup.Visible = true;
+            dvbTstContiTxPatternGroup.Enabled = true;
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstContiTxSingleToneRadioBtn_CheckedChanged
+         * [物件控制] - 刷新dvbTstContiTxPatternGroup
+         * 選到Single Tone模式時隱藏Pattern選項群組(Single Tone不需要選Pattern)。
+         * Param :
+         *   sender, e - CheckedChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstContiTxSingleToneRadioBtn_CheckedChanged(object sender, EventArgs e)
         {
-            dvbTstContiTxPatternGroup.Visible = false;
+            dvbTstContiTxPatternGroup.Enabled = false;
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxPrependSeqCheck_CheckedChanged
+         * [物件控制] - 刷新dvbTstPktTxDgm系列封包格式圖 (經由RefreshPacketFormatDiagram)
+         * PrependSeq勾選變動時重畫封包格式示意圖 (是否含SeqNum欄位)。
+         * Param :
+         *   sender, e - CheckedChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxPrependSeqCheck_CheckedChanged(object sender, EventArgs e)
         {
             //addSeqLevel.Visible = dvbTstPktTxPrependSeqCheck.Checked;
             RefreshPacketFormatDiagram();
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxCrcCombo_SelectedIndexChanged
+         * [物件控制] - 刷新dvbTstPktTxDgm系列封包格式圖 (經由RefreshPacketFormatDiagram)
+         * CRC選項變動時重畫封包格式示意圖(是否含CRC欄位)。
+         * Param :
+         *   sender, e - SelectedIndexChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktTxCrcCombo_SelectedIndexChanged(object sender, EventArgs e)
         {
             RefreshPacketFormatDiagram();
         }
 
+        /*-------------------------------------------------------------
+         *  preambleLen_TextChanged
+         * [物件控制] - 刷新dvbTstPktTxDgm系列封包格式圖 (經由RefreshPacketFormatDiagram)
+         * Preamble長度變動時重畫封包格式示意圖。
+         * Param :
+         *   sender, e - TextChanged事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void preambleLen_TextChanged(object sender, EventArgs e)
         {
             RefreshPacketFormatDiagram();
         }
 
+        /*-------------------------------------------------------------
+         *  SetFifoSegmentState
+         * [物件控制] - 刷新box(Label)/lenLabel(Label)
+         * 封包格式圖裡單一欄位色塊的顯示狀態: active時淺藍底黑字並顯示activeLenText,
+         * 否則白底灰字顯示"0Bytes"。
+         * Param :
+         *   box - 該欄位的色塊Label
+         *   lenLabel - 該欄位的長度說明Label
+         *   active - 這個欄位目前是否啟用(存在)
+         *   activeLenText - active時要顯示的長度文字
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void SetFifoSegmentState(Label box, Label lenLabel, bool active, string activeLenText)
         {
             box.BackColor = active ? Color.LightBlue : Color.White;
@@ -2678,6 +3800,19 @@ namespace ER41xxTestTool
             lenLabel.Text = active ? activeLenText : "0Bytes";
         }
 
+        /*-------------------------------------------------------------
+         *  RefreshPacketFormatDiagram
+         * [物件控制] - 刷新dvbTstPktTxDgmPbLenLabel/dvbTstPktTxDgmSyncLenLabel/
+         * dvbTstPktTxDgmSeqNumLabel/dvbTstPktTxDgmSeqNumLenLabel/dvbTstPktTxDgmCrcLabel/
+         * dvbTstPktTxDgmCrcLenLabel/dvbTstPktTxDgmPayloadLenLabel
+         * 依目前Preamble長度/Syncword實際位元數/PrependSeq/CRC選項重畫Packet TX的封包
+         * 格式示意圖各欄位長度, 並依FIFO_MAX_LEN(128)反推目前組合下Payload的最大可用長度
+         * (Length欄位1 byte + SeqNum(0/2) + Payload + CRC(0/2) = 128)。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void RefreshPacketFormatDiagram()
         {
             int preambleBytes;
@@ -2702,6 +3837,16 @@ namespace ER41xxTestTool
             dvbTstPktTxDgmPayloadLenLabel.Text = "Max " + maxPayload + " Bytes";
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstStateSetBtn_Click
+         * Power Mode State Set鈕: 檢查COM port已連線、REG TABLE無未寫回的變更
+         * (ConfirmRewriteIfRegTableDirty), 依選取的狀態送對應命令: Idle("pm 0"接著
+         * "rx 0")、Deep Sleep("pm 1")、Shutdown("pm 2")。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstStateSetBtn_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
@@ -2732,6 +3877,14 @@ namespace ER41xxTestTool
                 ShowInsLog("Set shutdown mode OK\r\n");
             }
         }
+        /*-------------------------------------------------------------
+         *  GetRSSI
+         * 把韌體回傳的3位數字串轉成RSSI值(取負號)。
+         * Param :
+         *   str - 韌體回傳的字串
+         * Return:
+         *   解析出的RSSI(dBm); 長度不是3或解析失敗則回傳333(無效值)
+         *-------------------------------------------------------------*/
         private int GetRSSI(string str)
         {
             int rssidBm = 333;
@@ -2749,6 +3902,16 @@ namespace ER41xxTestTool
             }
             return rssidBm;
         }
+        /*-------------------------------------------------------------
+         *  DoScanProcess
+         * [物件控制] - 刷新dvbTstPktRxRssiText
+         * Scan RSSI一次取樣: 送"getchrssi <getrssiTimes>"命令, 讀回結果解析RSSI
+         * (GetRSSI)並顯示。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void DoScanProcess()
         {
             int rssi = -200;
@@ -2766,6 +3929,15 @@ namespace ER41xxTestTool
             string timestamp = DateTime.Now.ToString("HH:mm:ss:fff");
             ShowRxPacket(timestamp + " RSSI : " + rssi + "dBm\r\n");
         }
+        /*-------------------------------------------------------------
+         *  OnTimedScanFreqProcess
+         * scanTimer的Elapsed callback: COM port開著就呼叫DoScanProcess()做一次RSSI取樣,
+         * 否則停掉計時器(StopScanTimer)。
+         * Param :
+         *   source, e - Elapsed事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void OnTimedScanFreqProcess(Object source, ElapsedEventArgs e)
         {
             if (serialPort1.IsOpen)
@@ -2777,6 +3949,15 @@ namespace ER41xxTestTool
                 StopScanTimer();
             }
         }
+        /*-------------------------------------------------------------
+         *  InitScanTimer
+         * 建立並啟動scanTimer(500ms週期, AutoReset), Elapsed掛OnTimedScanFreqProcess。
+         * 已存在就不重建(避免重複new)。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void InitScanTimer()
         {
             if (scanTimer != null) return;   // 避免重複new
@@ -2789,6 +3970,14 @@ namespace ER41xxTestTool
             scanTimer.Start();
         }
 
+        /*-------------------------------------------------------------
+         *  StopScanTimer
+         * 停止並釋放scanTimer。已是null就不做事。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void StopScanTimer()
         {
             if (scanTimer == null) return;
@@ -2797,6 +3986,17 @@ namespace ER41xxTestTool
             scanTimer.Dispose();
             scanTimer = null;
         }
+        /*-------------------------------------------------------------
+         *  ScanStop
+         * [物件控制] - 刷新dvbTstPktRxScanBtn/dvbTstPktRxStartBtn/dvbTstPktRxOkCntText/
+         * dvbTstPktRxErrCntText
+         * 停止Scan RSSI: 送"setregb19c 0"、停計時器(StopScanTimer)、解鎖PARAMETER控制項
+         * (EnableParameterSetting)、按鈕文字還原"Scan RSSI"、重新啟用Start RX等控制項。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ScanStop()
         {
             string cmd = "";
@@ -2811,6 +4011,17 @@ namespace ER41xxTestTool
             dvbTstPktRxErrCntText.Enabled = true;
         }
 
+        /*-------------------------------------------------------------
+         *  ScanStart
+         * [物件控制] - 刷新dvbTstPktRxScanBtn/dvbTstPktRxStartBtn/dvbTstPktRxOkCntText/
+         * dvbTstPktRxErrCntText/dvbTstPktRxLogText
+         * 開始Scan RSSI: 送"settestst 1"/"rx 0"/"setregb19c 3"進入掃描模式, 按鈕文字改
+         * "Scan Stop", 鎖住Start RX等控制項, 啟動計時器(InitScanTimer)定期取樣。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ScanStart()
         {
             bool res = false;
@@ -2854,6 +4065,16 @@ namespace ER41xxTestTool
                 DisableParameterSetting();
             }));
         }
+        /*-------------------------------------------------------------
+         *  ScanProcess
+         * [物件控制] - 刷新dvbTstPktRxScanBtn (經由ScanStart/ScanStop)
+         * Scan RSSI鈕的統一進入點: 依dvbTstPktRxScanBtn目前文字判斷要Start還是Stop,
+         * Start前先確認REG TABLE無未寫回的變更(ConfirmRewriteIfRegTableDirty)。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ScanProcess()
         {
             if (!serialPort1.IsOpen)
@@ -2871,6 +4092,14 @@ namespace ER41xxTestTool
                 ScanStop();
             }
         }
+        /*-------------------------------------------------------------
+         *  btnScanRssi_Click
+         * Scan RSSI鈕: 轉呼叫ScanProcess()。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnScanRssi_Click(object sender, EventArgs e)
         {
                 // Set Parameter
@@ -2881,39 +4110,31 @@ namespace ER41xxTestTool
                 ScanProcess();
         }
 
+        /*-------------------------------------------------------------
+         *  dvbTstPktRxClearLogBtn_Click
+         * [物件控制] - 清空dvbTstPktRxLogText
+         * 清空Packet RX的Log顯示框。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void dvbTstPktRxClearLogBtn_Click(object sender, EventArgs e)
         {
             dvbTstPktRxLogText.Clear();
         }
 
-        private void pageParameter_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label13_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label16_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void txModCombo_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pageParameter_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
         private ContextMenuStrip genMenu;
 
-        /// <summary>按下 GENERATE 先跳出選單: 要照 REG TABLE 目前的 Topic/DependsOn 過濾結果只產生通過的 register, 還是產生全部</summary>
+        /*-------------------------------------------------------------
+         *  btnGen_Click
+         * 按下GENERATE先跳出選單: 要照REG TABLE目前的Topic/DependsOn過濾結果只產生
+         * 通過的register, 還是產生全部。選單物件(genMenu)延遲建立、重複使用。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnGen_Click(object sender, EventArgs e)
         {
             if (genMenu == null)
@@ -2925,7 +4146,17 @@ namespace ER41xxTestTool
             genMenu.Show(regTableGenBtn, new Point(0, regTableGenBtn.Height));
         }
 
-        /// <summary>filterOnly=true 時只有目前通過 REG TABLE Topic/DependsOn 過濾的位址會被 CodeOutHelper 寫出 (見 GenerateAllowedAddrs); false 就是原本的「全部產生」</summary>
+        /*-------------------------------------------------------------
+         *  RunGenerate
+         * filterOnly=true時只有目前通過REG TABLE Topic/DependsOn過濾的位址會被
+         * CodeOutHelper寫出(見GenerateAllowedAddrs); false就是原本的「全部產生」。
+         * 值一律來自REG TABLE目前顯示的現值(GenerateValueOverrides, 而不是重新用參數
+         * 算一次), 產生成功則跳出CodeGenPreviewForm預覽/存檔。
+         * Param :
+         *   filterOnly - true=只產生通過過濾的位址 / false=產生全部
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void RunGenerate(bool filterOnly)
         {
             string apiVersion = "V4.04";
@@ -2957,7 +4188,15 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>依 REG TABLE 目前的 Topic/DependsOn 勾選狀態 (PassesFilter, 定義在 RegDumpProcess.cs), 收集通過的 register 位址</summary>
+        /*-------------------------------------------------------------
+         *  BuildGenerateAllowedAddrs
+         * 依REG TABLE目前的Topic/DependsOn勾選狀態(PassesFilter, 定義在
+         * RegDumpProcess.cs), 收集通過的register位址。
+         * Param :
+         *   (無)
+         * Return:
+         *   通過目前過濾條件的位址集合
+         *-------------------------------------------------------------*/
         private HashSet<ushort> BuildGenerateAllowedAddrs()
         {
             HashSet<ushort> allowed = new HashSet<ushort>();
@@ -2967,7 +4206,16 @@ namespace ER41xxTestTool
             return allowed;
         }
 
-        /// <summary>REG TABLE 目前顯示的每一顆 register 值 (GetCurrentRegTableValue, 定義在 RegDumpProcess.cs), 不受 Topic/DependsOn 過濾影響 —— 過濾只決定輸出裡「有沒有這顆」, 這裡決定「有的話值是多少」</summary>
+        /*-------------------------------------------------------------
+         *  BuildGenerateValueOverrides
+         * REG TABLE目前顯示的每一顆register值(GetCurrentRegTableValue, 定義在
+         * RegDumpProcess.cs), 不受Topic/DependsOn過濾影響——過濾只決定輸出裡
+         * 「有沒有這顆」, 這裡決定「有的話值是多少」。
+         * Param :
+         *   (無)
+         * Return:
+         *   位址->目前應輸出值的對照表 (涵蓋RegTableItems全部項目)
+         *-------------------------------------------------------------*/
         private Dictionary<ushort, uint> BuildGenerateValueOverrides()
         {
             Dictionary<ushort, uint> overrides = new Dictionary<ushort, uint>();
@@ -2976,19 +4224,19 @@ namespace ER41xxTestTool
             return overrides;
         }
 
-        //private void btnDefault_Click(object sender, EventArgs e)
-        //{
 
-        //}
-
-        private void btnReadDVB_Click(object sender, EventArgs e)
+        private void dvbTstPktFifoDgmHelpBtn_Click(object sender, EventArgs e)
         {
-            btnRegDumpFromDVB();// sender, e);
-        }
-
-        private void btnWriteDVB_Click(object sender, EventArgs e)
-        {
-            btnRegWriteToDVB();// sender, e);
+            string msg =
+                "1. Preamble (4 Bytes) and Syncword (4 Bytes) are generated by the MAC layer automatically - they are NOT part of the FIFO data you fill in.\r\n\r\n" +
+                "2. FIFO Data (Max 128 Bytes total) is what you actually write into the FIFO:\r\n" +
+                ">>Length      (1 Byte)\r\n" +
+                ">>Seq Number  (2 Bytes)  - optional, only present when \"Prepend Seq Num\" is enabled.\r\n" +
+                ">>Payload     (Max 125 Bytes)\r\n" +
+                ">>CRC         (2 Bytes)  - optional, depends on the selected CRC mode.\r\n\r\n" +
+                "3. Length = byte count of (Seq Number + Payload + CRC) combined. It does NOT include itself, Preamble, or Syncword.\r\n\r\n" +
+                "4. CRC is calculated over (Seq Number + Payload) only. It does NOT cover the Length byte, Preamble, or Syncword.";
+            MessageBox.Show(this, msg, "FIFO Data Format Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /*

@@ -55,9 +55,11 @@ namespace ER41xxTestTool
             this.autoSendcbx = new System.Windows.Forms.CheckBox();
             this.dvbTstZoneTab = new System.Windows.Forms.TabControl();
             this.dvbTstPktTxPage = new System.Windows.Forms.TabPage();
+            this.dvbTstPktFifoDgmHelpBtn = new System.Windows.Forms.Button();
             this.dvbTstPktTxDgmSyncLenLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxDgmSyncLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxDgmCrcLenLabel = new System.Windows.Forms.Label();
+            this.dvbTstPktTxDgmMacRangeLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxDgmFifoRangeLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxDgmCrcLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxDgmPayloadLenLabel = new System.Windows.Forms.Label();
@@ -128,6 +130,7 @@ namespace ER41xxTestTool
             this.paramFreqTableUnitLabel = new System.Windows.Forms.Label();
             this.paramFreqTableAddBtn = new System.Windows.Forms.Button();
             this.paramFreqTableList = new System.Windows.Forms.ListView();
+            this.paramFreqTableDelAllBtn = new System.Windows.Forms.Button();
             this.paramFreqTableDeleteBtn = new System.Windows.Forms.Button();
             this.paramPbLabel = new System.Windows.Forms.Label();
             this.paramPbContentText = new System.Windows.Forms.TextBox();
@@ -162,11 +165,15 @@ namespace ER41xxTestTool
             this.paramIntModeTxAemptyText = new System.Windows.Forms.TextBox();
             this.paramIntModeRxAfullGroup = new System.Windows.Forms.GroupBox();
             this.paramIntModeRxAfullText = new System.Windows.Forms.TextBox();
-            this.paramGpioGroup = new System.Windows.Forms.GroupBox();
-            this.paramGpio0EnableCheck = new System.Windows.Forms.CheckBox();
-            this.paramGpio0Combo = new System.Windows.Forms.ComboBox();
-            this.paramGpio1EnableCheck = new System.Windows.Forms.CheckBox();
-            this.paramGpio1Combo = new System.Windows.Forms.ComboBox();
+            this.paramGpio0Group = new System.Windows.Forms.GroupBox();
+            this.paramGpio0GIoInvCheck = new System.Windows.Forms.CheckBox();
+            this.paramGpio0ModeLabel = new System.Windows.Forms.Label();
+            this.paramGpio0PullCtrlLabel = new System.Windows.Forms.Label();
+            this.paramGpio0GIoSelLabel = new System.Windows.Forms.Label();
+            this.paramGpio0ModeCombo = new System.Windows.Forms.ComboBox();
+            this.paramGpio0PullCtrlCombo = new System.Windows.Forms.ComboBox();
+            this.paramGpio0GioSelCombo = new System.Windows.Forms.ComboBox();
+            this.paramGpio1GioSelCombo = new System.Windows.Forms.ComboBox();
             this.logResultClearBtn = new System.Windows.Forms.Button();
             this.logResultText = new System.Windows.Forms.TextBox();
             this.paramTxSyncSoftInvertCheck = new System.Windows.Forms.CheckBox();
@@ -212,25 +219,42 @@ namespace ER41xxTestTool
             this.paramModemGroup = new System.Windows.Forms.GroupBox();
             this.paramDeviationHelpBtn = new System.Windows.Forms.Button();
             this.paramFreqAndPwrGroup = new System.Windows.Forms.GroupBox();
-            this.paramFreqPwrHelpBtn = new System.Windows.Forms.Button();
+            this.paramXtalGainLabel = new System.Windows.Forms.Label();
+            this.paramXtalGainCombo = new System.Windows.Forms.ComboBox();
+            this.paramXtalHelpBtn = new System.Windows.Forms.Button();
+            this.paramFreqHelpBtn = new System.Windows.Forms.Button();
+            this.paramPwrHelpBtn = new System.Windows.Forms.Button();
             this.paramXtalCombo = new System.Windows.Forms.ComboBox();
             this.paramDvbBandLabel = new System.Windows.Forms.Label();
             this.paramDvbBandCombo = new System.Windows.Forms.ComboBox();
             this.paramXtalLabel = new System.Windows.Forms.Label();
             this.pageFreqTable = new System.Windows.Forms.TabPage();
             this.pageTxPayload = new System.Windows.Forms.TabPage();
-            this.paramTxFifoModeInfoLabel = new System.Windows.Forms.Label();
+            this.paramTxFifoModeTransHelpLabel = new System.Windows.Forms.Label();
+            this.paramTxFifoMode802HelpLabel = new System.Windows.Forms.Label();
+            this.paramTxFifoModePreSyncHelpLabel = new System.Windows.Forms.Label();
+            this.paramTxFifoModeNoticeLabel = new System.Windows.Forms.Label();
             this.pageIntMode = new System.Windows.Forms.TabPage();
             this.pageGpio = new System.Windows.Forms.TabPage();
+            this.paramGpio1Group = new System.Windows.Forms.GroupBox();
+            this.paramGpio1GIoInvCheck = new System.Windows.Forms.CheckBox();
+            this.paramGpio1GIoSelLabel = new System.Windows.Forms.Label();
+            this.paramGpio1PullCtrlLabel = new System.Windows.Forms.Label();
+            this.paramGpio1ModeLabel = new System.Windows.Forms.Label();
+            this.paramGpio1PullCtrlCombo = new System.Windows.Forms.ComboBox();
+            this.paramGpio1ModeCombo = new System.Windows.Forms.ComboBox();
             this.pagePcrmu = new System.Windows.Forms.TabPage();
             this.regTableGenBtn = new System.Windows.Forms.Button();
             this.regTableDefaultBtn = new System.Windows.Forms.Button();
             this.regTableTopicGroup = new System.Windows.Forms.GroupBox();
             this.dvbTstTopicLabel = new System.Windows.Forms.Label();
             this.paramTopicLabel = new System.Windows.Forms.Label();
-            this.regTableReadDvbRegBtn = new System.Windows.Forms.Button();
+            this.regTableDumpDvbRegBtn = new System.Windows.Forms.Button();
             this.regTableWriteDvbRegBtn = new System.Windows.Forms.Button();
             this.regTableIncInitArrayCheck = new System.Windows.Forms.CheckBox();
+            this.dvbTstSubTopicLabel = new System.Windows.Forms.Label();
+            this.regTableWriteSelDvbRegBtn = new System.Windows.Forms.Button();
+            this.dvbTstConnStateLabel = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             this.panel3.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -256,7 +280,7 @@ namespace ER41xxTestTool
             this.paramIntModeGroup.SuspendLayout();
             this.paramIntModeTxAemptyGroup.SuspendLayout();
             this.paramIntModeRxAfullGroup.SuspendLayout();
-            this.paramGpioGroup.SuspendLayout();
+            this.paramGpio0Group.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.paramZoneTab.SuspendLayout();
             this.pageParameter.SuspendLayout();
@@ -268,6 +292,7 @@ namespace ER41xxTestTool
             this.pageTxPayload.SuspendLayout();
             this.pageIntMode.SuspendLayout();
             this.pageGpio.SuspendLayout();
+            this.paramGpio1Group.SuspendLayout();
             this.pagePcrmu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -517,9 +542,11 @@ namespace ER41xxTestTool
             // dvbTstPktTxPage
             // 
             this.dvbTstPktTxPage.BackColor = System.Drawing.Color.White;
+            this.dvbTstPktTxPage.Controls.Add(this.dvbTstPktFifoDgmHelpBtn);
             this.dvbTstPktTxPage.Controls.Add(this.dvbTstPktTxDgmSyncLenLabel);
             this.dvbTstPktTxPage.Controls.Add(this.dvbTstPktTxDgmSyncLabel);
             this.dvbTstPktTxPage.Controls.Add(this.dvbTstPktTxDgmCrcLenLabel);
+            this.dvbTstPktTxPage.Controls.Add(this.dvbTstPktTxDgmMacRangeLabel);
             this.dvbTstPktTxPage.Controls.Add(this.dvbTstPktTxDgmFifoRangeLabel);
             this.dvbTstPktTxPage.Controls.Add(this.dvbTstPktTxDgmCrcLabel);
             this.dvbTstPktTxPage.Controls.Add(this.dvbTstPktTxDgmPayloadLenLabel);
@@ -549,10 +576,20 @@ namespace ER41xxTestTool
             this.dvbTstPktTxPage.TabIndex = 0;
             this.dvbTstPktTxPage.Text = "PACKET TX";
             // 
+            // dvbTstPktFifoDgmHelpBtn
+            // 
+            this.dvbTstPktFifoDgmHelpBtn.Location = new System.Drawing.Point(768, 38);
+            this.dvbTstPktFifoDgmHelpBtn.Name = "dvbTstPktFifoDgmHelpBtn";
+            this.dvbTstPktFifoDgmHelpBtn.Size = new System.Drawing.Size(28, 23);
+            this.dvbTstPktFifoDgmHelpBtn.TabIndex = 54;
+            this.dvbTstPktFifoDgmHelpBtn.Text = "?";
+            this.dvbTstPktFifoDgmHelpBtn.UseVisualStyleBackColor = true;
+            this.dvbTstPktFifoDgmHelpBtn.Click += new System.EventHandler(this.dvbTstPktFifoDgmHelpBtn_Click);
+            // 
             // dvbTstPktTxDgmSyncLenLabel
             // 
             this.dvbTstPktTxDgmSyncLenLabel.ForeColor = System.Drawing.Color.Gray;
-            this.dvbTstPktTxDgmSyncLenLabel.Location = new System.Drawing.Point(192, 78);
+            this.dvbTstPktTxDgmSyncLenLabel.Location = new System.Drawing.Point(192, 69);
             this.dvbTstPktTxDgmSyncLenLabel.Name = "dvbTstPktTxDgmSyncLenLabel";
             this.dvbTstPktTxDgmSyncLenLabel.Size = new System.Drawing.Size(111, 17);
             this.dvbTstPktTxDgmSyncLenLabel.TabIndex = 53;
@@ -561,9 +598,9 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxDgmSyncLabel
             // 
-            this.dvbTstPktTxDgmSyncLabel.BackColor = System.Drawing.Color.Gainsboro;
+            this.dvbTstPktTxDgmSyncLabel.BackColor = System.Drawing.Color.Silver;
             this.dvbTstPktTxDgmSyncLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.dvbTstPktTxDgmSyncLabel.Location = new System.Drawing.Point(192, 45);
+            this.dvbTstPktTxDgmSyncLabel.Location = new System.Drawing.Point(192, 36);
             this.dvbTstPktTxDgmSyncLabel.Name = "dvbTstPktTxDgmSyncLabel";
             this.dvbTstPktTxDgmSyncLabel.Size = new System.Drawing.Size(111, 27);
             this.dvbTstPktTxDgmSyncLabel.TabIndex = 53;
@@ -573,17 +610,27 @@ namespace ER41xxTestTool
             // dvbTstPktTxDgmCrcLenLabel
             // 
             this.dvbTstPktTxDgmCrcLenLabel.ForeColor = System.Drawing.Color.Gray;
-            this.dvbTstPktTxDgmCrcLenLabel.Location = new System.Drawing.Point(652, 78);
+            this.dvbTstPktTxDgmCrcLenLabel.Location = new System.Drawing.Point(652, 69);
             this.dvbTstPktTxDgmCrcLenLabel.Name = "dvbTstPktTxDgmCrcLenLabel";
             this.dvbTstPktTxDgmCrcLenLabel.Size = new System.Drawing.Size(111, 17);
             this.dvbTstPktTxDgmCrcLenLabel.TabIndex = 53;
             this.dvbTstPktTxDgmCrcLenLabel.Text = "2Bytes";
             this.dvbTstPktTxDgmCrcLenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // dvbTstPktTxDgmMacRangeLabel
+            // 
+            this.dvbTstPktTxDgmMacRangeLabel.BackColor = System.Drawing.Color.DarkGray;
+            this.dvbTstPktTxDgmMacRangeLabel.Location = new System.Drawing.Point(77, 9);
+            this.dvbTstPktTxDgmMacRangeLabel.Name = "dvbTstPktTxDgmMacRangeLabel";
+            this.dvbTstPktTxDgmMacRangeLabel.Size = new System.Drawing.Size(226, 27);
+            this.dvbTstPktTxDgmMacRangeLabel.TabIndex = 53;
+            this.dvbTstPktTxDgmMacRangeLabel.Text = "Generated by MAC";
+            this.dvbTstPktTxDgmMacRangeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // dvbTstPktTxDgmFifoRangeLabel
             // 
-            this.dvbTstPktTxDgmFifoRangeLabel.BackColor = System.Drawing.Color.PaleTurquoise;
-            this.dvbTstPktTxDgmFifoRangeLabel.Location = new System.Drawing.Point(307, 18);
+            this.dvbTstPktTxDgmFifoRangeLabel.BackColor = System.Drawing.Color.PowderBlue;
+            this.dvbTstPktTxDgmFifoRangeLabel.Location = new System.Drawing.Point(307, 9);
             this.dvbTstPktTxDgmFifoRangeLabel.Name = "dvbTstPktTxDgmFifoRangeLabel";
             this.dvbTstPktTxDgmFifoRangeLabel.Size = new System.Drawing.Size(456, 27);
             this.dvbTstPktTxDgmFifoRangeLabel.TabIndex = 53;
@@ -594,7 +641,7 @@ namespace ER41xxTestTool
             // 
             this.dvbTstPktTxDgmCrcLabel.BackColor = System.Drawing.Color.LightBlue;
             this.dvbTstPktTxDgmCrcLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.dvbTstPktTxDgmCrcLabel.Location = new System.Drawing.Point(652, 45);
+            this.dvbTstPktTxDgmCrcLabel.Location = new System.Drawing.Point(652, 36);
             this.dvbTstPktTxDgmCrcLabel.Name = "dvbTstPktTxDgmCrcLabel";
             this.dvbTstPktTxDgmCrcLabel.Size = new System.Drawing.Size(111, 27);
             this.dvbTstPktTxDgmCrcLabel.TabIndex = 53;
@@ -604,7 +651,7 @@ namespace ER41xxTestTool
             // dvbTstPktTxDgmPayloadLenLabel
             // 
             this.dvbTstPktTxDgmPayloadLenLabel.ForeColor = System.Drawing.Color.Gray;
-            this.dvbTstPktTxDgmPayloadLenLabel.Location = new System.Drawing.Point(537, 78);
+            this.dvbTstPktTxDgmPayloadLenLabel.Location = new System.Drawing.Point(537, 69);
             this.dvbTstPktTxDgmPayloadLenLabel.Name = "dvbTstPktTxDgmPayloadLenLabel";
             this.dvbTstPktTxDgmPayloadLenLabel.Size = new System.Drawing.Size(111, 17);
             this.dvbTstPktTxDgmPayloadLenLabel.TabIndex = 53;
@@ -615,8 +662,8 @@ namespace ER41xxTestTool
             // 
             this.dvbTstPktTxDgmPayloadLabel.BackColor = System.Drawing.Color.Black;
             this.dvbTstPktTxDgmPayloadLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.dvbTstPktTxDgmPayloadLabel.ForeColor = System.Drawing.Color.White;
-            this.dvbTstPktTxDgmPayloadLabel.Location = new System.Drawing.Point(537, 45);
+            this.dvbTstPktTxDgmPayloadLabel.ForeColor = System.Drawing.Color.Yellow;
+            this.dvbTstPktTxDgmPayloadLabel.Location = new System.Drawing.Point(537, 36);
             this.dvbTstPktTxDgmPayloadLabel.Name = "dvbTstPktTxDgmPayloadLabel";
             this.dvbTstPktTxDgmPayloadLabel.Size = new System.Drawing.Size(111, 27);
             this.dvbTstPktTxDgmPayloadLabel.TabIndex = 53;
@@ -626,7 +673,7 @@ namespace ER41xxTestTool
             // dvbTstPktTxDgmSeqNumLenLabel
             // 
             this.dvbTstPktTxDgmSeqNumLenLabel.ForeColor = System.Drawing.Color.Gray;
-            this.dvbTstPktTxDgmSeqNumLenLabel.Location = new System.Drawing.Point(422, 78);
+            this.dvbTstPktTxDgmSeqNumLenLabel.Location = new System.Drawing.Point(422, 69);
             this.dvbTstPktTxDgmSeqNumLenLabel.Name = "dvbTstPktTxDgmSeqNumLenLabel";
             this.dvbTstPktTxDgmSeqNumLenLabel.Size = new System.Drawing.Size(111, 17);
             this.dvbTstPktTxDgmSeqNumLenLabel.TabIndex = 53;
@@ -637,7 +684,7 @@ namespace ER41xxTestTool
             // 
             this.dvbTstPktTxDgmSeqNumLabel.BackColor = System.Drawing.Color.LightBlue;
             this.dvbTstPktTxDgmSeqNumLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.dvbTstPktTxDgmSeqNumLabel.Location = new System.Drawing.Point(422, 45);
+            this.dvbTstPktTxDgmSeqNumLabel.Location = new System.Drawing.Point(422, 36);
             this.dvbTstPktTxDgmSeqNumLabel.Name = "dvbTstPktTxDgmSeqNumLabel";
             this.dvbTstPktTxDgmSeqNumLabel.Size = new System.Drawing.Size(111, 27);
             this.dvbTstPktTxDgmSeqNumLabel.TabIndex = 53;
@@ -647,7 +694,7 @@ namespace ER41xxTestTool
             // dvbTstPktTxDgmLengthLenLabel
             // 
             this.dvbTstPktTxDgmLengthLenLabel.ForeColor = System.Drawing.Color.Gray;
-            this.dvbTstPktTxDgmLengthLenLabel.Location = new System.Drawing.Point(307, 78);
+            this.dvbTstPktTxDgmLengthLenLabel.Location = new System.Drawing.Point(307, 69);
             this.dvbTstPktTxDgmLengthLenLabel.Name = "dvbTstPktTxDgmLengthLenLabel";
             this.dvbTstPktTxDgmLengthLenLabel.Size = new System.Drawing.Size(111, 17);
             this.dvbTstPktTxDgmLengthLenLabel.TabIndex = 53;
@@ -656,9 +703,9 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxDgmLengthLabel
             // 
-            this.dvbTstPktTxDgmLengthLabel.BackColor = System.Drawing.Color.PaleGoldenrod;
+            this.dvbTstPktTxDgmLengthLabel.BackColor = System.Drawing.Color.LightBlue;
             this.dvbTstPktTxDgmLengthLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.dvbTstPktTxDgmLengthLabel.Location = new System.Drawing.Point(307, 45);
+            this.dvbTstPktTxDgmLengthLabel.Location = new System.Drawing.Point(307, 36);
             this.dvbTstPktTxDgmLengthLabel.Name = "dvbTstPktTxDgmLengthLabel";
             this.dvbTstPktTxDgmLengthLabel.Size = new System.Drawing.Size(111, 27);
             this.dvbTstPktTxDgmLengthLabel.TabIndex = 53;
@@ -668,7 +715,7 @@ namespace ER41xxTestTool
             // dvbTstPktTxDgmPbLenLabel
             // 
             this.dvbTstPktTxDgmPbLenLabel.ForeColor = System.Drawing.Color.Gray;
-            this.dvbTstPktTxDgmPbLenLabel.Location = new System.Drawing.Point(77, 78);
+            this.dvbTstPktTxDgmPbLenLabel.Location = new System.Drawing.Point(77, 69);
             this.dvbTstPktTxDgmPbLenLabel.Name = "dvbTstPktTxDgmPbLenLabel";
             this.dvbTstPktTxDgmPbLenLabel.Size = new System.Drawing.Size(111, 17);
             this.dvbTstPktTxDgmPbLenLabel.TabIndex = 53;
@@ -677,9 +724,9 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxDgmPbLabel
             // 
-            this.dvbTstPktTxDgmPbLabel.BackColor = System.Drawing.Color.Gainsboro;
+            this.dvbTstPktTxDgmPbLabel.BackColor = System.Drawing.Color.Silver;
             this.dvbTstPktTxDgmPbLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.dvbTstPktTxDgmPbLabel.Location = new System.Drawing.Point(77, 45);
+            this.dvbTstPktTxDgmPbLabel.Location = new System.Drawing.Point(77, 36);
             this.dvbTstPktTxDgmPbLabel.Name = "dvbTstPktTxDgmPbLabel";
             this.dvbTstPktTxDgmPbLabel.Size = new System.Drawing.Size(111, 27);
             this.dvbTstPktTxDgmPbLabel.TabIndex = 53;
@@ -691,7 +738,7 @@ namespace ER41xxTestTool
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxCntUnitLabel);
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxCntText);
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxInfiniteCheck);
-            this.dvbTstPktTxCntGroup.Location = new System.Drawing.Point(474, 229);
+            this.dvbTstPktTxCntGroup.Location = new System.Drawing.Point(575, 221);
             this.dvbTstPktTxCntGroup.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstPktTxCntGroup.Name = "dvbTstPktTxCntGroup";
             this.dvbTstPktTxCntGroup.Padding = new System.Windows.Forms.Padding(2);
@@ -724,7 +771,7 @@ namespace ER41xxTestTool
             // dvbTstPktTxInfiniteCheck
             // 
             this.dvbTstPktTxInfiniteCheck.AutoSize = true;
-            this.dvbTstPktTxInfiniteCheck.Location = new System.Drawing.Point(148, 26);
+            this.dvbTstPktTxInfiniteCheck.Location = new System.Drawing.Point(148, 29);
             this.dvbTstPktTxInfiniteCheck.Margin = new System.Windows.Forms.Padding(4);
             this.dvbTstPktTxInfiniteCheck.Name = "dvbTstPktTxInfiniteCheck";
             this.dvbTstPktTxInfiniteCheck.Size = new System.Drawing.Size(71, 21);
@@ -741,7 +788,7 @@ namespace ER41xxTestTool
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxRandomPlLenText);
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxCrcCombo);
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxPrependSeqCheck);
-            this.dvbTstPktTxContentGroup.Location = new System.Drawing.Point(474, 108);
+            this.dvbTstPktTxContentGroup.Location = new System.Drawing.Point(575, 100);
             this.dvbTstPktTxContentGroup.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstPktTxContentGroup.Name = "dvbTstPktTxContentGroup";
             this.dvbTstPktTxContentGroup.Padding = new System.Windows.Forms.Padding(2);
@@ -819,7 +866,7 @@ namespace ER41xxTestTool
             // dvbTstPktTxStopBtn
             // 
             this.dvbTstPktTxStopBtn.Enabled = false;
-            this.dvbTstPktTxStopBtn.Location = new System.Drawing.Point(753, 262);
+            this.dvbTstPktTxStopBtn.Location = new System.Drawing.Point(753, 287);
             this.dvbTstPktTxStopBtn.Margin = new System.Windows.Forms.Padding(4);
             this.dvbTstPktTxStopBtn.Name = "dvbTstPktTxStopBtn";
             this.dvbTstPktTxStopBtn.Size = new System.Drawing.Size(90, 31);
@@ -830,10 +877,10 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxFilledLenText
             // 
-            this.dvbTstPktTxFilledLenText.BackColor = System.Drawing.Color.Silver;
+            this.dvbTstPktTxFilledLenText.BackColor = System.Drawing.Color.Gainsboro;
             this.dvbTstPktTxFilledLenText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.dvbTstPktTxFilledLenText.Enabled = false;
-            this.dvbTstPktTxFilledLenText.Location = new System.Drawing.Point(22, 107);
+            this.dvbTstPktTxFilledLenText.Location = new System.Drawing.Point(22, 100);
             this.dvbTstPktTxFilledLenText.Margin = new System.Windows.Forms.Padding(4);
             this.dvbTstPktTxFilledLenText.Name = "dvbTstPktTxFilledLenText";
             this.dvbTstPktTxFilledLenText.ReadOnly = true;
@@ -845,7 +892,7 @@ namespace ER41xxTestTool
             // 
             this.dvbTstPktTxFilledLenDescLabel.AutoSize = true;
             this.dvbTstPktTxFilledLenDescLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.dvbTstPktTxFilledLenDescLabel.Location = new System.Drawing.Point(89, 109);
+            this.dvbTstPktTxFilledLenDescLabel.Location = new System.Drawing.Point(89, 102);
             this.dvbTstPktTxFilledLenDescLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.dvbTstPktTxFilledLenDescLabel.Name = "dvbTstPktTxFilledLenDescLabel";
             this.dvbTstPktTxFilledLenDescLabel.Size = new System.Drawing.Size(301, 17);
@@ -854,26 +901,27 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxStartBtn
             // 
-            this.dvbTstPktTxStartBtn.Location = new System.Drawing.Point(753, 223);
+            this.dvbTstPktTxStartBtn.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.dvbTstPktTxStartBtn.Location = new System.Drawing.Point(655, 287);
             this.dvbTstPktTxStartBtn.Margin = new System.Windows.Forms.Padding(4);
             this.dvbTstPktTxStartBtn.Name = "dvbTstPktTxStartBtn";
             this.dvbTstPktTxStartBtn.Size = new System.Drawing.Size(90, 31);
             this.dvbTstPktTxStartBtn.TabIndex = 47;
             this.dvbTstPktTxStartBtn.Text = "Start";
-            this.dvbTstPktTxStartBtn.UseVisualStyleBackColor = true;
+            this.dvbTstPktTxStartBtn.UseVisualStyleBackColor = false;
             this.dvbTstPktTxStartBtn.Click += new System.EventHandler(this.dvbTstPktTxStartBtn_Click);
             // 
             // dvbTstPktTxPayloadText
             // 
             this.dvbTstPktTxPayloadText.BackColor = System.Drawing.Color.Black;
-            this.dvbTstPktTxPayloadText.Font = new System.Drawing.Font("Consolas", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.dvbTstPktTxPayloadText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(230)))), ((int)(((byte)(230)))));
-            this.dvbTstPktTxPayloadText.Location = new System.Drawing.Point(18, 138);
+            this.dvbTstPktTxPayloadText.Font = new System.Drawing.Font("Consolas", 9F);
+            this.dvbTstPktTxPayloadText.ForeColor = System.Drawing.Color.Yellow;
+            this.dvbTstPktTxPayloadText.Location = new System.Drawing.Point(18, 131);
             this.dvbTstPktTxPayloadText.Margin = new System.Windows.Forms.Padding(4);
             this.dvbTstPktTxPayloadText.Multiline = true;
             this.dvbTstPktTxPayloadText.Name = "dvbTstPktTxPayloadText";
             this.dvbTstPktTxPayloadText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.dvbTstPktTxPayloadText.Size = new System.Drawing.Size(450, 152);
+            this.dvbTstPktTxPayloadText.Size = new System.Drawing.Size(539, 151);
             this.dvbTstPktTxPayloadText.TabIndex = 46;
             this.dvbTstPktTxPayloadText.TextChanged += new System.EventHandler(this.dvbTstPktTxPayloadText_TextChanged);
             // 
@@ -901,10 +949,10 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxTestBtn
             // 
-            this.dvbTstPktTxTestBtn.Location = new System.Drawing.Point(703, 299);
+            this.dvbTstPktTxTestBtn.Location = new System.Drawing.Point(553, 287);
             this.dvbTstPktTxTestBtn.Margin = new System.Windows.Forms.Padding(4);
             this.dvbTstPktTxTestBtn.Name = "dvbTstPktTxTestBtn";
-            this.dvbTstPktTxTestBtn.Size = new System.Drawing.Size(114, 20);
+            this.dvbTstPktTxTestBtn.Size = new System.Drawing.Size(90, 31);
             this.dvbTstPktTxTestBtn.TabIndex = 19;
             this.dvbTstPktTxTestBtn.Text = "Crc";
             this.dvbTstPktTxTestBtn.UseVisualStyleBackColor = true;
@@ -929,20 +977,21 @@ namespace ER41xxTestTool
             // 
             // dvbTstContiTxStopBtn
             // 
-            this.dvbTstContiTxStopBtn.Location = new System.Drawing.Point(18, 73);
+            this.dvbTstContiTxStopBtn.BackColor = System.Drawing.Color.White;
+            this.dvbTstContiTxStopBtn.Location = new System.Drawing.Point(320, 65);
             this.dvbTstContiTxStopBtn.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstContiTxStopBtn.Name = "dvbTstContiTxStopBtn";
-            this.dvbTstContiTxStopBtn.Size = new System.Drawing.Size(128, 48);
+            this.dvbTstContiTxStopBtn.Size = new System.Drawing.Size(96, 35);
             this.dvbTstContiTxStopBtn.TabIndex = 3;
             this.dvbTstContiTxStopBtn.Text = "Stop";
-            this.dvbTstContiTxStopBtn.UseVisualStyleBackColor = true;
+            this.dvbTstContiTxStopBtn.UseVisualStyleBackColor = false;
             this.dvbTstContiTxStopBtn.Click += new System.EventHandler(this.dvbTstContiTxStopBtn_Click);
             // 
             // dvbTstContiTxPatternGroup
             // 
             this.dvbTstContiTxPatternGroup.Controls.Add(this.dvbTstContiTxPrbs9RadioBtn);
             this.dvbTstContiTxPatternGroup.Controls.Add(this.dvbTstContiTxBit0101RadioBtn);
-            this.dvbTstContiTxPatternGroup.Location = new System.Drawing.Point(314, 12);
+            this.dvbTstContiTxPatternGroup.Location = new System.Drawing.Point(170, 17);
             this.dvbTstContiTxPatternGroup.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstContiTxPatternGroup.Name = "dvbTstContiTxPatternGroup";
             this.dvbTstContiTxPatternGroup.Padding = new System.Windows.Forms.Padding(2);
@@ -977,20 +1026,21 @@ namespace ER41xxTestTool
             // 
             // dvbTstContiTxStartBtn
             // 
-            this.dvbTstContiTxStartBtn.Location = new System.Drawing.Point(18, 16);
+            this.dvbTstContiTxStartBtn.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.dvbTstContiTxStartBtn.Location = new System.Drawing.Point(320, 26);
             this.dvbTstContiTxStartBtn.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstContiTxStartBtn.Name = "dvbTstContiTxStartBtn";
-            this.dvbTstContiTxStartBtn.Size = new System.Drawing.Size(128, 48);
+            this.dvbTstContiTxStartBtn.Size = new System.Drawing.Size(96, 35);
             this.dvbTstContiTxStartBtn.TabIndex = 2;
             this.dvbTstContiTxStartBtn.Text = "Start";
-            this.dvbTstContiTxStartBtn.UseVisualStyleBackColor = true;
+            this.dvbTstContiTxStartBtn.UseVisualStyleBackColor = false;
             this.dvbTstContiTxStartBtn.Click += new System.EventHandler(this.dvbTstContiTxStartBtn_Click);
             // 
             // dvbTstContiTxModeGroup
             // 
             this.dvbTstContiTxModeGroup.Controls.Add(this.dvbTstContiTxPatternRadioBtn);
             this.dvbTstContiTxModeGroup.Controls.Add(this.dvbTstContiTxSingleToneRadioBtn);
-            this.dvbTstContiTxModeGroup.Location = new System.Drawing.Point(162, 12);
+            this.dvbTstContiTxModeGroup.Location = new System.Drawing.Point(18, 17);
             this.dvbTstContiTxModeGroup.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstContiTxModeGroup.Name = "dvbTstContiTxModeGroup";
             this.dvbTstContiTxModeGroup.Padding = new System.Windows.Forms.Padding(2);
@@ -1082,13 +1132,14 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktRxScanBtn
             // 
-            this.dvbTstPktRxScanBtn.Location = new System.Drawing.Point(747, 226);
+            this.dvbTstPktRxScanBtn.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.dvbTstPktRxScanBtn.Location = new System.Drawing.Point(747, 235);
             this.dvbTstPktRxScanBtn.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstPktRxScanBtn.Name = "dvbTstPktRxScanBtn";
             this.dvbTstPktRxScanBtn.Size = new System.Drawing.Size(99, 35);
             this.dvbTstPktRxScanBtn.TabIndex = 47;
             this.dvbTstPktRxScanBtn.Text = "Scan RSSI";
-            this.dvbTstPktRxScanBtn.UseVisualStyleBackColor = true;
+            this.dvbTstPktRxScanBtn.UseVisualStyleBackColor = false;
             this.dvbTstPktRxScanBtn.Click += new System.EventHandler(this.btnScanRssi_Click);
             // 
             // dvbTstPktRxSetPayloadBtn
@@ -1220,12 +1271,13 @@ namespace ER41xxTestTool
             // dvbTstPktRxLogText
             // 
             this.dvbTstPktRxLogText.BackColor = System.Drawing.Color.Black;
-            this.dvbTstPktRxLogText.Font = new System.Drawing.Font("Consolas", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.dvbTstPktRxLogText.ForeColor = System.Drawing.Color.White;
+            this.dvbTstPktRxLogText.Font = new System.Drawing.Font("Consolas", 9F);
+            this.dvbTstPktRxLogText.ForeColor = System.Drawing.Color.Yellow;
             this.dvbTstPktRxLogText.Location = new System.Drawing.Point(12, 118);
             this.dvbTstPktRxLogText.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstPktRxLogText.Multiline = true;
             this.dvbTstPktRxLogText.Name = "dvbTstPktRxLogText";
+            this.dvbTstPktRxLogText.ReadOnly = true;
             this.dvbTstPktRxLogText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.dvbTstPktRxLogText.Size = new System.Drawing.Size(718, 191);
             this.dvbTstPktRxLogText.TabIndex = 44;
@@ -1233,7 +1285,7 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktRxStartBtn
             // 
-            this.dvbTstPktRxStartBtn.BackColor = System.Drawing.Color.Transparent;
+            this.dvbTstPktRxStartBtn.BackColor = System.Drawing.Color.LightSteelBlue;
             this.dvbTstPktRxStartBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
             this.dvbTstPktRxStartBtn.Location = new System.Drawing.Point(747, 274);
             this.dvbTstPktRxStartBtn.Margin = new System.Windows.Forms.Padding(2);
@@ -1278,13 +1330,14 @@ namespace ER41xxTestTool
             // 
             // dvbTstStateSetBtn
             // 
-            this.dvbTstStateSetBtn.Location = new System.Drawing.Point(21, 201);
+            this.dvbTstStateSetBtn.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.dvbTstStateSetBtn.Location = new System.Drawing.Point(163, 24);
             this.dvbTstStateSetBtn.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstStateSetBtn.Name = "dvbTstStateSetBtn";
-            this.dvbTstStateSetBtn.Size = new System.Drawing.Size(141, 33);
+            this.dvbTstStateSetBtn.Size = new System.Drawing.Size(96, 35);
             this.dvbTstStateSetBtn.TabIndex = 1;
             this.dvbTstStateSetBtn.Text = "Set";
-            this.dvbTstStateSetBtn.UseVisualStyleBackColor = true;
+            this.dvbTstStateSetBtn.UseVisualStyleBackColor = false;
             this.dvbTstStateSetBtn.Click += new System.EventHandler(this.dvbTstStateSetBtn_Click);
             // 
             // dvbTstStateGroup
@@ -1292,11 +1345,11 @@ namespace ER41xxTestTool
             this.dvbTstStateGroup.Controls.Add(this.dvbTstStateShutdownRadioBtn);
             this.dvbTstStateGroup.Controls.Add(this.dvbTstStateDeepSleepRadioBtn);
             this.dvbTstStateGroup.Controls.Add(this.dvbTstStateIdleRadioBtn);
-            this.dvbTstStateGroup.Location = new System.Drawing.Point(21, 24);
+            this.dvbTstStateGroup.Location = new System.Drawing.Point(18, 13);
             this.dvbTstStateGroup.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstStateGroup.Name = "dvbTstStateGroup";
             this.dvbTstStateGroup.Padding = new System.Windows.Forms.Padding(2);
-            this.dvbTstStateGroup.Size = new System.Drawing.Size(141, 173);
+            this.dvbTstStateGroup.Size = new System.Drawing.Size(141, 143);
             this.dvbTstStateGroup.TabIndex = 0;
             this.dvbTstStateGroup.TabStop = false;
             this.dvbTstStateGroup.Text = "State";
@@ -1304,7 +1357,7 @@ namespace ER41xxTestTool
             // dvbTstStateShutdownRadioBtn
             // 
             this.dvbTstStateShutdownRadioBtn.AutoSize = true;
-            this.dvbTstStateShutdownRadioBtn.Location = new System.Drawing.Point(25, 125);
+            this.dvbTstStateShutdownRadioBtn.Location = new System.Drawing.Point(16, 108);
             this.dvbTstStateShutdownRadioBtn.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstStateShutdownRadioBtn.Name = "dvbTstStateShutdownRadioBtn";
             this.dvbTstStateShutdownRadioBtn.Size = new System.Drawing.Size(91, 21);
@@ -1312,11 +1365,12 @@ namespace ER41xxTestTool
             this.dvbTstStateShutdownRadioBtn.TabStop = true;
             this.dvbTstStateShutdownRadioBtn.Text = "Shutdown";
             this.dvbTstStateShutdownRadioBtn.UseVisualStyleBackColor = true;
+            this.dvbTstStateShutdownRadioBtn.Visible = false;
             // 
             // dvbTstStateDeepSleepRadioBtn
             // 
             this.dvbTstStateDeepSleepRadioBtn.AutoSize = true;
-            this.dvbTstStateDeepSleepRadioBtn.Location = new System.Drawing.Point(25, 79);
+            this.dvbTstStateDeepSleepRadioBtn.Location = new System.Drawing.Point(16, 73);
             this.dvbTstStateDeepSleepRadioBtn.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstStateDeepSleepRadioBtn.Name = "dvbTstStateDeepSleepRadioBtn";
             this.dvbTstStateDeepSleepRadioBtn.Size = new System.Drawing.Size(103, 21);
@@ -1329,13 +1383,13 @@ namespace ER41xxTestTool
             // 
             this.dvbTstStateIdleRadioBtn.AutoSize = true;
             this.dvbTstStateIdleRadioBtn.Checked = true;
-            this.dvbTstStateIdleRadioBtn.Location = new System.Drawing.Point(25, 35);
+            this.dvbTstStateIdleRadioBtn.Location = new System.Drawing.Point(16, 38);
             this.dvbTstStateIdleRadioBtn.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstStateIdleRadioBtn.Name = "dvbTstStateIdleRadioBtn";
             this.dvbTstStateIdleRadioBtn.Size = new System.Drawing.Size(51, 21);
             this.dvbTstStateIdleRadioBtn.TabIndex = 0;
             this.dvbTstStateIdleRadioBtn.TabStop = true;
-            this.dvbTstStateIdleRadioBtn.Text = "idle";
+            this.dvbTstStateIdleRadioBtn.Text = "Idle";
             this.dvbTstStateIdleRadioBtn.UseVisualStyleBackColor = true;
             // 
             // regWrPage
@@ -1355,6 +1409,7 @@ namespace ER41xxTestTool
             this.paramFreqTableGroup.Controls.Add(this.paramFreqTableUnitLabel);
             this.paramFreqTableGroup.Controls.Add(this.paramFreqTableAddBtn);
             this.paramFreqTableGroup.Controls.Add(this.paramFreqTableList);
+            this.paramFreqTableGroup.Controls.Add(this.paramFreqTableDelAllBtn);
             this.paramFreqTableGroup.Controls.Add(this.paramFreqTableDeleteBtn);
             this.paramFreqTableGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold);
             this.paramFreqTableGroup.ForeColor = System.Drawing.SystemColors.HotTrack;
@@ -1371,7 +1426,7 @@ namespace ER41xxTestTool
             // 
             this.paramFreqTableInputText.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramFreqTableInputText.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramFreqTableInputText.Location = new System.Drawing.Point(88, 36);
+            this.paramFreqTableInputText.Location = new System.Drawing.Point(11, 30);
             this.paramFreqTableInputText.Margin = new System.Windows.Forms.Padding(4);
             this.paramFreqTableInputText.Name = "paramFreqTableInputText";
             this.paramFreqTableInputText.Size = new System.Drawing.Size(76, 22);
@@ -1382,7 +1437,7 @@ namespace ER41xxTestTool
             this.paramFreqTableUnitLabel.AutoSize = true;
             this.paramFreqTableUnitLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramFreqTableUnitLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramFreqTableUnitLabel.Location = new System.Drawing.Point(170, 39);
+            this.paramFreqTableUnitLabel.Location = new System.Drawing.Point(95, 33);
             this.paramFreqTableUnitLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.paramFreqTableUnitLabel.Name = "paramFreqTableUnitLabel";
             this.paramFreqTableUnitLabel.Size = new System.Drawing.Size(36, 17);
@@ -1391,15 +1446,16 @@ namespace ER41xxTestTool
             // 
             // paramFreqTableAddBtn
             // 
+            this.paramFreqTableAddBtn.BackColor = System.Drawing.Color.White;
             this.paramFreqTableAddBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramFreqTableAddBtn.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramFreqTableAddBtn.Location = new System.Drawing.Point(18, 32);
+            this.paramFreqTableAddBtn.Location = new System.Drawing.Point(11, 60);
             this.paramFreqTableAddBtn.Margin = new System.Windows.Forms.Padding(4);
             this.paramFreqTableAddBtn.Name = "paramFreqTableAddBtn";
-            this.paramFreqTableAddBtn.Size = new System.Drawing.Size(62, 30);
+            this.paramFreqTableAddBtn.Size = new System.Drawing.Size(128, 30);
             this.paramFreqTableAddBtn.TabIndex = 1;
             this.paramFreqTableAddBtn.Text = "Add";
-            this.paramFreqTableAddBtn.UseVisualStyleBackColor = true;
+            this.paramFreqTableAddBtn.UseVisualStyleBackColor = false;
             this.paramFreqTableAddBtn.Click += new System.EventHandler(this.btnAddFreq_Click);
             // 
             // paramFreqTableList
@@ -1409,28 +1465,43 @@ namespace ER41xxTestTool
             this.paramFreqTableList.FullRowSelect = true;
             this.paramFreqTableList.GridLines = true;
             this.paramFreqTableList.HideSelection = false;
-            this.paramFreqTableList.Location = new System.Drawing.Point(225, 25);
+            this.paramFreqTableList.Location = new System.Drawing.Point(147, 25);
             this.paramFreqTableList.Margin = new System.Windows.Forms.Padding(4);
             this.paramFreqTableList.MultiSelect = false;
             this.paramFreqTableList.Name = "paramFreqTableList";
-            this.paramFreqTableList.Size = new System.Drawing.Size(606, 166);
+            this.paramFreqTableList.Size = new System.Drawing.Size(684, 166);
             this.paramFreqTableList.TabIndex = 2;
             this.paramFreqTableList.UseCompatibleStateImageBehavior = false;
             this.paramFreqTableList.View = System.Windows.Forms.View.Details;
             this.paramFreqTableList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.freqList_KeyDown);
             // 
+            // paramFreqTableDelAllBtn
+            // 
+            this.paramFreqTableDelAllBtn.BackColor = System.Drawing.Color.White;
+            this.paramFreqTableDelAllBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.paramFreqTableDelAllBtn.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramFreqTableDelAllBtn.Location = new System.Drawing.Point(11, 136);
+            this.paramFreqTableDelAllBtn.Margin = new System.Windows.Forms.Padding(4);
+            this.paramFreqTableDelAllBtn.Name = "paramFreqTableDelAllBtn";
+            this.paramFreqTableDelAllBtn.Size = new System.Drawing.Size(128, 30);
+            this.paramFreqTableDelAllBtn.TabIndex = 3;
+            this.paramFreqTableDelAllBtn.Text = "Delete All";
+            this.paramFreqTableDelAllBtn.UseVisualStyleBackColor = false;
+            this.paramFreqTableDelAllBtn.Click += new System.EventHandler(this.paramFreqTableDelAllBtn_Click);
+            // 
             // paramFreqTableDeleteBtn
             // 
+            this.paramFreqTableDeleteBtn.BackColor = System.Drawing.Color.White;
             this.paramFreqTableDeleteBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramFreqTableDeleteBtn.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramFreqTableDeleteBtn.Location = new System.Drawing.Point(18, 75);
+            this.paramFreqTableDeleteBtn.Location = new System.Drawing.Point(11, 98);
             this.paramFreqTableDeleteBtn.Margin = new System.Windows.Forms.Padding(4);
             this.paramFreqTableDeleteBtn.Name = "paramFreqTableDeleteBtn";
-            this.paramFreqTableDeleteBtn.Size = new System.Drawing.Size(190, 30);
+            this.paramFreqTableDeleteBtn.Size = new System.Drawing.Size(128, 30);
             this.paramFreqTableDeleteBtn.TabIndex = 3;
-            this.paramFreqTableDeleteBtn.Text = "Delete";
-            this.paramFreqTableDeleteBtn.UseVisualStyleBackColor = true;
-            this.paramFreqTableDeleteBtn.Click += new System.EventHandler(this.btnDeleteItem_Click);
+            this.paramFreqTableDeleteBtn.Text = "Delete Selected";
+            this.paramFreqTableDeleteBtn.UseVisualStyleBackColor = false;
+            this.paramFreqTableDeleteBtn.Click += new System.EventHandler(this.paramFreqTableDeleteBtn_Click);
             // 
             // paramPbLabel
             // 
@@ -1501,7 +1572,7 @@ namespace ER41xxTestTool
             this.paramTxSyncActualLabel.AutoSize = true;
             this.paramTxSyncActualLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramTxSyncActualLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.paramTxSyncActualLabel.Location = new System.Drawing.Point(255, 31);
+            this.paramTxSyncActualLabel.Location = new System.Drawing.Point(250, 32);
             this.paramTxSyncActualLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.paramTxSyncActualLabel.Name = "paramTxSyncActualLabel";
             this.paramTxSyncActualLabel.Size = new System.Drawing.Size(128, 15);
@@ -1552,7 +1623,7 @@ namespace ER41xxTestTool
             this.paramRxSyncActualLabel.AutoSize = true;
             this.paramRxSyncActualLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramRxSyncActualLabel.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.paramRxSyncActualLabel.Location = new System.Drawing.Point(255, 62);
+            this.paramRxSyncActualLabel.Location = new System.Drawing.Point(260, 63);
             this.paramRxSyncActualLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.paramRxSyncActualLabel.Name = "paramRxSyncActualLabel";
             this.paramRxSyncActualLabel.Size = new System.Drawing.Size(118, 15);
@@ -1562,11 +1633,11 @@ namespace ER41xxTestTool
             // paramRxSyncAllowBitErrText
             // 
             this.paramRxSyncAllowBitErrText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.paramRxSyncAllowBitErrText.Location = new System.Drawing.Point(120, 89);
+            this.paramRxSyncAllowBitErrText.Location = new System.Drawing.Point(111, 89);
             this.paramRxSyncAllowBitErrText.Margin = new System.Windows.Forms.Padding(4);
             this.paramRxSyncAllowBitErrText.MaxLength = 1;
             this.paramRxSyncAllowBitErrText.Name = "paramRxSyncAllowBitErrText";
-            this.paramRxSyncAllowBitErrText.Size = new System.Drawing.Size(34, 22);
+            this.paramRxSyncAllowBitErrText.Size = new System.Drawing.Size(33, 22);
             this.paramRxSyncAllowBitErrText.TabIndex = 0;
             this.paramRxSyncAllowBitErrText.Text = "1";
             this.paramRxSyncAllowBitErrText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.allowBitError_KeyPress);
@@ -1576,7 +1647,7 @@ namespace ER41xxTestTool
             // 
             this.paramRxSyncAllowBitErrUnitLabel.AutoSize = true;
             this.paramRxSyncAllowBitErrUnitLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramRxSyncAllowBitErrUnitLabel.Location = new System.Drawing.Point(162, 92);
+            this.paramRxSyncAllowBitErrUnitLabel.Location = new System.Drawing.Point(148, 91);
             this.paramRxSyncAllowBitErrUnitLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.paramRxSyncAllowBitErrUnitLabel.Name = "paramRxSyncAllowBitErrUnitLabel";
             this.paramRxSyncAllowBitErrUnitLabel.Size = new System.Drawing.Size(80, 17);
@@ -1588,7 +1659,7 @@ namespace ER41xxTestTool
             this.paramFIFOBitOrderGroup.Controls.Add(this.paramFIFOBitOrderLSBRadioBtn);
             this.paramFIFOBitOrderGroup.Controls.Add(this.paramFIFOBitOrderMSBRadioBtn);
             this.paramFIFOBitOrderGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.paramFIFOBitOrderGroup.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramFIFOBitOrderGroup.ForeColor = System.Drawing.SystemColors.HotTrack;
             this.paramFIFOBitOrderGroup.Location = new System.Drawing.Point(199, 21);
             this.paramFIFOBitOrderGroup.Margin = new System.Windows.Forms.Padding(4);
             this.paramFIFOBitOrderGroup.Name = "paramFIFOBitOrderGroup";
@@ -1876,98 +1947,149 @@ namespace ER41xxTestTool
             this.paramIntModeRxAfullText.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.rxFullThr_KeyPress);
             this.paramIntModeRxAfullText.Validating += new System.ComponentModel.CancelEventHandler(this.rxFullThr_Validating);
             // 
-            // paramGpioGroup
+            // paramGpio0Group
             // 
-            this.paramGpioGroup.Controls.Add(this.paramGpio0EnableCheck);
-            this.paramGpioGroup.Controls.Add(this.paramGpio0Combo);
-            this.paramGpioGroup.Controls.Add(this.paramGpio1EnableCheck);
-            this.paramGpioGroup.Controls.Add(this.paramGpio1Combo);
-            this.paramGpioGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold);
-            this.paramGpioGroup.ForeColor = System.Drawing.SystemColors.HotTrack;
-            this.paramGpioGroup.Location = new System.Drawing.Point(10, 8);
-            this.paramGpioGroup.Margin = new System.Windows.Forms.Padding(4);
-            this.paramGpioGroup.Name = "paramGpioGroup";
-            this.paramGpioGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.paramGpioGroup.Size = new System.Drawing.Size(194, 150);
-            this.paramGpioGroup.TabIndex = 8;
-            this.paramGpioGroup.TabStop = false;
-            this.paramGpioGroup.Text = "GPIO Mode";
+            this.paramGpio0Group.Controls.Add(this.paramGpio0GIoInvCheck);
+            this.paramGpio0Group.Controls.Add(this.paramGpio0ModeLabel);
+            this.paramGpio0Group.Controls.Add(this.paramGpio0PullCtrlLabel);
+            this.paramGpio0Group.Controls.Add(this.paramGpio0GIoSelLabel);
+            this.paramGpio0Group.Controls.Add(this.paramGpio0ModeCombo);
+            this.paramGpio0Group.Controls.Add(this.paramGpio0PullCtrlCombo);
+            this.paramGpio0Group.Controls.Add(this.paramGpio0GioSelCombo);
+            this.paramGpio0Group.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold);
+            this.paramGpio0Group.ForeColor = System.Drawing.SystemColors.HotTrack;
+            this.paramGpio0Group.Location = new System.Drawing.Point(8, 8);
+            this.paramGpio0Group.Margin = new System.Windows.Forms.Padding(4);
+            this.paramGpio0Group.Name = "paramGpio0Group";
+            this.paramGpio0Group.Padding = new System.Windows.Forms.Padding(4);
+            this.paramGpio0Group.Size = new System.Drawing.Size(203, 211);
+            this.paramGpio0Group.TabIndex = 8;
+            this.paramGpio0Group.TabStop = false;
+            this.paramGpio0Group.Text = "GPIO0";
             // 
-            // paramGpio0EnableCheck
+            // paramGpio0GIoInvCheck
             // 
-            this.paramGpio0EnableCheck.AutoSize = true;
-            this.paramGpio0EnableCheck.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.paramGpio0EnableCheck.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramGpio0EnableCheck.Location = new System.Drawing.Point(10, 22);
-            this.paramGpio0EnableCheck.Margin = new System.Windows.Forms.Padding(4);
-            this.paramGpio0EnableCheck.Name = "paramGpio0EnableCheck";
-            this.paramGpio0EnableCheck.Size = new System.Drawing.Size(120, 21);
-            this.paramGpio0EnableCheck.TabIndex = 0;
-            this.paramGpio0EnableCheck.Text = "GPIO0 Enable";
-            this.paramGpio0EnableCheck.UseVisualStyleBackColor = true;
-            this.paramGpio0EnableCheck.CheckedChanged += new System.EventHandler(this.GPIO0_Enable_CheckedChanged);
+            this.paramGpio0GIoInvCheck.AutoSize = true;
+            this.paramGpio0GIoInvCheck.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio0GIoInvCheck.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio0GIoInvCheck.Location = new System.Drawing.Point(100, 81);
+            this.paramGpio0GIoInvCheck.Name = "paramGpio0GIoInvCheck";
+            this.paramGpio0GIoInvCheck.Size = new System.Drawing.Size(76, 21);
+            this.paramGpio0GIoInvCheck.TabIndex = 10;
+            this.paramGpio0GIoInvCheck.Text = "Inverse";
+            this.paramGpio0GIoInvCheck.UseVisualStyleBackColor = true;
             // 
-            // paramGpio0Combo
+            // paramGpio0ModeLabel
             // 
-            this.paramGpio0Combo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.paramGpio0Combo.Enabled = false;
-            this.paramGpio0Combo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.paramGpio0Combo.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramGpio0Combo.FormattingEnabled = true;
-            this.paramGpio0Combo.Location = new System.Drawing.Point(10, 48);
-            this.paramGpio0Combo.Margin = new System.Windows.Forms.Padding(4);
-            this.paramGpio0Combo.Name = "paramGpio0Combo";
-            this.paramGpio0Combo.Size = new System.Drawing.Size(172, 24);
-            this.paramGpio0Combo.TabIndex = 1;
+            this.paramGpio0ModeLabel.AutoSize = true;
+            this.paramGpio0ModeLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio0ModeLabel.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio0ModeLabel.Location = new System.Drawing.Point(18, 28);
+            this.paramGpio0ModeLabel.Name = "paramGpio0ModeLabel";
+            this.paramGpio0ModeLabel.Size = new System.Drawing.Size(181, 17);
+            this.paramGpio0ModeLabel.TabIndex = 9;
+            this.paramGpio0ModeLabel.Text = "Mode(Default is TCXO_EN)";
             // 
-            // paramGpio1EnableCheck
+            // paramGpio0PullCtrlLabel
             // 
-            this.paramGpio1EnableCheck.AutoSize = true;
-            this.paramGpio1EnableCheck.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.paramGpio1EnableCheck.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramGpio1EnableCheck.Location = new System.Drawing.Point(10, 82);
-            this.paramGpio1EnableCheck.Margin = new System.Windows.Forms.Padding(4);
-            this.paramGpio1EnableCheck.Name = "paramGpio1EnableCheck";
-            this.paramGpio1EnableCheck.Size = new System.Drawing.Size(120, 21);
-            this.paramGpio1EnableCheck.TabIndex = 2;
-            this.paramGpio1EnableCheck.Text = "GPIO1 Enable";
-            this.paramGpio1EnableCheck.UseVisualStyleBackColor = true;
-            this.paramGpio1EnableCheck.CheckedChanged += new System.EventHandler(this.GPIO1_Enable_CheckedChanged);
+            this.paramGpio0PullCtrlLabel.AutoSize = true;
+            this.paramGpio0PullCtrlLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio0PullCtrlLabel.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio0PullCtrlLabel.Location = new System.Drawing.Point(18, 138);
+            this.paramGpio0PullCtrlLabel.Name = "paramGpio0PullCtrlLabel";
+            this.paramGpio0PullCtrlLabel.Size = new System.Drawing.Size(80, 17);
+            this.paramGpio0PullCtrlLabel.TabIndex = 9;
+            this.paramGpio0PullCtrlLabel.Text = "Pull Control";
             // 
-            // paramGpio1Combo
+            // paramGpio0GIoSelLabel
             // 
-            this.paramGpio1Combo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.paramGpio1Combo.Enabled = false;
-            this.paramGpio1Combo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.paramGpio1Combo.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramGpio1Combo.FormattingEnabled = true;
-            this.paramGpio1Combo.Location = new System.Drawing.Point(10, 108);
-            this.paramGpio1Combo.Margin = new System.Windows.Forms.Padding(4);
-            this.paramGpio1Combo.Name = "paramGpio1Combo";
-            this.paramGpio1Combo.Size = new System.Drawing.Size(172, 24);
-            this.paramGpio1Combo.TabIndex = 3;
+            this.paramGpio0GIoSelLabel.AutoSize = true;
+            this.paramGpio0GIoSelLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio0GIoSelLabel.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio0GIoSelLabel.Location = new System.Drawing.Point(18, 83);
+            this.paramGpio0GIoSelLabel.Name = "paramGpio0GIoSelLabel";
+            this.paramGpio0GIoSelLabel.Size = new System.Drawing.Size(76, 17);
+            this.paramGpio0GIoSelLabel.TabIndex = 9;
+            this.paramGpio0GIoSelLabel.Text = "GIO Select";
+            // 
+            // paramGpio0ModeCombo
+            // 
+            this.paramGpio0ModeCombo.BackColor = System.Drawing.Color.White;
+            this.paramGpio0ModeCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.paramGpio0ModeCombo.Enabled = false;
+            this.paramGpio0ModeCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio0ModeCombo.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio0ModeCombo.FormattingEnabled = true;
+            this.paramGpio0ModeCombo.Location = new System.Drawing.Point(18, 52);
+            this.paramGpio0ModeCombo.Margin = new System.Windows.Forms.Padding(4);
+            this.paramGpio0ModeCombo.Name = "paramGpio0ModeCombo";
+            this.paramGpio0ModeCombo.Size = new System.Drawing.Size(158, 24);
+            this.paramGpio0ModeCombo.TabIndex = 1;
+            this.paramGpio0ModeCombo.SelectedIndexChanged += new System.EventHandler(this.paramGpio0ModeCombo_SelectedIndexChanged);
+            // 
+            // paramGpio0PullCtrlCombo
+            // 
+            this.paramGpio0PullCtrlCombo.BackColor = System.Drawing.Color.White;
+            this.paramGpio0PullCtrlCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.paramGpio0PullCtrlCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio0PullCtrlCombo.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio0PullCtrlCombo.FormattingEnabled = true;
+            this.paramGpio0PullCtrlCombo.Location = new System.Drawing.Point(18, 162);
+            this.paramGpio0PullCtrlCombo.Margin = new System.Windows.Forms.Padding(4);
+            this.paramGpio0PullCtrlCombo.Name = "paramGpio0PullCtrlCombo";
+            this.paramGpio0PullCtrlCombo.Size = new System.Drawing.Size(158, 24);
+            this.paramGpio0PullCtrlCombo.TabIndex = 1;
+            // 
+            // paramGpio0GioSelCombo
+            // 
+            this.paramGpio0GioSelCombo.BackColor = System.Drawing.Color.White;
+            this.paramGpio0GioSelCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.paramGpio0GioSelCombo.Enabled = false;
+            this.paramGpio0GioSelCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio0GioSelCombo.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio0GioSelCombo.FormattingEnabled = true;
+            this.paramGpio0GioSelCombo.Location = new System.Drawing.Point(18, 107);
+            this.paramGpio0GioSelCombo.Margin = new System.Windows.Forms.Padding(4);
+            this.paramGpio0GioSelCombo.Name = "paramGpio0GioSelCombo";
+            this.paramGpio0GioSelCombo.Size = new System.Drawing.Size(158, 24);
+            this.paramGpio0GioSelCombo.TabIndex = 1;
+            // 
+            // paramGpio1GioSelCombo
+            // 
+            this.paramGpio1GioSelCombo.BackColor = System.Drawing.Color.White;
+            this.paramGpio1GioSelCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.paramGpio1GioSelCombo.Enabled = false;
+            this.paramGpio1GioSelCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio1GioSelCombo.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramGpio1GioSelCombo.FormattingEnabled = true;
+            this.paramGpio1GioSelCombo.Location = new System.Drawing.Point(18, 107);
+            this.paramGpio1GioSelCombo.Margin = new System.Windows.Forms.Padding(4);
+            this.paramGpio1GioSelCombo.Name = "paramGpio1GioSelCombo";
+            this.paramGpio1GioSelCombo.Size = new System.Drawing.Size(158, 24);
+            this.paramGpio1GioSelCombo.TabIndex = 3;
             // 
             // logResultClearBtn
             // 
-            this.logResultClearBtn.Location = new System.Drawing.Point(789, 715);
+            this.logResultClearBtn.BackColor = System.Drawing.SystemColors.Info;
+            this.logResultClearBtn.Location = new System.Drawing.Point(10, 715);
             this.logResultClearBtn.Margin = new System.Windows.Forms.Padding(2);
             this.logResultClearBtn.Name = "logResultClearBtn";
-            this.logResultClearBtn.Size = new System.Drawing.Size(89, 92);
+            this.logResultClearBtn.Size = new System.Drawing.Size(54, 92);
             this.logResultClearBtn.TabIndex = 33;
             this.logResultClearBtn.Text = "Clear";
-            this.logResultClearBtn.UseVisualStyleBackColor = true;
+            this.logResultClearBtn.UseVisualStyleBackColor = false;
             this.logResultClearBtn.Click += new System.EventHandler(this.btnClearInsLog_Click);
             // 
             // logResultText
             // 
             this.logResultText.BackColor = System.Drawing.SystemColors.Info;
             this.logResultText.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.logResultText.Location = new System.Drawing.Point(10, 715);
+            this.logResultText.Location = new System.Drawing.Point(70, 715);
             this.logResultText.Margin = new System.Windows.Forms.Padding(4);
             this.logResultText.Multiline = true;
             this.logResultText.Name = "logResultText";
             this.logResultText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.logResultText.Size = new System.Drawing.Size(776, 92);
+            this.logResultText.Size = new System.Drawing.Size(808, 92);
             this.logResultText.TabIndex = 0;
             // 
             // paramTxSyncSoftInvertCheck
@@ -1987,10 +2109,10 @@ namespace ER41xxTestTool
             // 
             this.paramCapIoText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.paramCapIoText.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.paramCapIoText.Location = new System.Drawing.Point(128, 55);
+            this.paramCapIoText.Location = new System.Drawing.Point(154, 56);
             this.paramCapIoText.Margin = new System.Windows.Forms.Padding(2);
             this.paramCapIoText.Name = "paramCapIoText";
-            this.paramCapIoText.Size = new System.Drawing.Size(96, 22);
+            this.paramCapIoText.Size = new System.Drawing.Size(69, 22);
             this.paramCapIoText.TabIndex = 29;
             this.paramCapIoText.Text = "33";
             // 
@@ -1999,12 +2121,12 @@ namespace ER41xxTestTool
             this.paramCapIoLabel.AutoSize = true;
             this.paramCapIoLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramCapIoLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramCapIoLabel.Location = new System.Drawing.Point(128, 28);
+            this.paramCapIoLabel.Location = new System.Drawing.Point(154, 28);
             this.paramCapIoLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.paramCapIoLabel.Name = "paramCapIoLabel";
-            this.paramCapIoLabel.Size = new System.Drawing.Size(101, 17);
+            this.paramCapIoLabel.Size = new System.Drawing.Size(97, 17);
             this.paramCapIoLabel.TabIndex = 28;
-            this.paramCapIoLabel.Text = "Cap IO(0~127)";
+            this.paramCapIoLabel.Text = "CapIO(0~127)";
             // 
             // paramPwrLvText
             // 
@@ -2024,7 +2146,7 @@ namespace ER41xxTestTool
             this.paramDeviationText.Location = new System.Drawing.Point(10, 178);
             this.paramDeviationText.Margin = new System.Windows.Forms.Padding(4);
             this.paramDeviationText.Name = "paramDeviationText";
-            this.paramDeviationText.Size = new System.Drawing.Size(96, 22);
+            this.paramDeviationText.Size = new System.Drawing.Size(70, 22);
             this.paramDeviationText.TabIndex = 21;
             this.paramDeviationText.Text = "24";
             // 
@@ -2039,7 +2161,6 @@ namespace ER41xxTestTool
             this.paramPwrLvLabel.Size = new System.Drawing.Size(118, 17);
             this.paramPwrLvLabel.TabIndex = 18;
             this.paramPwrLvLabel.Text = "Power LV(0~127)";
-            this.paramPwrLvLabel.Click += new System.EventHandler(this.label13_Click);
             // 
             // paramTxSyncText
             // 
@@ -2058,6 +2179,7 @@ namespace ER41xxTestTool
             // 
             // paramDataRateCombo
             // 
+            this.paramDataRateCombo.BackColor = System.Drawing.Color.White;
             this.paramDataRateCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.paramDataRateCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramDataRateCombo.FormattingEnabled = true;
@@ -2071,7 +2193,7 @@ namespace ER41xxTestTool
             // 
             this.paramBaseFreqText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.paramBaseFreqText.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.paramBaseFreqText.Location = new System.Drawing.Point(128, 116);
+            this.paramBaseFreqText.Location = new System.Drawing.Point(128, 117);
             this.paramBaseFreqText.Margin = new System.Windows.Forms.Padding(4);
             this.paramBaseFreqText.Name = "paramBaseFreqText";
             this.paramBaseFreqText.Size = new System.Drawing.Size(96, 22);
@@ -2104,6 +2226,7 @@ namespace ER41xxTestTool
             // 
             // paramModulationCombo
             // 
+            this.paramModulationCombo.BackColor = System.Drawing.Color.White;
             this.paramModulationCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.paramModulationCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramModulationCombo.FormattingEnabled = true;
@@ -2112,7 +2235,6 @@ namespace ER41xxTestTool
             this.paramModulationCombo.Name = "paramModulationCombo";
             this.paramModulationCombo.Size = new System.Drawing.Size(96, 24);
             this.paramModulationCombo.TabIndex = 12;
-            this.paramModulationCombo.SelectedIndexChanged += new System.EventHandler(this.txModCombo_SelectedIndexChanged);
             // 
             // paramModulationLabel
             // 
@@ -2125,7 +2247,6 @@ namespace ER41xxTestTool
             this.paramModulationLabel.Size = new System.Drawing.Size(77, 17);
             this.paramModulationLabel.TabIndex = 5;
             this.paramModulationLabel.Text = "Modulation";
-            this.paramModulationLabel.Click += new System.EventHandler(this.label16_Click);
             // 
             // paramDataRateLabel
             // 
@@ -2143,7 +2264,7 @@ namespace ER41xxTestTool
             // 
             this.paramPAConfigCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramPAConfigCombo.FormattingEnabled = true;
-            this.paramPAConfigCombo.Location = new System.Drawing.Point(12, 178);
+            this.paramPAConfigCombo.Location = new System.Drawing.Point(12, 177);
             this.paramPAConfigCombo.Margin = new System.Windows.Forms.Padding(4);
             this.paramPAConfigCombo.Name = "paramPAConfigCombo";
             this.paramPAConfigCombo.Size = new System.Drawing.Size(96, 24);
@@ -2164,7 +2285,7 @@ namespace ER41xxTestTool
             // btnTxSet
             // 
             this.btnTxSet.Font = new System.Drawing.Font("微軟正黑體", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.btnTxSet.Location = new System.Drawing.Point(15, 741);
+            this.btnTxSet.Location = new System.Drawing.Point(84, 751);
             this.btnTxSet.Margin = new System.Windows.Forms.Padding(4);
             this.btnTxSet.Name = "btnTxSet";
             this.btnTxSet.Size = new System.Drawing.Size(205, 68);
@@ -2285,7 +2406,7 @@ namespace ER41xxTestTool
             // comPortToolStripComboBox
             // 
             this.comPortToolStripComboBox.Name = "comPortToolStripComboBox";
-            this.comPortToolStripComboBox.Size = new System.Drawing.Size(121, 23);
+            this.comPortToolStripComboBox.Size = new System.Drawing.Size(121, 27);
             // 
             // connectComToolStripMenuItem
             // 
@@ -2322,7 +2443,6 @@ namespace ER41xxTestTool
             this.pageParameter.Size = new System.Drawing.Size(860, 232);
             this.pageParameter.TabIndex = 0;
             this.pageParameter.Text = "RF PARAM";
-            this.pageParameter.Click += new System.EventHandler(this.pageParameter_Click_1);
             // 
             // paramPktGroup
             // 
@@ -2335,7 +2455,7 @@ namespace ER41xxTestTool
             this.paramPktGroup.Controls.Add(this.paramPbMultipLabel);
             this.paramPktGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramPktGroup.ForeColor = System.Drawing.SystemColors.HotTrack;
-            this.paramPktGroup.Location = new System.Drawing.Point(423, 9);
+            this.paramPktGroup.Location = new System.Drawing.Point(422, 9);
             this.paramPktGroup.Margin = new System.Windows.Forms.Padding(2);
             this.paramPktGroup.Name = "paramPktGroup";
             this.paramPktGroup.Padding = new System.Windows.Forms.Padding(2);
@@ -2358,7 +2478,7 @@ namespace ER41xxTestTool
             this.paramSyncGroup.Controls.Add(this.paramRxSyncText);
             this.paramSyncGroup.Controls.Add(this.paramTxSyncText);
             this.paramSyncGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.paramSyncGroup.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramSyncGroup.ForeColor = System.Drawing.SystemColors.HotTrack;
             this.paramSyncGroup.Location = new System.Drawing.Point(10, 81);
             this.paramSyncGroup.Margin = new System.Windows.Forms.Padding(2);
             this.paramSyncGroup.Name = "paramSyncGroup";
@@ -2372,7 +2492,7 @@ namespace ER41xxTestTool
             // 
             this.paramRxSyncAllowBitErrLabel.AutoSize = true;
             this.paramRxSyncAllowBitErrLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramRxSyncAllowBitErrLabel.Location = new System.Drawing.Point(16, 92);
+            this.paramRxSyncAllowBitErrLabel.Location = new System.Drawing.Point(11, 91);
             this.paramRxSyncAllowBitErrLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.paramRxSyncAllowBitErrLabel.Name = "paramRxSyncAllowBitErrLabel";
             this.paramRxSyncAllowBitErrLabel.Size = new System.Drawing.Size(96, 17);
@@ -2402,11 +2522,11 @@ namespace ER41xxTestTool
             this.paramModemGroup.Controls.Add(this.paramDataRateLabel);
             this.paramModemGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramModemGroup.ForeColor = System.Drawing.SystemColors.HotTrack;
-            this.paramModemGroup.Location = new System.Drawing.Point(265, 9);
+            this.paramModemGroup.Location = new System.Drawing.Point(286, 9);
             this.paramModemGroup.Margin = new System.Windows.Forms.Padding(2);
             this.paramModemGroup.Name = "paramModemGroup";
             this.paramModemGroup.Padding = new System.Windows.Forms.Padding(2);
-            this.paramModemGroup.Size = new System.Drawing.Size(151, 212);
+            this.paramModemGroup.Size = new System.Drawing.Size(125, 212);
             this.paramModemGroup.TabIndex = 36;
             this.paramModemGroup.TabStop = false;
             this.paramModemGroup.Text = "Modem";
@@ -2415,17 +2535,21 @@ namespace ER41xxTestTool
             // 
             this.paramDeviationHelpBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.paramDeviationHelpBtn.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramDeviationHelpBtn.Location = new System.Drawing.Point(113, 177);
+            this.paramDeviationHelpBtn.Location = new System.Drawing.Point(87, 178);
             this.paramDeviationHelpBtn.Name = "paramDeviationHelpBtn";
             this.paramDeviationHelpBtn.Size = new System.Drawing.Size(28, 23);
             this.paramDeviationHelpBtn.TabIndex = 22;
             this.paramDeviationHelpBtn.Text = "?";
             this.paramDeviationHelpBtn.UseVisualStyleBackColor = true;
-            this.paramDeviationHelpBtn.Click += new System.EventHandler(this.btnDevComment_Click);
+            this.paramDeviationHelpBtn.Click += new System.EventHandler(this.paramDeviationHelpBtn_Click);
             // 
             // paramFreqAndPwrGroup
             // 
-            this.paramFreqAndPwrGroup.Controls.Add(this.paramFreqPwrHelpBtn);
+            this.paramFreqAndPwrGroup.Controls.Add(this.paramXtalGainLabel);
+            this.paramFreqAndPwrGroup.Controls.Add(this.paramXtalGainCombo);
+            this.paramFreqAndPwrGroup.Controls.Add(this.paramXtalHelpBtn);
+            this.paramFreqAndPwrGroup.Controls.Add(this.paramFreqHelpBtn);
+            this.paramFreqAndPwrGroup.Controls.Add(this.paramPwrHelpBtn);
             this.paramFreqAndPwrGroup.Controls.Add(this.paramCapIoText);
             this.paramFreqAndPwrGroup.Controls.Add(this.paramXtalCombo);
             this.paramFreqAndPwrGroup.Controls.Add(this.paramDvbBandLabel);
@@ -2444,23 +2568,68 @@ namespace ER41xxTestTool
             this.paramFreqAndPwrGroup.Margin = new System.Windows.Forms.Padding(2);
             this.paramFreqAndPwrGroup.Name = "paramFreqAndPwrGroup";
             this.paramFreqAndPwrGroup.Padding = new System.Windows.Forms.Padding(2);
-            this.paramFreqAndPwrGroup.Size = new System.Drawing.Size(252, 212);
+            this.paramFreqAndPwrGroup.Size = new System.Drawing.Size(269, 212);
             this.paramFreqAndPwrGroup.TabIndex = 35;
             this.paramFreqAndPwrGroup.TabStop = false;
             this.paramFreqAndPwrGroup.Text = "Frequency and Power";
             // 
-            // paramFreqPwrHelpBtn
+            // paramXtalGainLabel
             // 
-            this.paramFreqPwrHelpBtn.BackColor = System.Drawing.Color.White;
-            this.paramFreqPwrHelpBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.paramFreqPwrHelpBtn.ForeColor = System.Drawing.Color.Black;
-            this.paramFreqPwrHelpBtn.Location = new System.Drawing.Point(172, -2);
-            this.paramFreqPwrHelpBtn.Name = "paramFreqPwrHelpBtn";
-            this.paramFreqPwrHelpBtn.Size = new System.Drawing.Size(28, 23);
-            this.paramFreqPwrHelpBtn.TabIndex = 35;
-            this.paramFreqPwrHelpBtn.Text = "?";
-            this.paramFreqPwrHelpBtn.UseVisualStyleBackColor = false;
-            this.paramFreqPwrHelpBtn.Click += new System.EventHandler(this.rfParamFreqPwrHelpBtn_Click);
+            this.paramXtalGainLabel.AutoSize = true;
+            this.paramXtalGainLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.paramXtalGainLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramXtalGainLabel.Location = new System.Drawing.Point(91, 28);
+            this.paramXtalGainLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.paramXtalGainLabel.Name = "paramXtalGainLabel";
+            this.paramXtalGainLabel.Size = new System.Drawing.Size(38, 17);
+            this.paramXtalGainLabel.TabIndex = 37;
+            this.paramXtalGainLabel.Text = "Gain";
+            // 
+            // paramXtalGainCombo
+            // 
+            this.paramXtalGainCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.paramXtalGainCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.paramXtalGainCombo.FormattingEnabled = true;
+            this.paramXtalGainCombo.Location = new System.Drawing.Point(91, 55);
+            this.paramXtalGainCombo.Name = "paramXtalGainCombo";
+            this.paramXtalGainCombo.Size = new System.Drawing.Size(47, 24);
+            this.paramXtalGainCombo.TabIndex = 36;
+            // 
+            // paramXtalHelpBtn
+            // 
+            this.paramXtalHelpBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.paramXtalHelpBtn.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramXtalHelpBtn.Location = new System.Drawing.Point(230, 56);
+            this.paramXtalHelpBtn.Name = "paramXtalHelpBtn";
+            this.paramXtalHelpBtn.Size = new System.Drawing.Size(28, 23);
+            this.paramXtalHelpBtn.TabIndex = 35;
+            this.paramXtalHelpBtn.Text = "?";
+            this.paramXtalHelpBtn.UseVisualStyleBackColor = true;
+            this.paramXtalHelpBtn.Click += new System.EventHandler(this.paramXtalHelpBtn_Click);
+            // 
+            // paramFreqHelpBtn
+            // 
+            this.paramFreqHelpBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.paramFreqHelpBtn.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramFreqHelpBtn.Location = new System.Drawing.Point(231, 117);
+            this.paramFreqHelpBtn.Name = "paramFreqHelpBtn";
+            this.paramFreqHelpBtn.Size = new System.Drawing.Size(28, 23);
+            this.paramFreqHelpBtn.TabIndex = 36;
+            this.paramFreqHelpBtn.Text = "?";
+            this.paramFreqHelpBtn.UseVisualStyleBackColor = true;
+            this.paramFreqHelpBtn.Click += new System.EventHandler(this.paramFreqHelpBtn_Click);
+            // 
+            // paramPwrHelpBtn
+            // 
+            this.paramPwrHelpBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.paramPwrHelpBtn.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramPwrHelpBtn.Location = new System.Drawing.Point(231, 178);
+            this.paramPwrHelpBtn.Name = "paramPwrHelpBtn";
+            this.paramPwrHelpBtn.Size = new System.Drawing.Size(28, 23);
+            this.paramPwrHelpBtn.TabIndex = 37;
+            this.paramPwrHelpBtn.Text = "?";
+            this.paramPwrHelpBtn.UseVisualStyleBackColor = true;
+            this.paramPwrHelpBtn.Click += new System.EventHandler(this.paramPwrHelpBtn_Click);
             // 
             // paramXtalCombo
             // 
@@ -2469,7 +2638,7 @@ namespace ER41xxTestTool
             this.paramXtalCombo.Location = new System.Drawing.Point(12, 55);
             this.paramXtalCombo.Margin = new System.Windows.Forms.Padding(2);
             this.paramXtalCombo.Name = "paramXtalCombo";
-            this.paramXtalCombo.Size = new System.Drawing.Size(96, 24);
+            this.paramXtalCombo.Size = new System.Drawing.Size(63, 24);
             this.paramXtalCombo.TabIndex = 33;
             this.paramXtalCombo.SelectedIndexChanged += new System.EventHandler(this.xtalCombo_SelectedIndexChanged);
             // 
@@ -2523,7 +2692,10 @@ namespace ER41xxTestTool
             // pageTxPayload
             // 
             this.pageTxPayload.BackColor = System.Drawing.Color.LightSteelBlue;
-            this.pageTxPayload.Controls.Add(this.paramTxFifoModeInfoLabel);
+            this.pageTxPayload.Controls.Add(this.paramTxFifoModeTransHelpLabel);
+            this.pageTxPayload.Controls.Add(this.paramTxFifoMode802HelpLabel);
+            this.pageTxPayload.Controls.Add(this.paramTxFifoModePreSyncHelpLabel);
+            this.pageTxPayload.Controls.Add(this.paramTxFifoModeNoticeLabel);
             this.pageTxPayload.Controls.Add(this.paramTxFifoModeGroup);
             this.pageTxPayload.Location = new System.Drawing.Point(4, 28);
             this.pageTxPayload.Margin = new System.Windows.Forms.Padding(4);
@@ -2533,21 +2705,46 @@ namespace ER41xxTestTool
             this.pageTxPayload.TabIndex = 2;
             this.pageTxPayload.Text = "TX FIFO MODE";
             // 
-            // paramTxFifoModeInfoLabel
+            // paramTxFifoModeTransHelpLabel
             // 
-            this.paramTxFifoModeInfoLabel.AutoSize = true;
-            this.paramTxFifoModeInfoLabel.BackColor = System.Drawing.Color.OldLace;
-            this.paramTxFifoModeInfoLabel.Font = new System.Drawing.Font("Microsoft JhengHei UI", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.paramTxFifoModeInfoLabel.ForeColor = System.Drawing.Color.Black;
-            this.paramTxFifoModeInfoLabel.Location = new System.Drawing.Point(230, 17);
-            this.paramTxFifoModeInfoLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.paramTxFifoModeInfoLabel.Name = "paramTxFifoModeInfoLabel";
-            this.paramTxFifoModeInfoLabel.Padding = new System.Windows.Forms.Padding(5, 2, 5, 2);
-            this.paramTxFifoModeInfoLabel.Size = new System.Drawing.Size(581, 70);
-            this.paramTxFifoModeInfoLabel.TabIndex = 5;
-            this.paramTxFifoModeInfoLabel.Text = "Only for Register setting generation\r\nthis setting determines how the MAC layer p" +
-    "ackets data using the FIFO.\r\nRX FIFO must be configured via API in the firmware " +
-    "flow.";
+            this.paramTxFifoModeTransHelpLabel.BackColor = System.Drawing.Color.OldLace;
+            this.paramTxFifoModeTransHelpLabel.Location = new System.Drawing.Point(231, 51);
+            this.paramTxFifoModeTransHelpLabel.Name = "paramTxFifoModeTransHelpLabel";
+            this.paramTxFifoModeTransHelpLabel.Size = new System.Drawing.Size(614, 45);
+            this.paramTxFifoModeTransHelpLabel.TabIndex = 5;
+            this.paramTxFifoModeTransHelpLabel.Text = "[Transparent] : sends the FIFO data as-is (nothing added) -user must put preamble" +
+    " and Syncword into the FIFO themselves (if needed).\r\n";
+            // 
+            // paramTxFifoMode802HelpLabel
+            // 
+            this.paramTxFifoMode802HelpLabel.BackColor = System.Drawing.Color.OldLace;
+            this.paramTxFifoMode802HelpLabel.Location = new System.Drawing.Point(231, 107);
+            this.paramTxFifoMode802HelpLabel.Name = "paramTxFifoMode802HelpLabel";
+            this.paramTxFifoMode802HelpLabel.Size = new System.Drawing.Size(614, 49);
+            this.paramTxFifoMode802HelpLabel.TabIndex = 5;
+            this.paramTxFifoMode802HelpLabel.Text = "[802.15.4] : same auto Preamble/Syncword as above, plus HW inserts a PHR(length, " +
+    "<=127) after Syncword and appends CRC after the payload -user must include MHR w" +
+    "ithin the payload.";
+            // 
+            // paramTxFifoModePreSyncHelpLabel
+            // 
+            this.paramTxFifoModePreSyncHelpLabel.BackColor = System.Drawing.Color.OldLace;
+            this.paramTxFifoModePreSyncHelpLabel.Location = new System.Drawing.Point(231, 8);
+            this.paramTxFifoModePreSyncHelpLabel.Name = "paramTxFifoModePreSyncHelpLabel";
+            this.paramTxFifoModePreSyncHelpLabel.Size = new System.Drawing.Size(614, 32);
+            this.paramTxFifoModePreSyncHelpLabel.TabIndex = 5;
+            this.paramTxFifoModePreSyncHelpLabel.Text = "[Transparent + Presync] : HW auto-adds Preamble + Syncword before the FIFO data.\r" +
+    "\n";
+            // 
+            // paramTxFifoModeNoticeLabel
+            // 
+            this.paramTxFifoModeNoticeLabel.BackColor = System.Drawing.Color.Silver;
+            this.paramTxFifoModeNoticeLabel.Location = new System.Drawing.Point(231, 167);
+            this.paramTxFifoModeNoticeLabel.Name = "paramTxFifoModeNoticeLabel";
+            this.paramTxFifoModeNoticeLabel.Size = new System.Drawing.Size(615, 51);
+            this.paramTxFifoModeNoticeLabel.TabIndex = 5;
+            this.paramTxFifoModeNoticeLabel.Text = "RX FIFO mode is NOT set through this GUI — the firmware decides it at runtime fro" +
+    "m the OpCode passed when RX is triggered by TRx_RX_Trigger(...)\r\n\r\n";
             // 
             // pageIntMode
             // 
@@ -2564,7 +2761,8 @@ namespace ER41xxTestTool
             // pageGpio
             // 
             this.pageGpio.BackColor = System.Drawing.Color.LightSteelBlue;
-            this.pageGpio.Controls.Add(this.paramGpioGroup);
+            this.pageGpio.Controls.Add(this.paramGpio1Group);
+            this.pageGpio.Controls.Add(this.paramGpio0Group);
             this.pageGpio.Location = new System.Drawing.Point(4, 28);
             this.pageGpio.Margin = new System.Windows.Forms.Padding(4);
             this.pageGpio.Name = "pageGpio";
@@ -2572,6 +2770,99 @@ namespace ER41xxTestTool
             this.pageGpio.Size = new System.Drawing.Size(860, 232);
             this.pageGpio.TabIndex = 4;
             this.pageGpio.Text = "GPIO";
+            // 
+            // paramGpio1Group
+            // 
+            this.paramGpio1Group.Controls.Add(this.paramGpio1GIoInvCheck);
+            this.paramGpio1Group.Controls.Add(this.paramGpio1GIoSelLabel);
+            this.paramGpio1Group.Controls.Add(this.paramGpio1PullCtrlLabel);
+            this.paramGpio1Group.Controls.Add(this.paramGpio1ModeLabel);
+            this.paramGpio1Group.Controls.Add(this.paramGpio1PullCtrlCombo);
+            this.paramGpio1Group.Controls.Add(this.paramGpio1ModeCombo);
+            this.paramGpio1Group.Controls.Add(this.paramGpio1GioSelCombo);
+            this.paramGpio1Group.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold);
+            this.paramGpio1Group.ForeColor = System.Drawing.SystemColors.HotTrack;
+            this.paramGpio1Group.Location = new System.Drawing.Point(228, 8);
+            this.paramGpio1Group.Margin = new System.Windows.Forms.Padding(4);
+            this.paramGpio1Group.Name = "paramGpio1Group";
+            this.paramGpio1Group.Padding = new System.Windows.Forms.Padding(4);
+            this.paramGpio1Group.Size = new System.Drawing.Size(203, 211);
+            this.paramGpio1Group.TabIndex = 11;
+            this.paramGpio1Group.TabStop = false;
+            this.paramGpio1Group.Text = "GPIO1";
+            // 
+            // paramGpio1GIoInvCheck
+            // 
+            this.paramGpio1GIoInvCheck.AutoSize = true;
+            this.paramGpio1GIoInvCheck.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio1GIoInvCheck.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio1GIoInvCheck.Location = new System.Drawing.Point(100, 81);
+            this.paramGpio1GIoInvCheck.Name = "paramGpio1GIoInvCheck";
+            this.paramGpio1GIoInvCheck.Size = new System.Drawing.Size(76, 21);
+            this.paramGpio1GIoInvCheck.TabIndex = 10;
+            this.paramGpio1GIoInvCheck.Text = "Inverse";
+            this.paramGpio1GIoInvCheck.UseVisualStyleBackColor = true;
+            // 
+            // paramGpio1GIoSelLabel
+            // 
+            this.paramGpio1GIoSelLabel.AutoSize = true;
+            this.paramGpio1GIoSelLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio1GIoSelLabel.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio1GIoSelLabel.Location = new System.Drawing.Point(18, 83);
+            this.paramGpio1GIoSelLabel.Name = "paramGpio1GIoSelLabel";
+            this.paramGpio1GIoSelLabel.Size = new System.Drawing.Size(76, 17);
+            this.paramGpio1GIoSelLabel.TabIndex = 9;
+            this.paramGpio1GIoSelLabel.Text = "GIO Select";
+            // 
+            // paramGpio1PullCtrlLabel
+            // 
+            this.paramGpio1PullCtrlLabel.AutoSize = true;
+            this.paramGpio1PullCtrlLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio1PullCtrlLabel.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio1PullCtrlLabel.Location = new System.Drawing.Point(18, 138);
+            this.paramGpio1PullCtrlLabel.Name = "paramGpio1PullCtrlLabel";
+            this.paramGpio1PullCtrlLabel.Size = new System.Drawing.Size(80, 17);
+            this.paramGpio1PullCtrlLabel.TabIndex = 9;
+            this.paramGpio1PullCtrlLabel.Text = "Pull Control";
+            // 
+            // paramGpio1ModeLabel
+            // 
+            this.paramGpio1ModeLabel.AutoSize = true;
+            this.paramGpio1ModeLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio1ModeLabel.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio1ModeLabel.Location = new System.Drawing.Point(18, 28);
+            this.paramGpio1ModeLabel.Name = "paramGpio1ModeLabel";
+            this.paramGpio1ModeLabel.Size = new System.Drawing.Size(180, 17);
+            this.paramGpio1ModeLabel.TabIndex = 9;
+            this.paramGpio1ModeLabel.Text = "Mode(Default is SHD input)";
+            // 
+            // paramGpio1PullCtrlCombo
+            // 
+            this.paramGpio1PullCtrlCombo.BackColor = System.Drawing.Color.White;
+            this.paramGpio1PullCtrlCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.paramGpio1PullCtrlCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio1PullCtrlCombo.ForeColor = System.Drawing.Color.Black;
+            this.paramGpio1PullCtrlCombo.FormattingEnabled = true;
+            this.paramGpio1PullCtrlCombo.Location = new System.Drawing.Point(18, 162);
+            this.paramGpio1PullCtrlCombo.Margin = new System.Windows.Forms.Padding(4);
+            this.paramGpio1PullCtrlCombo.Name = "paramGpio1PullCtrlCombo";
+            this.paramGpio1PullCtrlCombo.Size = new System.Drawing.Size(158, 24);
+            this.paramGpio1PullCtrlCombo.TabIndex = 1;
+            // 
+            // paramGpio1ModeCombo
+            // 
+            this.paramGpio1ModeCombo.BackColor = System.Drawing.Color.White;
+            this.paramGpio1ModeCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.paramGpio1ModeCombo.Enabled = false;
+            this.paramGpio1ModeCombo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramGpio1ModeCombo.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramGpio1ModeCombo.FormattingEnabled = true;
+            this.paramGpio1ModeCombo.Location = new System.Drawing.Point(18, 52);
+            this.paramGpio1ModeCombo.Margin = new System.Windows.Forms.Padding(4);
+            this.paramGpio1ModeCombo.Name = "paramGpio1ModeCombo";
+            this.paramGpio1ModeCombo.Size = new System.Drawing.Size(158, 24);
+            this.paramGpio1ModeCombo.TabIndex = 3;
+            this.paramGpio1ModeCombo.SelectedIndexChanged += new System.EventHandler(this.paramGpio1ModeCombo_SelectedIndexChanged);
             // 
             // pagePcrmu
             // 
@@ -2588,36 +2879,38 @@ namespace ER41xxTestTool
             // 
             // regTableGenBtn
             // 
-            this.regTableGenBtn.Location = new System.Drawing.Point(1190, 763);
+            this.regTableGenBtn.BackColor = System.Drawing.Color.White;
+            this.regTableGenBtn.Location = new System.Drawing.Point(1191, 745);
             this.regTableGenBtn.Margin = new System.Windows.Forms.Padding(4);
             this.regTableGenBtn.Name = "regTableGenBtn";
-            this.regTableGenBtn.Size = new System.Drawing.Size(96, 44);
+            this.regTableGenBtn.Size = new System.Drawing.Size(96, 62);
             this.regTableGenBtn.TabIndex = 44;
             this.regTableGenBtn.Text = "Generate";
-            this.regTableGenBtn.UseVisualStyleBackColor = true;
+            this.regTableGenBtn.UseVisualStyleBackColor = false;
             this.regTableGenBtn.Click += new System.EventHandler(this.btnGen_Click);
             // 
             // regTableDefaultBtn
             // 
-            this.regTableDefaultBtn.Location = new System.Drawing.Point(1296, 763);
+            this.regTableDefaultBtn.BackColor = System.Drawing.Color.White;
+            this.regTableDefaultBtn.Location = new System.Drawing.Point(1291, 745);
             this.regTableDefaultBtn.Margin = new System.Windows.Forms.Padding(4);
             this.regTableDefaultBtn.Name = "regTableDefaultBtn";
-            this.regTableDefaultBtn.Size = new System.Drawing.Size(96, 44);
+            this.regTableDefaultBtn.Size = new System.Drawing.Size(96, 62);
             this.regTableDefaultBtn.TabIndex = 47;
             this.regTableDefaultBtn.Text = "Default";
-            this.regTableDefaultBtn.UseVisualStyleBackColor = true;
+            this.regTableDefaultBtn.UseVisualStyleBackColor = false;
             this.regTableDefaultBtn.Click += new System.EventHandler(this.btnDefault_Click);
             // 
             // regTableTopicGroup
             // 
             this.regTableTopicGroup.BackColor = System.Drawing.Color.Transparent;
-            this.regTableTopicGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold);
-            this.regTableTopicGroup.ForeColor = System.Drawing.Color.CornflowerBlue;
+            this.regTableTopicGroup.Font = new System.Drawing.Font("Calibri", 10.2F, System.Drawing.FontStyle.Bold);
+            this.regTableTopicGroup.ForeColor = System.Drawing.Color.Navy;
             this.regTableTopicGroup.Location = new System.Drawing.Point(891, 36);
             this.regTableTopicGroup.Margin = new System.Windows.Forms.Padding(4);
             this.regTableTopicGroup.Name = "regTableTopicGroup";
             this.regTableTopicGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.regTableTopicGroup.Size = new System.Drawing.Size(501, 694);
+            this.regTableTopicGroup.Size = new System.Drawing.Size(501, 669);
             this.regTableTopicGroup.TabIndex = 46;
             this.regTableTopicGroup.TabStop = false;
             this.regTableTopicGroup.Text = "REG Table";
@@ -2625,43 +2918,45 @@ namespace ER41xxTestTool
             // dvbTstTopicLabel
             // 
             this.dvbTstTopicLabel.AutoSize = true;
-            this.dvbTstTopicLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.dvbTstTopicLabel.ForeColor = System.Drawing.Color.CornflowerBlue;
+            this.dvbTstTopicLabel.Font = new System.Drawing.Font("Calibri", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.dvbTstTopicLabel.ForeColor = System.Drawing.Color.Navy;
             this.dvbTstTopicLabel.Location = new System.Drawing.Point(11, 322);
             this.dvbTstTopicLabel.Name = "dvbTstTopicLabel";
-            this.dvbTstTopicLabel.Size = new System.Drawing.Size(525, 20);
+            this.dvbTstTopicLabel.Size = new System.Drawing.Size(89, 21);
             this.dvbTstTopicLabel.TabIndex = 48;
-            this.dvbTstTopicLabel.Text = "DVB Tester(Only support FIFO mode : Transparent+Presync)";
+            this.dvbTstTopicLabel.Text = "DVB Tester";
             // 
             // paramTopicLabel
             // 
             this.paramTopicLabel.AutoSize = true;
-            this.paramTopicLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.paramTopicLabel.ForeColor = System.Drawing.Color.CornflowerBlue;
+            this.paramTopicLabel.Font = new System.Drawing.Font("Calibri", 10.2F, System.Drawing.FontStyle.Bold);
+            this.paramTopicLabel.ForeColor = System.Drawing.Color.Navy;
             this.paramTopicLabel.Location = new System.Drawing.Point(10, 32);
             this.paramTopicLabel.Name = "paramTopicLabel";
-            this.paramTopicLabel.Size = new System.Drawing.Size(96, 20);
+            this.paramTopicLabel.Size = new System.Drawing.Size(85, 21);
             this.paramTopicLabel.TabIndex = 48;
             this.paramTopicLabel.Text = "Parameter";
             // 
-            // regTableReadDvbRegBtn
+            // regTableDumpDvbRegBtn
             // 
-            this.regTableReadDvbRegBtn.Location = new System.Drawing.Point(891, 763);
-            this.regTableReadDvbRegBtn.Name = "regTableReadDvbRegBtn";
-            this.regTableReadDvbRegBtn.Size = new System.Drawing.Size(96, 44);
-            this.regTableReadDvbRegBtn.TabIndex = 49;
-            this.regTableReadDvbRegBtn.Text = "Read DVB Register";
-            this.regTableReadDvbRegBtn.UseVisualStyleBackColor = true;
-            this.regTableReadDvbRegBtn.Click += new System.EventHandler(this.btnReadDVB_Click);
+            this.regTableDumpDvbRegBtn.BackColor = System.Drawing.Color.White;
+            this.regTableDumpDvbRegBtn.Location = new System.Drawing.Point(891, 745);
+            this.regTableDumpDvbRegBtn.Name = "regTableDumpDvbRegBtn";
+            this.regTableDumpDvbRegBtn.Size = new System.Drawing.Size(96, 62);
+            this.regTableDumpDvbRegBtn.TabIndex = 49;
+            this.regTableDumpDvbRegBtn.Text = "Dump All DVB Register";
+            this.regTableDumpDvbRegBtn.UseVisualStyleBackColor = false;
+            this.regTableDumpDvbRegBtn.Click += new System.EventHandler(this.btnReadDVB_Click);
             // 
             // regTableWriteDvbRegBtn
             // 
-            this.regTableWriteDvbRegBtn.Location = new System.Drawing.Point(997, 763);
+            this.regTableWriteDvbRegBtn.BackColor = System.Drawing.Color.White;
+            this.regTableWriteDvbRegBtn.Location = new System.Drawing.Point(991, 745);
             this.regTableWriteDvbRegBtn.Name = "regTableWriteDvbRegBtn";
-            this.regTableWriteDvbRegBtn.Size = new System.Drawing.Size(96, 44);
+            this.regTableWriteDvbRegBtn.Size = new System.Drawing.Size(96, 62);
             this.regTableWriteDvbRegBtn.TabIndex = 50;
-            this.regTableWriteDvbRegBtn.Text = "Write DVB Register";
-            this.regTableWriteDvbRegBtn.UseVisualStyleBackColor = true;
+            this.regTableWriteDvbRegBtn.Text = "Write All DVB Register";
+            this.regTableWriteDvbRegBtn.UseVisualStyleBackColor = false;
             this.regTableWriteDvbRegBtn.Click += new System.EventHandler(this.btnWriteDVB_Click);
             // 
             // regTableIncInitArrayCheck
@@ -2669,12 +2964,46 @@ namespace ER41xxTestTool
             this.regTableIncInitArrayCheck.AutoSize = true;
             this.regTableIncInitArrayCheck.Checked = true;
             this.regTableIncInitArrayCheck.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.regTableIncInitArrayCheck.Location = new System.Drawing.Point(1190, 737);
+            this.regTableIncInitArrayCheck.Location = new System.Drawing.Point(1194, 716);
             this.regTableIncInitArrayCheck.Name = "regTableIncInitArrayCheck";
-            this.regTableIncInitArrayCheck.Size = new System.Drawing.Size(135, 21);
+            this.regTableIncInitArrayCheck.Size = new System.Drawing.Size(136, 22);
             this.regTableIncInitArrayCheck.TabIndex = 51;
             this.regTableIncInitArrayCheck.Text = "Include Init Array";
             this.regTableIncInitArrayCheck.UseVisualStyleBackColor = true;
+            // 
+            // dvbTstSubTopicLabel
+            // 
+            this.dvbTstSubTopicLabel.AutoSize = true;
+            this.dvbTstSubTopicLabel.BackColor = System.Drawing.Color.Transparent;
+            this.dvbTstSubTopicLabel.Font = new System.Drawing.Font("Calibri", 10F);
+            this.dvbTstSubTopicLabel.ForeColor = System.Drawing.Color.Navy;
+            this.dvbTstSubTopicLabel.Location = new System.Drawing.Point(235, 322);
+            this.dvbTstSubTopicLabel.Name = "dvbTstSubTopicLabel";
+            this.dvbTstSubTopicLabel.Size = new System.Drawing.Size(348, 21);
+            this.dvbTstSubTopicLabel.TabIndex = 52;
+            this.dvbTstSubTopicLabel.Text = "(Only support FIFO mode : Transparent+Presync)";
+            // 
+            // regTableWriteSelDvbRegBtn
+            // 
+            this.regTableWriteSelDvbRegBtn.BackColor = System.Drawing.Color.White;
+            this.regTableWriteSelDvbRegBtn.Location = new System.Drawing.Point(1091, 745);
+            this.regTableWriteSelDvbRegBtn.Name = "regTableWriteSelDvbRegBtn";
+            this.regTableWriteSelDvbRegBtn.Size = new System.Drawing.Size(96, 62);
+            this.regTableWriteSelDvbRegBtn.TabIndex = 50;
+            this.regTableWriteSelDvbRegBtn.Text = "Write Selected DVB Register";
+            this.regTableWriteSelDvbRegBtn.UseVisualStyleBackColor = false;
+            this.regTableWriteSelDvbRegBtn.Click += new System.EventHandler(this.regTableWriteSelDvbRegBtn_Click);
+            // 
+            // dvbTstConnStateLabel
+            // 
+            this.dvbTstConnStateLabel.AutoSize = true;
+            this.dvbTstConnStateLabel.Font = new System.Drawing.Font("Calibri", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.dvbTstConnStateLabel.ForeColor = System.Drawing.Color.DarkRed;
+            this.dvbTstConnStateLabel.Location = new System.Drawing.Point(102, 322);
+            this.dvbTstConnStateLabel.Name = "dvbTstConnStateLabel";
+            this.dvbTstConnStateLabel.Size = new System.Drawing.Size(118, 21);
+            this.dvbTstConnStateLabel.TabIndex = 48;
+            this.dvbTstConnStateLabel.Text = "[Disconnected]";
             // 
             // MainForm
             // 
@@ -2683,10 +3012,13 @@ namespace ER41xxTestTool
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.SystemColors.ScrollBar;
             this.ClientSize = new System.Drawing.Size(1405, 838);
+            this.Controls.Add(this.dvbTstSubTopicLabel);
             this.Controls.Add(this.regTableIncInitArrayCheck);
+            this.Controls.Add(this.regTableWriteSelDvbRegBtn);
             this.Controls.Add(this.regTableWriteDvbRegBtn);
-            this.Controls.Add(this.regTableReadDvbRegBtn);
+            this.Controls.Add(this.regTableDumpDvbRegBtn);
             this.Controls.Add(this.paramTopicLabel);
+            this.Controls.Add(this.dvbTstConnStateLabel);
             this.Controls.Add(this.dvbTstTopicLabel);
             this.Controls.Add(this.regTableDefaultBtn);
             this.Controls.Add(this.regTableTopicGroup);
@@ -2698,14 +3030,14 @@ namespace ER41xxTestTool
             this.Controls.Add(this.dvbTstZoneTab);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btnTxSet);
-            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ForeColor = System.Drawing.SystemColors.ControlText;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.Text = "ER4100  RF Test Tool 20260826 V1.20L";
+            this.Text = "ER41xx RF Test Tool";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
@@ -2754,8 +3086,8 @@ namespace ER41xxTestTool
             this.paramIntModeTxAemptyGroup.PerformLayout();
             this.paramIntModeRxAfullGroup.ResumeLayout(false);
             this.paramIntModeRxAfullGroup.PerformLayout();
-            this.paramGpioGroup.ResumeLayout(false);
-            this.paramGpioGroup.PerformLayout();
+            this.paramGpio0Group.ResumeLayout(false);
+            this.paramGpio0Group.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.paramZoneTab.ResumeLayout(false);
@@ -2770,9 +3102,10 @@ namespace ER41xxTestTool
             this.paramFreqAndPwrGroup.PerformLayout();
             this.pageFreqTable.ResumeLayout(false);
             this.pageTxPayload.ResumeLayout(false);
-            this.pageTxPayload.PerformLayout();
             this.pageIntMode.ResumeLayout(false);
             this.pageGpio.ResumeLayout(false);
+            this.paramGpio1Group.ResumeLayout(false);
+            this.paramGpio1Group.PerformLayout();
             this.pagePcrmu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -2903,12 +3236,9 @@ namespace ER41xxTestTool
         private System.Windows.Forms.TextBox paramIntModeTxAemptyText;
         private System.Windows.Forms.GroupBox paramIntModeRxAfullGroup;
         private System.Windows.Forms.TextBox paramIntModeRxAfullText;
-        private System.Windows.Forms.GroupBox paramGpioGroup;
-        private System.Windows.Forms.CheckBox paramGpio0EnableCheck;
-        private System.Windows.Forms.ComboBox paramGpio0Combo;
-        private System.Windows.Forms.CheckBox paramGpio1EnableCheck;
-        private System.Windows.Forms.ComboBox paramGpio1Combo;
-        private System.Windows.Forms.Label paramTxFifoModeInfoLabel;
+        private System.Windows.Forms.GroupBox paramGpio0Group;
+        private System.Windows.Forms.ComboBox paramGpio0GioSelCombo;
+        private System.Windows.Forms.ComboBox paramGpio1GioSelCombo;
         private System.Windows.Forms.Button regTableDefaultBtn;
         private System.Windows.Forms.GroupBox paramModemGroup;
         private System.Windows.Forms.GroupBox paramFreqAndPwrGroup;
@@ -2920,7 +3250,7 @@ namespace ER41xxTestTool
         private System.Windows.Forms.GroupBox regTableTopicGroup;
         private System.Windows.Forms.Label dvbTstTopicLabel;
         private System.Windows.Forms.Label paramTopicLabel;
-        private System.Windows.Forms.Button regTableReadDvbRegBtn;
+        private System.Windows.Forms.Button regTableDumpDvbRegBtn;
         private System.Windows.Forms.Button regTableWriteDvbRegBtn;
         private System.Windows.Forms.CheckBox regTableIncInitArrayCheck;
         private System.Windows.Forms.Button paramDeviationHelpBtn;
@@ -2980,7 +3310,34 @@ namespace ER41xxTestTool
         private System.Windows.Forms.Button dvbTstPktRxStartBtn;
         private System.Windows.Forms.Label dvbTstPktRxOkCntLabel;
         private System.Windows.Forms.TextBox dvbTstPktRxOkCntText;
-        private System.Windows.Forms.Button paramFreqPwrHelpBtn;
+        private System.Windows.Forms.Button paramXtalHelpBtn;
+        private System.Windows.Forms.Button paramFreqHelpBtn;
+        private System.Windows.Forms.Button paramPwrHelpBtn;
+        private System.Windows.Forms.ComboBox paramGpio0ModeCombo;
+        private System.Windows.Forms.ComboBox paramGpio1ModeCombo;
+        private System.Windows.Forms.Label paramGpio0ModeLabel;
+        private System.Windows.Forms.Label paramGpio0PullCtrlLabel;
+        private System.Windows.Forms.Label paramGpio0GIoSelLabel;
+        private System.Windows.Forms.ComboBox paramGpio0PullCtrlCombo;
+        private System.Windows.Forms.Label paramGpio1GIoSelLabel;
+        private System.Windows.Forms.Label paramGpio1ModeLabel;
+        private System.Windows.Forms.CheckBox paramGpio0GIoInvCheck;
+        private System.Windows.Forms.GroupBox paramGpio1Group;
+        private System.Windows.Forms.CheckBox paramGpio1GIoInvCheck;
+        private System.Windows.Forms.Label paramGpio1PullCtrlLabel;
+        private System.Windows.Forms.ComboBox paramGpio1PullCtrlCombo;
+        private System.Windows.Forms.Button paramFreqTableDelAllBtn;
+        private System.Windows.Forms.Label dvbTstPktTxDgmMacRangeLabel;
+        private System.Windows.Forms.Label dvbTstSubTopicLabel;
+        private System.Windows.Forms.Label paramTxFifoModePreSyncHelpLabel;
+        private System.Windows.Forms.Label paramTxFifoModeNoticeLabel;
+        private System.Windows.Forms.Label paramTxFifoModeTransHelpLabel;
+        private System.Windows.Forms.Label paramTxFifoMode802HelpLabel;
+        private System.Windows.Forms.Button dvbTstPktFifoDgmHelpBtn;
+        private System.Windows.Forms.Button regTableWriteSelDvbRegBtn;
+        private System.Windows.Forms.ComboBox paramXtalGainCombo;
+        private System.Windows.Forms.Label paramXtalGainLabel;
+        private System.Windows.Forms.Label dvbTstConnStateLabel;
     }
 }
 

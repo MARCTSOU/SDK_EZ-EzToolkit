@@ -32,7 +32,7 @@ namespace ER41xxTestTool
         /// <summary>PARAMETER 分頁的預設頻率, 同時也是 FREQUENCYTABLE 的第一個頻點; 其餘 3 個頻點以此為基準往上加 FreqTableStepMHz。</summary>
         private const decimal DefaultFrequencyMHz = 433.301m;
         private const decimal FreqTableStepMHz = 0.1m;
-        private const int CountOfFreqTable = 4;
+        private const int CountOfFreqTable = 2;
 
         /// <summary>[FREQUENCYTABLE] 區塊內容: NUM 決定要印幾個 VALUEn, 頻點以 DefaultFrequencyMHz 為底, 每個往上加一次 FreqTableStepMHz。改 CountOfFreqTable 就會自動長出/減少對應的 VALUEn 行, 不用手動對齊。</summary>
         private static string BuildFrequencyTableSection()
@@ -49,6 +49,7 @@ $@"EZCODE
 
 [PARAMETER]
 CRYSTAL=40
+CRYSTALGAIN=4
 CAPIO=33
 FREQUENCY={DefaultFrequencyMHz}
 DATARATE=100.000
@@ -96,12 +97,16 @@ VALUE=64
 VALUE=64
 
 [GPIO0]
-ENABLE=false
-VALUE=
+MODE=Default_Mode
+GIO_SEL=TR_BSY
+PULL_CTRL=No_Pull
+INV=false
 
 [GPIO1]
-ENABLE=false
-VALUE=
+MODE=Default_Mode
+GIO_SEL=TR_BSY
+PULL_CTRL=No_Pull
+INV=false
 
 [FREQUENCYTABLE]
 {BuildFrequencyTableSection()}

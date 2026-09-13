@@ -15,16 +15,16 @@ namespace ER41xxTestTool
         public const string TxSetting = "TX RF Properties";
         public const string RxSetting = "RX RF Properties";
         public const string Synthesizer = "Synthesizer";// SYNTHESIZER"; //"FREQ/DEV/DATARATE";
-        public const string PowerConfig = "Tx Power";// POWER CONFIG";
-        public const string XOSetting = "XTAL Cap IO";
+        public const string PowerConfig = "TX Power";// POWER CONFIG";
+        public const string XOSetting = "XTAL Config";
         public const string Pcrmu = "PCR Management";
         public const string InterruptMode = "Interrupt";
 
         //public const string PacketSetting = "Packet";
-        public const string PreambleSetting = "Tx Preamble";
-        public const string TxPayloadFormat = "Tx FIFO Mode";
-        public const string TxSyncword = "Tx Syncword";
-        public const string RxSyncword = "Rx Syncword";
+        public const string PreambleSetting = "TX Preamble";
+        public const string TxPayloadFormat = "TX FIFO Mode";
+        public const string TxSyncword = "TX Syncword";
+        public const string RxSyncword = "RX Syncword";
         //public const string RxSyncwordErrorBit = "RX SYNCWORD ERROR BIT";
         public const string FIFOOrder = "FIFO Data Order";
         public const string FIFOThreshold = "FIFO Threshold";

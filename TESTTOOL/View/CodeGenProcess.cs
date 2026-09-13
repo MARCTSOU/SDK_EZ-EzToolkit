@@ -23,7 +23,21 @@ namespace ER41xxTestTool
             TX_TRANSPARENTwithPRESYNC = 0x3,
             TX_802154withPRESYNC = 0xF
         }
-        public enum TRx_GPIOMode
+        public enum TRx_GPIO_Mode
+        {
+            [Description("GPIO0-TCXO_EN(def high), GPIO1-SHD(def low)")]
+            Default_Mode = 0,
+            [Description("GIO is Selectable in GIO mode")]
+            GIO_Mode,
+            Reserved1,
+            Reserved2,
+            RX_RF_Mode,
+            RX_BBP_Mode,
+            NFC_Mode,
+            Debug_Mode
+        }
+        
+        public enum TRx_GPIO_GioSel
         {
             [Description("TX/RX in progress")]
             TR_BSY = 0,
@@ -45,6 +59,14 @@ namespace ER41xxTestTool
             NFC_FIELD_OK,
             NFC_BUSY
         }
+
+        public enum TRx_GPIO_PullCtrl
+        {
+            Pull_up = 0,
+            Pull_down,
+            No_Pull
+        }
+
         public enum TRx_InterruptMode
         {
             INT_ST_RX = 0,
@@ -119,6 +141,11 @@ namespace ER41xxTestTool
         {
             InitInterruptModeSelector();
 
+            // GPIO0/GPIO1 的Mode/GioSel下拉選單: Mode恆可選, GioSel的Enabled狀態跟著Mode連動,
+            // 不再需要靠paramGpio0EnableCheck/paramGpio1EnableCheck這個master checkbox觸發初始化。
+            GPIO0_Initial();
+            GPIO1_Initial();
+
             // FREQUENCY TABLE ListView
             paramFreqTableList.View = System.Windows.Forms.View.Details;
             paramFreqTableList.FullRowSelect = true;
@@ -178,23 +205,7 @@ namespace ER41xxTestTool
                 paramPAConfigCombo.SelectedIndex = 0;
         }
 
-        private void rfParamFreqPwrHelpBtn_Click(object sender, EventArgs e)
-        {
-            string msg =
-                "1. Xtal: Must match the crystal actually fitted on the module. It determines which Data Rates are available.\r\n\r\n" +
-                "2. Cap IO: Trims the crystal's internal load capacitance, used to fine-tune the actual Base Frequency offset.\r\n\r\n" +
-                "3. DVB Band: Only relevant to the DVB Tester. Determined by the ER4100 daughter-board's hardware and cannot be selected from software - it reflects the frequency band the daughter-board was built for. This setting does not limit the Base Frequency; it only narrows down the PA Config options.\r\n\r\n" +
-                "4. Frequency: The Base Frequency. ER4100 supports the following 5 bands:\r\n" +
-                "      99 - 125 MHz\r\n" +
-                "      196 - 253 MHz\r\n" +
-                "      391 - 508 MHz\r\n" +
-                "      780 - 1018 MHz\r\n" +
-                "5. PA Config: Selects the output power of the chip's internal High-Power PA (H-PA) or Low-Power PA (L-PA), and must match the external matching network design.\r\n" +
-                "      e.g. if the external matching is designed for 915MHz / 23dBm, select \"23\" here. H-PA/L-PA itself is fixed at the factory and cannot be changed here - this only selects the corresponding dBm value.\r\n\r\n" +
-                "6. Power LV: The range depends on PA Config - H-PA (23dBm) is 0~127, L-PA (10/14dBm) is 0~27. E.g. with PA Config = 23dBm (H-PA), 127 is the theoretical value for full 23dBm output.";
-            MessageBox.Show(this, msg, "Frequency & Power Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
+        
         /// <summary>PA CONFIG(dBm) = 10 或 14 時 POWER LV 只到 27, 其餘 dBm 到 127; 依 PAConfigCombo 目前的值更新 PwrLvLabel 上的範圍字樣</summary>
         private void UpdatePwrLvLabel()
         {
@@ -263,6 +274,8 @@ namespace ER41xxTestTool
             btnIntMode.Font = new Font("Microsoft Sans Serif", 8f);
             btnIntMode.AutoSize = false;
             btnIntMode.Location = new Point(8, 38);
+            btnIntMode.BackColor = Color.White;
+            btnIntMode.ForeColor = Color.Black;
             btnIntMode.Size = new Size(paramIntModeGroup.Width - 16, 26);
             btnIntMode.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnIntMode.Click += BtnIntMode_Click;
@@ -362,47 +375,72 @@ namespace ER41xxTestTool
         // =============== GPIO ===============
         public void Initial_Gpio0_Combo()
         {
-            paramGpio0Combo.DataSource = Enum.GetValues(typeof(TRx_GPIOMode));
+            paramGpio0ModeCombo.DataSource = Enum.GetValues(typeof(TRx_GPIO_Mode));
+            paramGpio0GioSelCombo.DataSource = Enum.GetValues(typeof(TRx_GPIO_GioSel));
+            paramGpio0PullCtrlCombo.DataSource = Enum.GetValues(typeof(TRx_GPIO_PullCtrl));
         }
         public void Initial_Gpio1_Combo()
         {
-            paramGpio1Combo.DataSource = Enum.GetValues(typeof(TRx_GPIOMode));
+            paramGpio1ModeCombo.DataSource = Enum.GetValues(typeof(TRx_GPIO_Mode));
+            paramGpio1GioSelCombo.DataSource = Enum.GetValues(typeof(TRx_GPIO_GioSel));
+            paramGpio1PullCtrlCombo.DataSource = Enum.GetValues(typeof(TRx_GPIO_PullCtrl));
         }
 
+        /// <summary>
+        /// GPIO0的Mode下拉選單永遠可選 (不再靠paramGpio0EnableCheck這個master enable),
+        /// "不使用GPIO0"這件事本身就是選Mode=Default_Mode就代表了。
+        /// GioSel下拉選單則只有Mode選到GIO_Mode時才有意義, 所以Enabled狀態跟著Mode連動。
+        /// </summary>
         public void GPIO0_Initial()
         {
-            if (paramGpio0EnableCheck.Checked == true)
+            if (paramGpio0ModeCombo.DataSource == null)
             {
-                paramGpio0Combo.DataSource = null;
-                paramGpio0Combo.SelectedIndex = -1;
                 Initial_Gpio0_Combo();
-                paramGpio0Combo.Enabled = true;
+                paramGpio0ModeCombo.SelectedItem = TRx_GPIO_Mode.Default_Mode;  //default_mode
+                paramGpio0GioSelCombo.SelectedItem = TRx_GPIO_GioSel.TR_BSY;    //TR_BSY
+                paramGpio0PullCtrlCombo.SelectedItem = TRx_GPIO_PullCtrl.No_Pull;  //NO Pull
+                paramGpio0ModeCombo.Enabled = true;
             }
-            else
-                paramGpio0Combo.Enabled = false;
+            UpdateGpio0GioSelEnabled();
         }
 
         public void GPIO1_Initial()
         {
-            if (paramGpio1EnableCheck.Checked == true)
+            if (paramGpio1ModeCombo.DataSource == null)
             {
-                paramGpio1Combo.DataSource = null;
-                paramGpio1Combo.SelectedIndex = -1;
-                Initial_Gpio1_Combo();
-                paramGpio1Combo.Enabled = true;
+                Initial_Gpio1_Combo(); 
+                paramGpio1ModeCombo.SelectedItem = TRx_GPIO_Mode.Default_Mode;  //default_mode
+                paramGpio1GioSelCombo.SelectedItem = TRx_GPIO_GioSel.TR_BSY;    //TR_BSY
+                paramGpio1PullCtrlCombo.SelectedItem = TRx_GPIO_PullCtrl.No_Pull;  //NO Pull
+                paramGpio1ModeCombo.Enabled = true;
             }
-            else
-                paramGpio1Combo.Enabled = false;
+            UpdateGpio1GioSelEnabled();
         }
 
-        private void GPIO0_Enable_CheckedChanged(object sender, EventArgs e)
+        private void UpdateGpio0GioSelEnabled()
         {
-            GPIO0_Initial();
+            bool isGio0Mode = paramGpio0ModeCombo.SelectedItem is TRx_GPIO_Mode gpio0Mode
+                && gpio0Mode == TRx_GPIO_Mode.GIO_Mode;
+            paramGpio0GioSelCombo.Enabled = isGio0Mode;
+            paramGpio0GIoInvCheck.Enabled = isGio0Mode;
         }
 
-        private void GPIO1_Enable_CheckedChanged(object sender, EventArgs e)
+        private void UpdateGpio1GioSelEnabled()
         {
-            GPIO1_Initial();
+            bool isGio1Mode = paramGpio1ModeCombo.SelectedItem is TRx_GPIO_Mode gpio1Mode
+                && gpio1Mode == TRx_GPIO_Mode.GIO_Mode;
+            paramGpio1GioSelCombo.Enabled = isGio1Mode;
+            paramGpio1GIoInvCheck.Enabled = isGio1Mode;
+        }
+
+        private void paramGpio0ModeCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateGpio0GioSelEnabled();
+        }
+
+        private void paramGpio1ModeCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateGpio1GioSelEnabled();
         }
 
         // =============== FREQUENCY TABLE ===============
@@ -456,7 +494,7 @@ namespace ER41xxTestTool
 
             foreach (double val in freqData)
             {
-                ListViewItem item = new ListViewItem(val.ToString("F2"));
+                ListViewItem item = new ListViewItem(val.ToString("F6"));   //floating顯示到小數第5位
                 item.SubItems.Add("");
                 paramFreqTableList.Items.Add(item);
 
@@ -529,6 +567,28 @@ namespace ER41xxTestTool
             }
         }
 
+        private void paramFreqTableDeleteBtn_Click(object sender, EventArgs e)
+        {
+            // 從最後一個項目開始往前檢查, 刪除所有勾選項目
+            for (int i = paramFreqTableList.Items.Count - 1; i >= 0; i--)
+            {
+                if (paramFreqTableList.Items[i].Checked)
+                {
+                    freqData.RemoveAt(i);
+                    paramFreqTableList.Items.RemoveAt(i);
+                }
+            }
+        }
+
+        private void paramFreqTableDelAllBtn_Click(object sender, EventArgs e)
+        {
+            for (int i = paramFreqTableList.Items.Count - 1; i >= 0; i--)
+            {
+                freqData.RemoveAt(i);
+                paramFreqTableList.Items.RemoveAt(i);
+            }
+        }
+
         private void RemoveSelectedFreq()
         {
             if (paramFreqTableList.SelectedIndices.Count == 0)
@@ -547,18 +607,18 @@ namespace ER41xxTestTool
             }
         }
 
-        private void btnDeleteItem_Click(object sender, EventArgs e)
-        {
-            // 從最後一個項目開始往前檢查, 刪除所有勾選項目
-            for (int i = paramFreqTableList.Items.Count - 1; i >= 0; i--)
-            {
-                if (paramFreqTableList.Items[i].Checked)
-                {
-                    freqData.RemoveAt(i);
-                    paramFreqTableList.Items.RemoveAt(i);
-                }
-            }
-        }
+        //private void btnDeleteItem_Click(object sender, EventArgs e)
+        //{
+        //    // 從最後一個項目開始往前檢查, 刪除所有勾選項目
+        //    for (int i = paramFreqTableList.Items.Count - 1; i >= 0; i--)
+        //    {
+        //        if (paramFreqTableList.Items[i].Checked)
+        //        {
+        //            freqData.RemoveAt(i);
+        //            paramFreqTableList.Items.RemoveAt(i);
+        //        }
+        //    }
+        //}
 
         // =============== SYNCWORD (PARAMETER 內 TX/RX 共用欄位) ===============
         public void syncwordOrderList(bool isTx)
@@ -892,6 +952,7 @@ namespace ER41xxTestTool
         {
             string missing = "";
             if (string.IsNullOrWhiteSpace(paramXtalCombo.Text)) missing += "CRYSTAL\r\n";
+            if (string.IsNullOrWhiteSpace(paramXtalGainCombo.Text)) missing += "CRYSTALGAIN\r\n";
             if (string.IsNullOrWhiteSpace(paramCapIoText.Text)) missing += "CAPIO\r\n";
             if (string.IsNullOrWhiteSpace(paramBaseFreqText.Text)) missing += "FREQUENCY\r\n";
             if (string.IsNullOrWhiteSpace(paramDataRateCombo.Text)) missing += "DATA RATE\r\n";
@@ -915,14 +976,18 @@ namespace ER41xxTestTool
             bool isRXFull = paramIntModeRxAfullGroup.Visible;
             int txEmptyThrValue = -1;
             int rxFullThrValue = -1;
-            bool enGpio0 = paramGpio0EnableCheck.Checked;
-            bool enGpio1 = paramGpio1EnableCheck.Checked;
-            int gpio0Type = 0;
-            int gpio1Type = 0;
-            if (enGpio0)
-                gpio0Type = paramGpio0Combo.SelectedIndex;
-            if (enGpio1)
-                gpio1Type = paramGpio1Combo.SelectedIndex;
+            // GPIO0/GPIO1 四個欄位都直接對照畫面上目前的選擇: Mode/GIO_SEL/GIO_INV/PULL_CTRL。
+            // GIO_SEL雖然只有Mode=GIO_Mode時硬體才會真的採用, 但這裡不論Mode為何一律照實寫出目前選到的值
+            // (硬體在非GIO_Mode下本來就會忽略這個欄位, 不需要在軟體端額外歸零)。
+            int gpio0Mode = paramGpio0ModeCombo.SelectedItem is TRx_GPIO_Mode m0 ? (int)m0 : 0;
+            int gpio0GioSel = paramGpio0GioSelCombo.SelectedIndex >= 0 ? paramGpio0GioSelCombo.SelectedIndex : 0;
+            bool gpio0Inv = paramGpio0GIoInvCheck.Checked;
+            int gpio0Pull = paramGpio0PullCtrlCombo.SelectedItem is TRx_GPIO_PullCtrl p0 ? (int)p0 : (int)TRx_GPIO_PullCtrl.No_Pull;
+
+            int gpio1Mode = paramGpio1ModeCombo.SelectedItem is TRx_GPIO_Mode m1 ? (int)m1 : 0;
+            int gpio1GioSel = paramGpio1GioSelCombo.SelectedIndex >= 0 ? paramGpio1GioSelCombo.SelectedIndex : 0;
+            bool gpio1Inv = paramGpio1GIoInvCheck.Checked;
+            int gpio1Pull = paramGpio1PullCtrlCombo.SelectedItem is TRx_GPIO_PullCtrl p1 ? (int)p1 : (int)TRx_GPIO_PullCtrl.No_Pull;
             bool pcrmuEn = paramPcrmuEnableRadioBtn.Checked;
             bool msbEnable = paramFIFOBitOrderMSBRadioBtn.Checked;
             bool isGFSK = true;
@@ -931,6 +996,8 @@ namespace ER41xxTestTool
             uint devValue = 0;
             string xtal = paramXtalCombo.Text;                       // RF TOOL 固定 40MHz
             double xtalValue = Convert.ToDouble(xtal);
+            string xtalGain = paramXtalGainCombo.Text;
+            int xtalGainValue = Convert.ToInt32(xtalGain);
             string capio = paramCapIoText.Text;
             string freq = paramBaseFreqText.Text;                      // 共用 RF TOOL 的 FREQUENCY 欄位
             double drTextValue = double.Parse(paramDataRateCombo.Text);
@@ -1137,11 +1204,9 @@ namespace ER41xxTestTool
                 sw.WriteLine("");
                 // Write TRx_ConfigEx_Array
                 sw.WriteLine("code const t_reg_array code TRx_ConfigEx_Array[] = {");
-                WriteCapValue.Set(sw, (uint)capValue);
-                // GPIO0/GPIO1 不管有沒有勾選 Enable 都要生成 (SetGpio0/SetGpio1 內部本來就有
-                // en=false 時寫 disable 預設值 0x00160000 的分支, 只是呼叫端被 if(enGpioX) 擋住沒進去)
-                GPIO_Def.SetGpio0(sw, enGpio0, gpio0Type);
-                GPIO_Def.SetGpio1(sw, enGpio1, gpio1Type);
+                WriteXoConfig.Set(sw, (uint)capValue, (uint)xtalGainValue);
+                GPIO_Def.SetGpio0(sw, gpio0Mode, gpio0GioSel, gpio0Inv, gpio0Pull);
+                GPIO_Def.SetGpio1(sw, gpio1Mode, gpio1GioSel, gpio1Inv, gpio1Pull);
                 PCRMU.Set(sw, pcrmuEn);
                 EnableInt.Set(sw, intMode);
                 if (isTXEmpty || isRXFull)
@@ -1264,8 +1329,13 @@ namespace ER41xxTestTool
                 using (var sr = new StreamReader(fileDialog.FileName))
                 {
                     tmpStr = sr.ReadLine();
-                    // "EZCODE": 舊版 EzCodeGen 存的 ini (相容讀取); "RF TEST TOOL": 現行 ToolTitle 存的檔頭
-                    if (tmpStr != null && (tmpStr.Equals("EZCODE") || tmpStr.Contains("RF TEST TOOL")))
+                    // "EZCODE": 舊版 EzCodeGen 存的 ini (相容讀取); 含"RF"+"TOOL"(不分大小寫):
+                    // 現行/過去 ToolTitle 存的檔頭 (檔頭文字本身隨版本改過幾次, 例如
+                    // "RF TEST TOOL"/"RF TOOL", 用寬鬆比對避免又因為文字改了就讀不回來)。
+                    bool looksLikeOurToolHeader = tmpStr != null
+                        && tmpStr.IndexOf("RF", StringComparison.OrdinalIgnoreCase) >= 0
+                        && tmpStr.IndexOf("TOOL", StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (tmpStr != null && (tmpStr.Equals("EZCODE", StringComparison.OrdinalIgnoreCase) || looksLikeOurToolHeader))
                     {
                         res = true;
                     }
@@ -1318,6 +1388,25 @@ namespace ER41xxTestTool
                 else
                     GenMsg.Show("[PARAMETER]CRYSTAL value is wrong");
             }
+
+            if (MyIni.KeyExists("CRYSTALGAIN", "PARAMETER"))
+            {
+                tmpRead = MyIni.Read("CRYSTALGAIN", "PARAMETER");
+                if (double.TryParse(tmpRead.Replace(" ", ""), out tmpDouble))
+                {
+                    for (int i = 0; i < paramXtalGainCombo.Items.Count; i++)
+                    {
+                        if (double.TryParse(paramXtalGainCombo.Items[i].ToString(), out double itemVal) && itemVal == tmpDouble)
+                        {
+                            paramXtalGainCombo.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                else
+                    GenMsg.Show("[PARAMETER]CRYSTALGAIN value is wrong");
+            }
+
             if (MyIni.KeyExists("CAPIO", "PARAMETER"))
             {
                 tmpRead = MyIni.Read("CAPIO", "PARAMETER");
@@ -1491,29 +1580,71 @@ namespace ER41xxTestTool
             if (MyIni.KeyExists("ENABLE", "GPIO0"))
             {
                 tmpRead = MyIni.Read("ENABLE", "GPIO0").ToUpper();
-                paramGpio0EnableCheck.Checked = tmpRead.Equals("TRUE");
+                //paramGpio0EnableCheck.Checked = tmpRead.Equals("TRUE");
             }
-            if (MyIni.KeyExists("VALUE", "GPIO0"))
+            if (MyIni.KeyExists("MODE", "GPIO0"))
             {
-                tmpRead = MyIni.Read("VALUE", "GPIO0");
-                if (Enum.TryParse<TRx_GPIOMode>(tmpRead, out var mode))
-                    paramGpio0Combo.SelectedItem = mode;
+                tmpRead = MyIni.Read("MODE", "GPIO0");
+                if (Enum.TryParse<TRx_GPIO_Mode>(tmpRead, out var mode))
+                    paramGpio0ModeCombo.SelectedItem = mode;
                 else
-                    paramGpio0Combo.SelectedItem = TRx_GPIOMode.TR_BSY;
+                    paramGpio0ModeCombo.SelectedItem = TRx_GPIO_Mode.Default_Mode;
+            }
+            if (MyIni.KeyExists("GIO_SEL", "GPIO0"))
+            {
+                tmpRead = MyIni.Read("GIO_SEL", "GPIO0");
+                if (Enum.TryParse<TRx_GPIO_GioSel>(tmpRead, out var sel))
+                    paramGpio0GioSelCombo.SelectedItem = sel;
+                else
+                    paramGpio0GioSelCombo.SelectedItem = TRx_GPIO_GioSel.TR_BSY;
+            }
+            if (MyIni.KeyExists("PULL_CTRL", "GPIO0"))
+            {
+                tmpRead = MyIni.Read("PULL_CTRL", "GPIO0");
+                if (Enum.TryParse<TRx_GPIO_PullCtrl>(tmpRead, out var pull))
+                    paramGpio0PullCtrlCombo.SelectedItem = pull;
+                else
+                    paramGpio0PullCtrlCombo.SelectedItem = TRx_GPIO_PullCtrl.No_Pull;
+            }
+            if (MyIni.KeyExists("INV", "GPIO0"))
+            {
+                tmpRead = MyIni.Read("INV", "GPIO0").ToUpper();
+                paramGpio0GIoInvCheck.Checked = tmpRead.Equals("TRUE");
             }
 
             if (MyIni.KeyExists("ENABLE", "GPIO1"))
             {
                 tmpRead = MyIni.Read("ENABLE", "GPIO1").ToUpper();
-                paramGpio1EnableCheck.Checked = tmpRead.Equals("TRUE");
+                //paramGpio1EnableCheck.Checked = tmpRead.Equals("TRUE");
             }
-            if (MyIni.KeyExists("VALUE", "GPIO1"))
+            if (MyIni.KeyExists("MODE", "GPIO1"))
             {
-                tmpRead = MyIni.Read("VALUE", "GPIO1");
-                if (Enum.TryParse<TRx_GPIOMode>(tmpRead, out var mode))
-                    paramGpio1Combo.SelectedItem = mode;
+                tmpRead = MyIni.Read("MODE", "GPIO1");
+                if (Enum.TryParse<TRx_GPIO_Mode>(tmpRead, out var mode))
+                    paramGpio1ModeCombo.SelectedItem = mode;
                 else
-                    paramGpio1Combo.SelectedItem = TRx_GPIOMode.TR_BSY;
+                    paramGpio1ModeCombo.SelectedItem = TRx_GPIO_Mode.Default_Mode;
+            }
+            if (MyIni.KeyExists("GIO_SEL", "GPIO1"))
+            {
+                tmpRead = MyIni.Read("GIO_SEL", "GPIO1");
+                if (Enum.TryParse<TRx_GPIO_GioSel>(tmpRead, out var sel))
+                    paramGpio1GioSelCombo.SelectedItem = sel;
+                else
+                    paramGpio1GioSelCombo.SelectedItem = TRx_GPIO_GioSel.TR_BSY;
+            }
+            if (MyIni.KeyExists("PULL_CTRL", "GPIO1"))
+            {
+                tmpRead = MyIni.Read("PULL_CTRL", "GPIO1");
+                if (Enum.TryParse<TRx_GPIO_PullCtrl>(tmpRead, out var pull))
+                    paramGpio1PullCtrlCombo.SelectedItem = pull;
+                else
+                    paramGpio1PullCtrlCombo.SelectedItem = TRx_GPIO_PullCtrl.No_Pull;
+            }
+            if (MyIni.KeyExists("INV", "GPIO1"))
+            {
+                tmpRead = MyIni.Read("INV", "GPIO1").ToUpper();
+                paramGpio1GIoInvCheck.Checked = tmpRead.Equals("TRUE");
             }
 
             freqData.Clear();
@@ -1535,8 +1666,6 @@ namespace ER41xxTestTool
                                 if (double.TryParse(tmpRead.Replace(" ", ""), out tmpDouble))
                                 {
                                     freqData.Add(tmpDouble);
-                                    ListViewItem item = new ListViewItem(tmpDouble.ToString());
-                                    paramFreqTableList.Items.Add(item);
                                 }
                                 else
                                 {
@@ -1550,6 +1679,8 @@ namespace ER41xxTestTool
                 else
                     GenMsg.Show("[FREQUENCYTABLE] NUM is wrong");
             }
+            // 用UpdateListView()統一畫面顯示格式, 不再自己組ListViewItem, 避免又跟Add按鈕那邊的格式分裂成兩套
+            UpdateListView(double.NaN);
 
             // 上面每個欄位都是直接設 .Text/.Checked/.SelectedItem, 不是使用者操作,
             // 不會觸發 HookParameterChangeEvents() 掛的 Leave/SelectionChangeCommitted,
@@ -1589,8 +1720,9 @@ namespace ER41xxTestTool
             MyIni.Write("BR", baudRateNumber.ToString(), "BAUDRATE");
             File.AppendAllText(filePath, Environment.NewLine);
             MyIni.Write("FREQBAND_CONFIG", paramDvbBandCombo.Text, "CONFIG");
-            File.AppendAllText(filePath, Environment.NewLine);
+            File.AppendAllText(filePath, Environment.NewLine); 
             MyIni.Write("CRYSTAL", paramXtalCombo.Text, "PARAMETER");
+            MyIni.Write("CRYSTALGAIN", paramXtalGainCombo.Text, "PARAMETER");
             MyIni.Write("CAPIO", paramCapIoText.Text, "PARAMETER");
             MyIni.Write("FREQUENCY", paramBaseFreqText.Text, "PARAMETER");
             MyIni.Write("DATARATE", paramDataRateCombo.Text, "PARAMETER");
@@ -1633,11 +1765,17 @@ namespace ER41xxTestTool
             File.AppendAllText(filePath, Environment.NewLine);
             MyIni.Write("VALUE", paramIntModeRxAfullText.Text, "RX_AFULL_THR");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("ENABLE", (paramGpio0EnableCheck.Checked ? "true" : "false"), "GPIO0");
-            MyIni.Write("VALUE", paramGpio0Combo.Text, "GPIO0");
+            //MyIni.Write("ENABLE", (paramGpio0EnableCheck.Checked ? "true" : "false"), "GPIO0");
+            MyIni.Write("MODE", paramGpio0ModeCombo.Text, "GPIO0");
+            MyIni.Write("GIO_SEL", paramGpio0GioSelCombo.Text, "GPIO0");
+            MyIni.Write("PULL_CTRL", paramGpio0PullCtrlCombo.Text, "GPIO0");
+            MyIni.Write("INV", (paramGpio0GIoInvCheck.Checked ? "true" : "false"), "GPIO0");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("ENABLE", (paramGpio1EnableCheck.Checked ? "true" : "false"), "GPIO1");
-            MyIni.Write("VALUE", paramGpio1Combo.Text, "GPIO1");
+            //MyIni.Write("ENABLE", (paramGpio1EnableCheck.Checked ? "true" : "false"), "GPIO1");
+            MyIni.Write("MODE", paramGpio1ModeCombo.Text, "GPIO1");
+            MyIni.Write("GIO_SEL", paramGpio1GioSelCombo.Text, "GPIO1");
+            MyIni.Write("PULL_CTRL", paramGpio1PullCtrlCombo.Text, "GPIO1");
+            MyIni.Write("INV", (paramGpio1GIoInvCheck.Checked ? "true" : "false"), "GPIO1");
             File.AppendAllText(filePath, Environment.NewLine);
             int freqListNum = freqData.Count;
             MyIni.Write("NUM", freqListNum.ToString(), "FREQUENCYTABLE");

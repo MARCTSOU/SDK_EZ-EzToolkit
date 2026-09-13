@@ -24,7 +24,17 @@ namespace ER41xxTestTool
         private Button btnCategoryFilter;
         private CheckedListBox categoryFilterCheckedList;
         private ToolStripDropDown categoryFilterDropDown;
-        
+
+        /* DVB否需更新設定的判斷資源 */
+        // 自動重算的兩個旗標: 開機初始化完成前不要動, 以及防止事件重入。
+        private bool bRegAutoRefreshReady = false;
+        private bool bRegRefreshing = false;
+        // PARAMETER 區的值改了、但還沒按 Write DVB Register 寫進板子 —— 用來在
+        // dvbTstPktTxStartBtn/dvbTstContiTxStartBtn/dvbTstPktRxScanBtn/dvbTstPktRxStartBtn/dvbTstStateSetBtn 按下前提醒使用者。
+        //private bool bRegTableDirty = false;
+        // Dict to sotre current Register table, 用來比對是否被更動
+        private readonly Dictionary<ushort, uint> lastWrittenRegSnapshot = new Dictionary<ushort, uint>();
+
         /* Register filter and Search */
         private Button btnDependsOnFilter;
         private CheckedListBox dependsOnFilterCheckedList;
@@ -80,12 +90,18 @@ namespace ER41xxTestTool
         // (見 CodeGenProcess.cs 的 "if (xtalValue == 38.4)" 判斷式), REG TABLE 上用灰字提示不用填。
         private static readonly HashSet<ushort> Xtal384OnlySynthAddrs = new HashSet<ushort> { 0x1998, 0x199C, 0x19A0, 0x1994 };
 
-        /// <summary>
-        /// 依目前 PARAMETER 分頁的設定, 判斷某顆 register 現在用不用得到 (用不到就灰字提示)。
-        /// 除了既有的 Xtal=40MHz Synthesizer 4 顆之外, 這裡也涵蓋只在特定 DataRate/H 條件下才會被
-        /// GenerateTxt() 寫入的幾顆 RX 微調 register, 以及只在啟用 TX_AEMPTY/RX_FULL 中斷時才會寫的
-        /// FIFO threshold —— 判斷條件對照 CodeGenProcess.cs 的 RxGenerate()/RXDRxxx.Set()/GenerateTxt()。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  IsRegisterGreyedOut
+         * 依目前PARAMETER分頁的設定，判斷某顆register現在用不用得到(用不到就灰字提示)。
+         * 除了既有的Xtal=40MHz Synthesizer 4顆之外，這裡也涵蓋只在特定DataRate/H條件下
+         * 才會被GenerateTxt()寫入的幾顆RX微調register，以及只在啟用TX_AEMPTY/RX_FULL
+         * 中斷時才會寫的FIFO threshold——判斷條件對照CodeGenProcess.cs的
+         * RxGenerate()/RXDRxxx.Set()/GenerateTxt()。
+         * Param :
+         *   addr - 要判斷的register位址
+         * Return:
+         *   true - 目前設定下這顆reg用不到(REG TABLE要灰字提示) / false - 有用到
+         *-------------------------------------------------------------*/
         private bool IsRegisterGreyedOut(ushort addr)
         {
             try
@@ -153,7 +169,14 @@ namespace ER41xxTestTool
         // 用來確認ViewCtrl是不是已經自動適應字串調整欄寬，只要第一次繪圖時調一次就好
         private bool bColumnsAutoSized = false;
 
-        /// <summary>掛上 Packet RX 的位元組接收處理常式 (集中在此以便追蹤掛載狀態)</summary>
+        /*-------------------------------------------------------------
+         *  AttachUartRxHandler
+         * 掛上Packet RX的位元組接收處理常式(集中在此以便追蹤掛載狀態)。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void AttachUartRxHandler()
         {
             serialPort1.DataReceived -= UartReceiveDataByte;
@@ -161,13 +184,30 @@ namespace ER41xxTestTool
             bUartRxHandlerOn = true;
         }
 
-        /// <summary>拆掉 Packet RX 的位元組接收處理常式</summary>
+        /*-------------------------------------------------------------
+         *  DetachUartRxHandler
+         * 拆掉Packet RX的位元組接收處理常式。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void DetachUartRxHandler()
         {
             serialPort1.DataReceived -= UartReceiveDataByte;
             bUartRxHandlerOn = false;
         }
 
+        /*-------------------------------------------------------------
+         *  InitRegDumpUI
+         * [物件控制] - 建立btnCategoryFilter/btnDependsOnFilter/txtSearchName/btnSearchName/
+         * regDumpView等REG TABLE分頁的所有控制項並加入regTableTopicGroup，開機時呼叫一次。
+         * 建完後呼叫ShowRegisterDefaults()先列出.h的預設值。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void InitRegDumpUI()
         {
             // regGroup ("REG TABLE") 固定在主視窗右側, 寬度已加大到 320 以容納三欄
@@ -383,6 +423,15 @@ namespace ER41xxTestTool
             ShowRegisterDefaults();
         }
 
+        /*-------------------------------------------------------------
+         *  BtnCategoryFilter_Click
+         * [物件控制] - 開關categoryFilterDropDown
+         * Topic過濾按鈕: 已顯示就收起下拉選單, 否則在按鈕下方展開。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void BtnCategoryFilter_Click(object sender, EventArgs e)
         {
             if (categoryFilterDropDown.Visible)
@@ -391,6 +440,15 @@ namespace ER41xxTestTool
                 categoryFilterDropDown.Show(btnCategoryFilter, new Point(0, btnCategoryFilter.Height));
         }
 
+        /*-------------------------------------------------------------
+         *  BtnDependsOnFilter_Click
+         * [物件控制] - 開關dependsOnFilterDropDown
+         * DependsOn過濾按鈕: 已顯示就收起下拉選單, 否則在按鈕下方展開。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void BtnDependsOnFilter_Click(object sender, EventArgs e)
         {
             if (dependsOnFilterDropDown.Visible)
@@ -399,12 +457,18 @@ namespace ER41xxTestTool
                 dependsOnFilterDropDown.Show(btnDependsOnFilter, new Point(0, btnDependsOnFilter.Height));
         }
 
-        /// <summary>
-        /// 給 Topic/DependsOn 兩個 CheckedListBox 共用: index 0 是 "ALL", 點它會把其餘項目一次設成同一個
-        /// 狀態(全勾/全消); 點任一個別項目則事後檢查其餘項目是不是全部都勾了, 藉此同步 ALL 的勾選狀態。
-        /// 呼叫端要用各自的 bUpdating*Filter 旗標包住, 避免這裡呼叫 SetItemChecked() 觸發的巢狀
-        /// ItemCheck 又跑一次這段邏輯。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  SyncAllToggle
+         * 給Topic/DependsOn兩個CheckedListBox共用: index 0是"ALL", 點它會把其餘項目一次設成
+         * 同一個狀態(全勾/全消); 點任一個別項目則事後檢查其餘項目是不是全部都勾了, 藉此同步
+         * ALL的勾選狀態。呼叫端要用各自的bUpdating*Filter旗標包住, 避免這裡呼叫SetItemChecked()
+         * 觸發的巢狀ItemCheck又跑一次這段邏輯。
+         * Param :
+         *   list - 要同步的CheckedListBox (categoryFilterCheckedList或dependsOnFilterCheckedList)
+         *   e - 觸發的ItemCheck事件參數 (取其Index/NewValue)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private static void SyncAllToggle(CheckedListBox list, ItemCheckEventArgs e)
         {
             bool newChecked = e.NewValue == CheckState.Checked;
@@ -429,6 +493,16 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  CategoryFilterCheckedList_ItemCheck
+         * [物件控制] - 刷新regDumpView (依categoryFilterCheckedList新的勾選狀態重畫)
+         * Topic勾選清單有勾選變動時, 先同步ALL項目狀態(SyncAllToggle), 再排到訊息迴圈後面
+         * 重畫REG TABLE (ItemCheck觸發當下勾選狀態還沒真的套用, 不能立刻重畫)。
+         * Param :
+         *   sender, e - ItemCheck事件參數
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void CategoryFilterCheckedList_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             if (!bUpdatingCategoryFilter)
@@ -442,6 +516,15 @@ namespace ER41xxTestTool
             BeginInvoke((MethodInvoker)delegate { RebuildAllItems(); });
         }
 
+        /*-------------------------------------------------------------
+         *  DependsOnFilterCheckedList_ItemCheck
+         * [物件控制] - 刷新regDumpView (依dependsOnFilterCheckedList新的勾選狀態重畫)
+         * DependsOn勾選清單有勾選變動時, 同CategoryFilterCheckedList_ItemCheck的處理方式。
+         * Param :
+         *   sender, e - ItemCheck事件參數
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void DependsOnFilterCheckedList_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             if (!bUpdatingDependsOnFilter)
@@ -454,11 +537,28 @@ namespace ER41xxTestTool
             BeginInvoke((MethodInvoker)delegate { RebuildAllItems(); });
         }
 
+        /*-------------------------------------------------------------
+         *  BtnSearchName_Click
+         * Search按鈕: 以txtSearchName目前輸入的文字執行搜尋並跳轉。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void BtnSearchName_Click(object sender, EventArgs e)
         {
             SearchAndJump(txtSearchName.Text.Trim());
         }
 
+        /*-------------------------------------------------------------
+         *  TxtSearchName_KeyDown
+         * 在txtSearchName裡按Enter等同按一次Search按鈕 (並吃掉Enter, 避免觸發其他預設行為)。
+         * Param :
+         *   sender - 未使用
+         *   e - KeyDown事件參數, 取其KeyCode判斷是否為Enter
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void TxtSearchName_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -474,12 +574,18 @@ namespace ER41xxTestTool
         private List<RegTableItem> lastSearchMatches;
         private int lastSearchMatchIndex = -1;
 
-        /// <summary>
-        /// 依輸入文字找到 register 後捲動過去並自動展開 (若有 bit field 可展開)。
-        /// 輸入可以是位址 (例如 "0x13AC"/"13AC", 精確比對) 或 REG_NAME 的一部分 (不分大小寫)。
-        /// 同一段文字重複呼叫 (按鈕連點或 Enter) 會依序跳到下一筆命中結果, 循環到底繞回第一筆 —— 即 "Search Next"。
-        /// 若命中的分類目前被 FILTER 隱藏, 會自動連同該分類一併勾選顯示, 確保一定找得到。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  SearchAndJump
+         * 依輸入文字找到register後捲動過去並自動展開(若有bit field可展開)。
+         * 輸入可以是位址(例如"0x13AC"/"13AC", 精確比對)或REG_NAME的一部分(不分大小寫)。
+         * 同一段文字重複呼叫(按鈕連點或Enter)會依序跳到下一筆命中結果, 循環到底繞回第一筆
+         * ——即"Search Next"。若命中的分類目前被FILTER隱藏, 會自動連同該分類一併勾選顯示,
+         * 確保一定找得到。
+         * Param :
+         *   text - 搜尋文字 (位址或REG_NAME/部分名稱)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void SearchAndJump(string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -503,7 +609,15 @@ namespace ER41xxTestTool
             JumpToRegister(lastSearchMatches[lastSearchMatchIndex]);
         }
 
-        /// <summary>text 先當成 16 進位位址 (可帶 "0x" 前綴) 精確比對 Addr; 沒有位址命中就退回以 REG_NAME 比對 (完全相符排最前面, 其餘依原順序排在後面)</summary>
+        /*-------------------------------------------------------------
+         *  BuildSearchMatches
+         * text先當成16進位位址(可帶"0x"前綴)精確比對Addr; 沒有位址命中就退回以REG_NAME比對
+         * (完全相符排最前面, 其餘依原順序排在後面)。
+         * Param :
+         *   text - 搜尋文字
+         * Return:
+         *   符合的RegTableItem清單, 依上述優先順序排列; 完全沒命中則為空清單
+         *-------------------------------------------------------------*/
         private List<RegTableItem> BuildSearchMatches(string text)
         {
             string hex = text.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? text.Substring(2) : text;
@@ -531,7 +645,16 @@ namespace ER41xxTestTool
             return exact;
         }
 
-        /// <summary>把指定 register 捲動到可視範圍最上緣、選取, 若有 bit field 就順便展開; 分類被 FILTER 隱藏的話先自動勾選</summary>
+        /*-------------------------------------------------------------
+         *  JumpToRegister
+         * [物件控制] - 刷新regDumpView (捲動/選取/展開指定register列)
+         * 把指定register捲動到可視範圍最上緣、選取, 若有bit field就順便展開; 分類被FILTER
+         * 隱藏的話先自動勾選。
+         * Param :
+         *   match - 要跳轉過去的RegTableItem
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void JumpToRegister(RegTableItem match)
         {
             if (categoryFilterCheckedList != null)
@@ -561,7 +684,15 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>目前的分類勾選是否放行這筆 register (只影響 RebuildAllItems 要不要畫出來, 不影響 regItemsByName 的資料)</summary>
+        /*-------------------------------------------------------------
+         *  PassesFilter
+         * 目前的分類勾選是否放行這筆register(只影響RebuildAllItems要不要畫出來, 不影響
+         * regItemsByName的資料)。
+         * Param :
+         *   it - 要判斷的RegTableItem
+         * Return:
+         *   true - Topic/DependsOn目前的勾選都放行 / false - 被過濾掉, 不顯示
+         *-------------------------------------------------------------*/
         private bool PassesFilter(RegTableItem it)
         {
             if (categoryFilterCheckedList != null && !categoryFilterCheckedList.CheckedItems.Contains(RegCategories.Get(it.Addr)))
@@ -596,19 +727,34 @@ namespace ER41xxTestTool
             return true;
         }
 
-        /// <summary>REG TABLE 目前顯示的值 (含手動 bit field 編輯/DVB讀回/PARAMETER重算, 以最後一次為準); 沒有值時退回編譯進 exe 的預設值。供 Generate 讀取當資料來源用。</summary>
+        /*-------------------------------------------------------------
+         *  GetCurrentRegTableValue
+         * REG TABLE目前顯示的值(含手動bit field編輯/DVB讀回/PARAMETER重算, 以最後一次為準);
+         * 沒有值時退回編譯進exe的預設值。供Generate讀取當資料來源用。
+         * Param :
+         *   it - 要取值的RegTableItem
+         * Return:
+         *   目前應該使用的32-bit register值
+         *-------------------------------------------------------------*/
         private uint GetCurrentRegTableValue(RegTableItem it)
         {
             RegItemTag tag;
             return (regItemsByName.TryGetValue(it.Name, out tag) && tag.RawValue.HasValue) ? tag.RawValue.Value : it.Value;
         }
 
-        /// <summary>
-        /// 依 RegTableItems 的順序 (= reg_list.txt 的功能分組順序) 更新整份清單的值。
-        /// regItemsByName 才是狀態的唯一來源 (RawValue/Expanded); 這裡只更新 RawValue, 再視情況
-        /// 決定要「就地改文字」(保留 scrollbar 位置與展開狀態) 還是「整份重畫」(第一次建立清單時)。
-        /// 展開中的列也會一併重算 bit field 子列的值, 不會因為 READ/參數變動而被收合。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  RenderRegisterRows
+         * [物件控制] - 刷新regDumpView
+         * 依RegTableItems的順序(= reg_list.txt的功能分組順序)更新整份清單的值。
+         * regItemsByName才是狀態的唯一來源(RawValue/Expanded); 這裡只更新RawValue, 再視情況
+         * 決定要「就地改文字」(保留scrollbar位置與展開狀態)還是「整份重畫」(第一次建立清單時)。
+         * 展開中的列也會一併重算bit field子列的值, 不會因為READ/參數變動而被收合。
+         * Param :
+         *   rows - 要顯示的整份RegRow清單 (依RegTableItems順序)
+         *   tooltip - 這批資料的來源說明 (存到lastRenderTooltip, 目前僅供除錯追蹤用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void RenderRegisterRows(List<RegRow> rows, string tooltip)
         {
             EndEditField(false);   // 重畫前先關掉可能開著的 bit field 編輯框, 避免它指到失效的列
@@ -638,12 +784,18 @@ namespace ER41xxTestTool
                 UpdateItemTextsInPlace();
         }
 
-        /// <summary>
-        /// 清空 regDumpView 並依 RegTableItems 順序整份重建, 展開中的 register 會把 bit field 子列
-        /// 緊接著加在自己下面。ListView 有 Groups 時, Items.Insert(index, ...) 並不會決定組內視覺順序
-        /// (實測子列一律被排到該分類的最後面), 所以子列一定要用「整份依最終順序重新 Add」來排版,
-        /// 不能用插入既有清單中間的方式 —— 這是這個方法存在的唯一理由。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  RebuildAllItems
+         * [物件控制] - 刷新regDumpView
+         * 清空regDumpView並依RegTableItems順序整份重建, 展開中的register會把bit field子列
+         * 緊接著加在自己下面。ListView有Groups時, Items.Insert(index, ...)並不會決定組內視覺
+         * 順序(實測子列一律被排到該分類的最後面), 所以子列一定要用「整份依最終順序重新Add」
+         * 來排版, 不能用插入既有清單中間的方式——這是這個方法存在的唯一理由。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void RebuildAllItems()
         {
             string topKey = GetItemKey(GetTopVisibleItem());
@@ -740,13 +892,18 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>
-        /// 找出目前實際顯示在可視範圍最上面的那一列。regDumpView.TopItem 這個 property 底層是
-        /// LVM_GETTOPINDEX, 實測在有 Groups 的 ListView 上永遠回傳第 0 筆, 不會反映真正的捲動
-        /// 位置 —— 這正是先前「還原捲動位置」失敗、每次都跳回第一筆的根因。改用 GetItemAt() 對
-        /// client area 左上角逐點 HitTest (底層是 groups-aware 的 LVM_HITTEST), 若第一個點落在
-        /// group 標題列上 (回傳 null) 就往下探幾個像素, 直到打中第一列真正的 item。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  GetTopVisibleItem
+         * 找出目前實際顯示在可視範圍最上面的那一列。regDumpView.TopItem這個property底層是
+         * LVM_GETTOPINDEX, 實測在有Groups的ListView上永遠回傳第0筆, 不會反映真正的捲動位置
+         * ——這正是先前「還原捲動位置」失敗、每次都跳回第一筆的根因。改用GetItemAt()對client
+         * area左上角逐點HitTest(底層是groups-aware的LVM_HITTEST), 若第一個點落在group標題列上
+         * (回傳null)就往下探幾個像素, 直到打中第一列真正的item。
+         * Param :
+         *   (無)
+         * Return:
+         *   目前捲動位置最上面那一列; 找不到(例如清單是空的)則回傳null
+         *-------------------------------------------------------------*/
         private ListViewItem GetTopVisibleItem()
         {
             for (int y = 2; y < regDumpView.ClientSize.Height; y += 4)
@@ -758,7 +915,16 @@ namespace ER41xxTestTool
             return null;
         }
 
-        /// <summary>依 Tag 內容組出可跨重建比對的識別字串, 用來在 RebuildAllItems 後找回原本捲動位置對應的列</summary>
+        /*-------------------------------------------------------------
+         *  GetItemKey
+         * 依Tag內容組出可跨重建比對的識別字串, 用來在RebuildAllItems後找回原本捲動位置
+         * 對應的列。
+         * Param :
+         *   item - 要取得識別字串的ListViewItem (Tag須為RegItemTag或FieldItemTag)
+         * Return:
+         *   識別字串 (register用RegName, bit field子列用"RegName|FieldName"); item為null
+         *   或Tag型別不符則回傳null
+         *-------------------------------------------------------------*/
         private static string GetItemKey(ListViewItem item)
         {
             if (item == null)
@@ -772,8 +938,18 @@ namespace ER41xxTestTool
             return null;
         }
 
-        /// <summary>把 tag 目前展開狀態對應的 bit field 子列加到清單末端 (呼叫端負責控制加入順序)。
-        /// 若 wantedKey 非 null, 回傳其中符合該 key 的子列 (供 RebuildAllItems 還原捲動位置用)。</summary>
+        /*-------------------------------------------------------------
+         *  AddFieldRows
+         * [物件控制] - 刷新regDumpView (加入bit field子列)
+         * 把tag目前展開狀態對應的bit field子列加到清單末端(呼叫端負責控制加入順序)。
+         * 若wantedKey非null, 回傳其中符合該key的子列(供RebuildAllItems還原捲動位置用)。
+         * Param :
+         *   tag - 要展開的register (取其RegName/RawValue)
+         *   grp - 子列要歸屬的ListViewGroup (跟上層register同一組)
+         *   wantedKey - 要順便找回的子列key (GetItemKey格式); 不需要找就傳null
+         * Return:
+         *   符合wantedKey的子列; 沒有bit field定義、或wantedKey為null/沒找到則回傳null
+         *-------------------------------------------------------------*/
         private ListViewItem AddFieldRows(RegItemTag tag, ListViewGroup grp, string wantedKey)
         {
             ListViewItem matched = null;
@@ -802,17 +978,31 @@ namespace ER41xxTestTool
             return matched;
         }
 
-        /// <summary>RegBitField.FieldName 本身帶了 "[高:低]" 後綴 (例如 "ANCTL_PWR01[6:0]"), 顯示時已經有前綴的 bit range, 這裡去掉重複的後綴</summary>
+        /*-------------------------------------------------------------
+         *  StripBitRangeSuffix
+         * RegBitField.FieldName本身帶了"[高:低]"後綴(例如"ANCTL_PWR01[6:0]"), 顯示時已經有
+         * 前綴的bit range, 這裡去掉重複的後綴。
+         * Param :
+         *   fieldName - 原始欄位名稱 (可能帶"[..]"後綴)
+         * Return:
+         *   去掉"[..]"後綴的欄位名稱; 沒有後綴則原樣傳回
+         *-------------------------------------------------------------*/
         private static string StripBitRangeSuffix(string fieldName)
         {
             int idx = fieldName.IndexOf('[');
             return idx >= 0 ? fieldName.Substring(0, idx) : fieldName;
         }
 
-        /// <summary>
-        /// 清單筆數/順序不變 (只是值變了) 的快速路徑: 逐一更新既有 ListViewItem 的文字,
-        /// 不清空/不重排, scrollbar 位置與目前展開狀態都保留。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  UpdateItemTextsInPlace
+         * [物件控制] - 刷新regDumpView (就地改文字, 不清空重建)
+         * 清單筆數/順序不變(只是值變了)的快速路徑: 逐一更新既有ListViewItem的文字, 不清空/
+         * 不重排, scrollbar位置與目前展開狀態都保留。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void UpdateItemTextsInPlace()
         {
             regDumpView.BeginUpdate();
@@ -858,10 +1048,17 @@ namespace ER41xxTestTool
             regDumpView.EndUpdate();
         }
 
-        /// <summary>
-        /// 列出內建的 register 預設值 (RegTableItems, 由 reg_list.txt 的名稱/位址 + SPI_ER41xx_config.h
-        /// 的初始值事先產生並編譯進程式, 執行期不會去讀檔), 依 reg_list.txt 的順序排列。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  ShowRegisterDefaults
+         * [物件控制] - 刷新regDumpView
+         * 列出內建的register預設值(RegTableItems, 由reg_list.txt的名稱/位址 +
+         * SPI_ER41xx_config.h的初始值事先產生並編譯進程式, 執行期不會去讀檔), 依reg_list.txt
+         * 的順序排列。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void ShowRegisterDefaults()
         {
             List<RegRow> rows = new List<RegRow>();
@@ -881,24 +1078,31 @@ namespace ER41xxTestTool
             
         }
 
-        /// <summary>DEFAULT 鈕:把 REG TABLE 全部重設回 .h 內建預設值 (放棄 READ 回來的實機值/畫面參數推算值)</summary>
+        /*-------------------------------------------------------------
+         *  btnDefault_Click
+         * [物件控制] - 刷新regDumpView
+         * DEFAULT鈕: 把REG TABLE全部重設回.h內建預設值(放棄READ回來的實機值/畫面參數推算值)。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void btnDefault_Click(object sender, EventArgs e)
         {
             ShowRegisterDefaults();
         }
 
-        // 自動重算的兩個旗標: 開機初始化完成前不要動, 以及防止事件重入。
-        private bool bRegAutoRefreshReady = false;
-        private bool bRegRefreshing = false;
 
-        // PARAMETER 區的值改了、但還沒按 Write DVB Register 寫進板子 —— 用來在
-        // dvbTstPktTxStartBtn/dvbTstContiTxStartBtn/dvbTstPktRxScanBtn/dvbTstPktRxStartBtn/dvbTstStateSetBtn 按下前提醒使用者。
-        private bool bRegTableDirty = false;
-
-        /// <summary>
-        /// 參數有變動時重算整份 REG TABLE:先回到 .h 預設值, 再套上畫面現值。
-        /// 先歸零再套是必要的 —— 否則按過 READ 之後列表是實機值, 只更新部分列會變成新舊混雜。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  RefreshRegisterListFromUi
+         * [物件控制] - 刷新regDumpView (經由ApplyUiValuesToRegisterList)
+         * 參數有變動時重算整份REG TABLE: 先回到.h預設值, 再套上畫面現值。
+         * 先歸零再套是必要的——否則按過READ之後列表是實機值, 只更新部分列會變成新舊混雜。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void RefreshRegisterListFromUi()
         {
             if (!bRegAutoRefreshReady || bRegRefreshing || regDumpView == null)
@@ -909,7 +1113,7 @@ namespace ER41xxTestTool
                 // ApplyUiValuesToRegisterList() 內部已經是「.h 預設值打底 + 畫面參數覆蓋」,
                 // 整份重建一次即可; 算不出來時保持原樣不動。
                 ApplyUiValuesToRegisterList();
-                bRegTableDirty = true;
+                //bRegTableDirty = true;
             }
             finally
             {
@@ -918,12 +1122,6 @@ namespace ER41xxTestTool
         }
 
         /// <summary>
-        /// 把所有會影響 register 的參數控制項掛上「變動就重算」。
-        /// TextBox 用 Leave (離開欄位才算, 不是每打一個字就算);
-        /// ComboBox 用 SelectedIndexChanged + Leave (可輸入的 combo 要靠 Leave);
-        /// CheckBox / RadioButton 用 CheckedChanged。
-        /// </summary>
-        /// <summary>
         /// 「這個控制項算不算 PARAMETER 區」的唯一清單來源 —— HookParameterChangeEvents() 掛
         /// Leave/SelectionChangeCommitted/CheckedChanged 用的是這份清單, MainForm_KeyDown()
         /// 判斷焦點在不在 PARAMETER 區(按 Enter 要不要重算)用的也是同一份, 避免兩邊各維護一次
@@ -931,6 +1129,22 @@ namespace ER41xxTestTool
         /// </summary>
         private HashSet<Control> parameterControls;
 
+        /*-------------------------------------------------------------
+         *  HookParameterChangeEvents
+         * [物件控制] - 掛事件到所有PARAMETER區控制項 (paramBaseFreqText等TextBox/
+         * paramDataRateCombo等ComboBox/paramTxSyncSoftInvertCheck等CheckBox/
+         * paramPcrmuEnableRadioBtn等RadioButton/intModeCheckedList), 並建立parameterControls
+         * 把所有會影響register的參數控制項掛上「變動就重算」。
+         * TextBox用Leave(離開欄位才算, 不是每打一個字就算);
+         * ComboBox用SelectionChangeCommitted + Leave, 且一律排到訊息迴圈後面才重算
+         * (BeginInvoke) —— SelectionChangeCommitted觸發當下.Text/.SelectedItem有時還沒
+         * 真的切換過去, 直接讀會拿到舊值, 症狀是"要再改一次上一次的值才生效";
+         * CheckBox / RadioButton用CheckedChanged。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void HookParameterChangeEvents()
         {
             EventHandler onChange = delegate { RefreshRegisterListFromUi(); };
@@ -950,26 +1164,25 @@ namespace ER41xxTestTool
             // ComboBox 用 SelectionChangeCommitted 而不是 SelectedIndexChanged ——
             // 後者連「程式改動」也會觸發: txFreqText 每打一個字都會呼叫 UpdatePAConfigCombo()
             // 重建 PA CONFIG 的選項, 用 SelectedIndexChanged 就會在打字途中一直重算。
-            // xtalCombo 不放進這裡: 見下面 xtalCombo 專用的 deferredRefresh。
-            ComboBox[] combos = { paramDataRateCombo, paramPAConfigCombo, paramModulationCombo,
-                                  paramGpio0Combo, paramGpio1Combo, paramDvbBandCombo };
-            foreach (ComboBox cb in combos)
-                if (cb != null) { cb.SelectionChangeCommitted += onChange; cb.Leave += onChange; }
-
-            // xtalCombo: 事件觸發當下 .Text 有時還沒真的切換過去 (跟下面 intModeCheckedList.ItemCheck
-            // 同一類 WinForms 時序問題), REG TABLE 裡依 Xtal=40/38.4 判斷灰字的邏輯會讀到切換前的舊值,
-            // 所以排到訊息迴圈後面再重算, 確保讀到的是切換後的新值。
-            if (paramXtalCombo != null)
+            //
+            // 全部一律用 onComboChange (排到訊息迴圈後面再重算), 不用上面 TextBox/CheckBox 共用的
+            // onChange: ComboBox 的 SelectionChangeCommitted 觸發當下, .Text/.SelectedItem 有時
+            // 還沒真的切換過去 (跟下面 intModeCheckedList.ItemCheck 同一類 WinForms 時序問題) ——
+            // 這原本只在 paramXtalCombo 上發現過, 所以曾經只特例處理它一個; 但 paramXtalGainCombo
+            // 加進來後也重現了同樣「要多改一次上一次的值才會套用」的症狀, 顯示這其實是 ComboBox
+            // 這個控制項類型共通的問題, 因此不再逐一特例, 所有 ComboBox 一律排到訊息迴圈後面再重算。
+            EventHandler onComboChange = delegate
             {
-                EventHandler deferredRefresh = delegate
-                {
-                    BeginInvoke((MethodInvoker)delegate { RefreshRegisterListFromUi(); });
-                };
-                paramXtalCombo.SelectionChangeCommitted += deferredRefresh;
-                paramXtalCombo.Leave += deferredRefresh;
-            }
+                BeginInvoke((MethodInvoker)delegate { RefreshRegisterListFromUi(); });
+            };
+            ComboBox[] combos = { paramDataRateCombo, paramPAConfigCombo, paramModulationCombo, paramXtalGainCombo, paramXtalCombo,
+                                  paramGpio0ModeCombo, paramGpio0GioSelCombo, paramGpio0PullCtrlCombo,
+                                  paramGpio1ModeCombo, paramGpio1GioSelCombo, paramGpio1PullCtrlCombo, paramDvbBandCombo };
+            foreach (ComboBox cb in combos)
+                if (cb != null) { cb.SelectionChangeCommitted += onComboChange; cb.Leave += onComboChange; }
 
-            CheckBox[] checks = { paramTxSyncSoftInvertCheck, paramRxSyncSoftInvertCheck, paramGpio0EnableCheck, paramGpio1EnableCheck };
+            CheckBox[] checks = { paramTxSyncSoftInvertCheck, paramRxSyncSoftInvertCheck, paramGpio0GIoInvCheck, paramGpio1GIoInvCheck
+                                   /*, paramGpio0EnableCheck, paramGpio1EnableCheck*/ };
             foreach (CheckBox c in checks)
                 if (c != null) c.CheckedChanged += onChange;
 
@@ -985,12 +1198,11 @@ namespace ER41xxTestTool
                     BeginInvoke((MethodInvoker)delegate { RefreshRegisterListFromUi(); });
                 };
 
-            // parameterControls: 上面 boxes/combos/checks/radios (+xtalCombo+intModeCheckedList) 全部收進同一個
+            // parameterControls: 上面 boxes/combos/checks/radios (+intModeCheckedList) 全部收進同一個
             // set, 供 MainForm_KeyDown() 判斷「目前焦點在不在 PARAMETER 區」。
             parameterControls = new HashSet<Control>();
             foreach (TextBox tb in boxes) if (tb != null) parameterControls.Add(tb);
             foreach (ComboBox cb in combos) if (cb != null) parameterControls.Add(cb);
-            if (paramXtalCombo != null) parameterControls.Add(paramXtalCombo);
             foreach (CheckBox c in checks) if (c != null) parameterControls.Add(c);
             foreach (RadioButton r in radios) if (r != null) parameterControls.Add(r);
             if (intModeCheckedList != null) parameterControls.Add(intModeCheckedList);
@@ -1004,7 +1216,16 @@ namespace ER41xxTestTool
             bRegAutoRefreshReady = true;
         }
 
-        /// <summary>焦點在 PARAMETER 區的控制項上時按 Enter, 等同該控制項失焦(Leave)的效果 —— 立即依目前畫面值重算 REG TABLE, 不用先點別的地方讓焦點離開。</summary>
+        /*-------------------------------------------------------------
+         *  MainForm_KeyDown
+         * 焦點在PARAMETER區的控制項上時按Enter, 等同該控制項失焦(Leave)的效果——立即依目前
+         * 畫面值重算REG TABLE, 不用先點別的地方讓焦點離開。
+         * Param :
+         *   sender - 未使用
+         *   e - KeyDown事件參數, 取其KeyCode判斷是否為Enter
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void MainForm_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter && parameterControls != null && parameterControls.Contains(ActiveControl))
@@ -1014,11 +1235,17 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>
-        /// 開啟程式的第二步 (由 MainForm_Load 呼叫, 此時各下拉選單才都填好了):
-        /// 依畫面上目前的參數算出對應的 register 值, 蓋掉第一步載入的預設值。
-        /// 例如 FREQUENCY = 915MHz -> 0x1980 顯示 0x369CCAC0。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  ApplyUiValuesToRegisterList
+         * [物件控制] - 刷新regDumpView
+         * 開啟程式的第二步(由MainForm_Load呼叫, 此時各下拉選單才都填好了):
+         * 依畫面上目前的參數算出對應的register值, 蓋掉第一步載入的預設值。
+         * 例如FREQUENCY = 915MHz -> 0x1980顯示0x369CCAC0。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         public void ApplyUiValuesToRegisterList()
         {
             if (regDumpView == null)
@@ -1050,25 +1277,37 @@ namespace ER41xxTestTool
             //lblRegDumpStatus.Text = rows.Count + " regs (UI)";
         }
 
-        /// <summary>
-        /// 用 Code Gen 的引擎 (GenerateTxt) 依畫面現值算出整份 register 設定再解析回來。
-        /// 刻意重用 GENERATE 的流程, 保證列表的值與按下 GENERATE 產出的 .h 一致。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  BuildRegistersFromUi
+         * 用Code Gen的引擎(GenerateTxt)依畫面現值算出整份register設定再解析回來。
+         * 刻意重用GENERATE的流程, 保證列表的值與按下GENERATE產出的.h一致。
+         * Param :
+         *   (無)
+         * Return:
+         *   位址->值的對照表; 算不出來(欄位空白/格式錯誤/例外)則回傳null
+         *-------------------------------------------------------------*/
         private Dictionary<ushort, uint> BuildRegistersFromUi()
         {
             string text = GetGeneratedRawText();
             return text == null ? null : ParseGeneratedRegisters(text);
         }
 
-        /// <summary>
-        /// 依 GenerateTxt() 的 quiet/32-bit 模式跑一次, 回傳原始產生文字。
-        /// BuildRegistersFromUi() (REG TABLE 數值) 跟 GetGeneratedRegisterOrder() (Write DVB Register
-        /// 順序) 共用同一份, 避免各自重複一次「切旗標 -> 呼叫 GenerateTxt -> 還原旗標」的邏輯。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  GetGeneratedRawText
+         * 依GenerateTxt()的quiet/32-bit模式跑一次, 回傳原始產生文字。
+         * BuildRegistersFromUi()(REG TABLE數值)跟GetGeneratedRegisterOrder()(Write DVB
+         * Register順序)共用同一份, 避免各自重複一次「切旗標 -> 呼叫GenerateTxt -> 還原旗標」
+         * 的邏輯。
+         * Param :
+         *   (無)
+         * Return:
+         *   GenerateTxt()產生的原始文字; PARAMETER必要欄位空白或產生失敗則回傳null
+         *-------------------------------------------------------------*/
         private string GetGeneratedRawText()
         {
             // 靜默前置檢查: 欄位空的話直接放棄, 避免 CheckGenParameterReady() 在開機時跳 MessageBox
             if (string.IsNullOrWhiteSpace(paramXtalCombo.Text) ||
+                string.IsNullOrWhiteSpace(paramXtalGainCombo.Text) ||
                 string.IsNullOrWhiteSpace(paramCapIoText.Text) ||
                 string.IsNullOrWhiteSpace(paramBaseFreqText.Text) ||
                 string.IsNullOrWhiteSpace(paramDataRateCombo.Text) ||
@@ -1100,12 +1339,17 @@ namespace ER41xxTestTool
             return text;
         }
 
-        /// <summary>
-        /// 依 GenerateTxt() 實際寫入 TRx_Config_Array/TRx_ConfigEx_Array 的先後順序回傳位址清單
-        /// (不含 Initial_Reg_Array, 那 ~40 顆不在 REG TABLE 82 顆範圍內, 跟 Write DVB Register 無關)。
-        /// Write DVB Register 靠這個順序寫, 保證跟 Generate 產生的內容順序一致 —— 以後 GenerateTxt()
-        /// 內部呼叫順序再怎麼調整, 這裡都會自動跟著對, 不用回頭手動調 RegTableItems.cs 的陣列位置。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  GetGeneratedRegisterOrder
+         * 依GenerateTxt()實際寫入TRx_Config_Array/TRx_ConfigEx_Array的先後順序回傳位址清單
+         * (不含Initial_Reg_Array, 那~40顆不在REG TABLE 82顆範圍內, 跟Write DVB Register無關)。
+         * Write DVB Register靠這個順序寫, 保證跟Generate產生的內容順序一致——以後GenerateTxt()
+         * 內部呼叫順序再怎麼調整, 這裡都會自動跟著對, 不用回頭手動調RegTableItems.cs的陣列位置。
+         * Param :
+         *   (無)
+         * Return:
+         *   依實際寫入順序排列的位址清單; GetGeneratedRawText()失敗則回傳空清單
+         *-------------------------------------------------------------*/
         private List<ushort> GetGeneratedRegisterOrder()
         {
             var order = new List<ushort>();
@@ -1142,6 +1386,16 @@ namespace ER41xxTestTool
         private static readonly Regex RegPair =
             new Regex(@"0x([0-9A-Fa-f]{1,4})\s*,\s*0x([0-9A-Fa-f]{1,8})\s*,", RegexOptions.Compiled);
 
+        /*-------------------------------------------------------------
+         *  ParseGeneratedRegisters
+         * 從h(GenerateTxt產生的.h內容)抽出Initial_Reg_Array/TRx_Config_Array/
+         * TRx_ConfigEx_Array三個陣列範圍內的register/值 (用RegPair這個regex比對, 避免把
+         * channel_pll_table或#define誤判成register)。同一位址取最後出現的值。
+         * Param :
+         *   h - GenerateTxt()產生的原始文字
+         * Return:
+         *   位址->值的對照表 (三個陣列合併後的結果)
+         *-------------------------------------------------------------*/
         private static Dictionary<ushort, uint> ParseGeneratedRegisters(string h)
         {
             Dictionary<ushort, uint> map = new Dictionary<ushort, uint>();
@@ -1172,6 +1426,15 @@ namespace ER41xxTestTool
             return map;
         }
 
+        /*-------------------------------------------------------------
+         *  TryParseHex16
+         * 把字串解析成16-bit十六進位值 (可帶"0x"前綴), 借用TryParseHex32並檢查範圍。
+         * Param :
+         *   s - 要解析的字串
+         *   v - 輸出解析結果 (out); 解析失敗則為0
+         * Return:
+         *   true - 解析成功且值不超過0xFFFF / false - 格式錯誤或超出範圍
+         *-------------------------------------------------------------*/
         private static bool TryParseHex16(string s, out ushort v)
         {
             uint u;
@@ -1182,6 +1445,15 @@ namespace ER41xxTestTool
             return true;
         }
 
+        /*-------------------------------------------------------------
+         *  TryParseHex32
+         * 把字串解析成32-bit十六進位值 (可帶"0x"前綴)。
+         * Param :
+         *   s - 要解析的字串
+         *   v - 輸出解析結果 (out); 解析失敗則為0
+         * Return:
+         *   true - 解析成功 / false - s為null、長度不對、或含非十六進位字元
+         *-------------------------------------------------------------*/
         private static bool TryParseHex32(string s, out uint v)
         {
             v = 0;
@@ -1196,7 +1468,16 @@ namespace ER41xxTestTool
             return true;
         }
 
-        private void btnRegDumpFromDVB()//object sender, EventArgs e)
+        /*-------------------------------------------------------------
+         *  btnReadDVB_Click
+         * [物件控制] - 刷新regDumpView
+         * Read DVB鈕: 送"rdump"讀回實機值並顯示 (ReadRegisterDump + ShowRegisterDump)。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void btnReadDVB_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {
@@ -1234,24 +1515,23 @@ namespace ER41xxTestTool
             }
         }
 
-        /// <summary>
-        /// 把 REG TABLE 目前顯示的每一列 (畫面現值或 .h 預設值, 依上次 READ/參數變動而定)
-        /// 逐筆用韌體既有的 "wr &lt;addr&gt; &lt;value&gt;" 命令寫回開發板。
-        /// 沿用舊版 regPage (WriteAllRegProc2) 的作法: 不逐筆等回應, 只在送出之間留 15ms,
-        /// 韌體端 wr 沒有另外新增命令。
-        /// </summary>
-        /// <summary>
-        /// 順序跟 Generate 產生的內容一致: 從 GenerateTxt() 實際寫入 TRx_Config_Array/
-        /// TRx_ConfigEx_Array 的先後順序取位址清單 (不含 Initial_Reg_Array), 再依目前 REG TABLE
-        /// 的 Topic/DependsOn 過濾狀態篩掉沒勾選的位址, 值則一律用 regItemsByName 目前的值
-        /// (含手動 bit field 編輯), 不是重新用參數算一次。
-        /// </summary>
         /// <summary>不管REG TABLE有沒有勾選、有沒有值, 一律不寫進DVB的位址清單。</summary>
         private static readonly HashSet<ushort> WriteIgnoredAddrList = new HashSet<ushort>
         {
             0xA028, //TX FIFO Format
         };
 
+        /*-------------------------------------------------------------
+         *  BuildRegWriteOrder
+         * 算出這次Write DVB Register要寫的位址清單。順序跟Generate產生的內容一致:
+         * 從GenerateTxt()實際寫入TRx_Config_Array/TRx_ConfigEx_Array的先後順序取位址清單
+         * (不含Initial_Reg_Array), 排除WriteIgnoredAddrList, 再依目前REG TABLE的
+         * Topic/DependsOn過濾狀態篩掉沒勾選的位址、以及還沒有值(畫面顯示"-")的位址。
+         * Param :
+         *   (無)
+         * Return:
+         *   這次實際要寫的位址清單 (依寫入順序排列)
+         *-------------------------------------------------------------*/
         private List<ushort> BuildRegWriteOrder()
         {
             List<ushort> writeOrder = new List<ushort>();
@@ -1270,6 +1550,19 @@ namespace ER41xxTestTool
             return writeOrder;
         }
 
+        /*-------------------------------------------------------------
+         *  PerformRegWrite
+         * [物件控制] - 附加顯示到logResultText (經由ShowInsLog)
+         * 把writeOrder裡每個位址目前的值(regItemsByName現值), 逐筆用韌體既有的
+         * "wr <addr> <value>" 命令寫回開發板, 並記錄進lastWrittenRegSnapshot供
+         * IsRegTableDirty()之後比對用。每寫一筆就把REG_NAME/位址/值印一行到Log,
+         * 留下實際寫了哪些register的紀錄。沿用舊版regPage(WriteAllRegProc2)的作法:
+         * 不逐筆等回應, 只在送出之間留15ms, 韌體端wr沒有另外新增命令。
+         * Param :
+         *   writeOrder - 要寫入的位址清單 (依BuildRegWriteOrder()算出的順序)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void PerformRegWrite(List<ushort> writeOrder)
         {
             //btnRegDump.Enabled = false;
@@ -1290,13 +1583,15 @@ namespace ER41xxTestTool
                     regItemsByName.TryGetValue(item.Name, out tag);
                     string cmd = "wr 0x" + addr.ToString("X4") + " 0x" + tag.RawValue.Value.ToString("X8") + "\r";
                     serialPort1.Write(cmd);
+                    lastWrittenRegSnapshot[addr] = tag.RawValue.Value;   // 記下這次真的寫了什麼值
+                    ShowInsLog("  wr " + item.Name + " (0x" + addr.ToString("X4") + ") = 0x" + tag.RawValue.Value.ToString("X8") + "\r\n");
                     written++;
                     Thread.Sleep(15);
                 }
                 TimeSpan t = DateTime.Now - start;
                 //lblRegDumpStatus.Text = written + " regs written, " + t.TotalSeconds.ToString("0.00") + "s";
                 ShowInsLog("REG WRITE: " + written + " regs written\r\n");
-                bRegTableDirty = false;
+                //bRegTableDirty = false;
             }
             finally
             {
@@ -1306,7 +1601,16 @@ namespace ER41xxTestTool
             }
         }
 
-        private void btnRegWriteToDVB()//object sender, EventArgs e)
+        /*-------------------------------------------------------------
+         *  btnWriteDVB_Click
+         * Write DVB鈕: 算出要寫的位址清單(BuildRegWriteOrder), 跳出確認對話框,
+         * 使用者按Yes才真的執行寫入(PerformRegWrite)。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void btnWriteDVB_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {
@@ -1325,29 +1629,133 @@ namespace ER41xxTestTool
             PerformRegWrite(writeOrder);
         }
 
-        /// <summary>
-        /// dvbTstPktTxStartBtn/dvbTstContiTxStartBtn/dvbTstPktRxScanBtn/dvbTstPktRxStartBtn/dvbTstStateSetBtn 開始動作前呼叫:
-        /// 如果PARAMETER區改過、還沒寫回DVB (bRegTableDirty), 詢問是否要先寫入。
-        /// 不管選 Yes 或 No, 呼叫端原本要做的動作都照常繼續, 只差在有沒有先補寫暫存器。
-        /// </summary>
-        private void ConfirmRewriteIfRegTableDirty()
+        /*-------------------------------------------------------------
+         *  BuildSelectedRegWriteOrder
+         * 跟BuildRegWriteOrder()一樣的過濾/順序邏輯(WriteIgnoredAddrList/PassesFilter/
+         * 要有值), 但只保留目前在regDumpView裡被選取(反白, 可Shift/Ctrl多選)的頂層
+         * register列所對應的位址。
+         * Param :
+         *   (無)
+         * Return:
+         *   目前選取中、且符合一般寫入條件的位址清單 (依BuildRegWriteOrder()的順序排列)
+         *-------------------------------------------------------------*/
+        private List<ushort> BuildSelectedRegWriteOrder()
         {
-            if (!bRegTableDirty)
-                return;
-
-            if (MessageBox.Show("REG TABLE has been changed. Do you want to rewrite the settings to the DVB?",
-                "REG TABLE Changed", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            HashSet<ushort> selectedAddrs = new HashSet<ushort>();
+            foreach (ListViewItem item in regDumpView.SelectedItems)
             {
-                List<ushort> writeOrder = BuildRegWriteOrder();
-                if (writeOrder.Count > 0)
-                    PerformRegWrite(writeOrder);
+                RegItemTag tag = item.Tag as RegItemTag;
+                if (tag != null)
+                    selectedAddrs.Add(tag.Addr);
             }
+
+            List<ushort> writeOrder = new List<ushort>();
+            foreach (ushort addr in BuildRegWriteOrder())
+            {
+                if (selectedAddrs.Contains(addr))
+                    writeOrder.Add(addr);
+            }
+            return writeOrder;
         }
 
-        /// <summary>
-        /// 送 "rdump" 並讀回整份 dump。
-        /// 韌體輸出格式: RDUMP_BEGIN,&lt;count&gt; / "AAAA=DDDDDDDD" xN / RDUMP_END
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  regTableWriteSelDvbRegBtn_Click
+         * "Wr Selected DVB Reg"鈕: 只把REG TABLE目前選取(反白)的register寫回開發板
+         * (BuildSelectedRegWriteOrder), 其餘流程跟btnWriteDVB_Click相同(先確認COM port
+         * 已連線、跳出確認對話框才真的寫入)。選取的列裡如果沒有任何一筆符合可寫入條件
+         * (未被過濾掉、有值), 跳提示訊息並中止。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void regTableWriteSelDvbRegBtn_Click(object sender, EventArgs e)
+        {
+            if (!serialPort1.IsOpen)
+            {
+                ShowInsLog("REG WRITE: COM port not open, please connect via the COM PORT menu\r\n");
+                return;
+            }
+
+            List<ushort> writeOrder = BuildSelectedRegWriteOrder();
+            if (writeOrder.Count == 0)
+            {
+                GenMsg.Show("No writable register is currently selected in REG TABLE.\r\nSelect one or more rows (Shift/Ctrl+Click) first.", "REG WRITE");
+                return;
+            }
+
+            if (MessageBox.Show("Write " + writeOrder.Count + " selected register value(s) to the board. Continue?",
+                "REG WRITE", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
+
+            PerformRegWrite(writeOrder);
+        }
+
+        /*-------------------------------------------------------------
+         *  IsRegTableDirty
+         * 比對writeOrder裡每個位址的現值(regItemsByName)跟lastWrittenRegSnapshot(上次
+         * Write DVB Register實際寫入的值), 只要有一個位址不同(含快照裡從沒寫過的新位址)
+         * 就算Dirty。取代舊版單純的bRegTableDirty旗標, 避免值改回去後仍誤判為Dirty。
+         * Param :
+         *   writeOrder - 要比對的位址清單 (通常是BuildRegWriteOrder()算出的結果)
+         * Return:
+         *   true - 至少一個位址的現值跟上次寫入的快照不同 / false - 跟快照完全一致
+         *-------------------------------------------------------------*/
+        private bool IsRegTableDirty(List<ushort> writeOrder)
+        {
+            foreach (ushort addr in writeOrder)
+            {
+                RegTableItem item;
+                RegTableItems.TryGetByAddr(addr, out item);
+                RegItemTag tag;
+                regItemsByName.TryGetValue(item.Name, out tag);
+                uint snapshotValue;
+                if (!lastWrittenRegSnapshot.TryGetValue(addr, out snapshotValue) || snapshotValue != tag.RawValue.Value)
+                    return true;   // 快照裡沒這個位址(從沒寫過), 或值不一樣
+            }
+            return false;
+        }
+        /*-------------------------------------------------------------
+         *  ConfirmRewriteIfRegTableDirty
+         * dvbTstPktTxStartBtn/dvbTstContiTxStartBtn/dvbTstPktRxScanBtn/dvbTstPktRxStartBtn/
+         * dvbTstStateSetBtn開始動作前呼叫: 用IsRegTableDirty()比對現值跟上次Write DVB
+         * Register的快照(lastWrittenRegSnapshot), 有差異才詢問是否要先寫入。
+         * 不管選Yes或No, 呼叫端原本要做的動作都照常繼續, 只差在有沒有先補寫暫存器。
+         * Param :
+         *   (無)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void ConfirmRewriteIfRegTableDirty()
+        {
+            //if (!bRegTableDirty)
+            //    return;
+
+            //if (MessageBox.Show("REG TABLE has been changed. Do you want to rewrite the settings to the DVB?",
+            //    "REG TABLE Changed", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            //{
+            //    List<ushort> writeOrder = BuildRegWriteOrder();
+            //    if (writeOrder.Count > 0)
+            //        PerformRegWrite(writeOrder);
+            //}
+
+            List<ushort> writeOrder = BuildRegWriteOrder();
+            if (writeOrder.Count == 0 || !IsRegTableDirty(writeOrder))
+                return;
+
+            if (MessageBox.Show("REG TABLE has been changed. Do you want to rewrite the settings to the DVB?", "REG TABLE Changed", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                PerformRegWrite(writeOrder);
+        }
+
+        /*-------------------------------------------------------------
+         *  ReadRegisterDump
+         * 送"rdump"並讀回整份dump。韌體輸出格式: RDUMP_BEGIN,<count> / "AAAA=DDDDDDDD" xN /
+         * RDUMP_END。dump期間會先拆掉Packet RX的DataReceived處理常式, 避免資料被搶走。
+         * Param :
+         *   (無)
+         * Return:
+         *   解析後的(位址字串,值)清單; COM port沒開/逾時/例外則回傳null
+         *-------------------------------------------------------------*/
         private List<KeyValuePair<string, uint>> ReadRegisterDump()
         {
             // 不自動猜 COM port; 沿用主流程 (COM PORT 選單 → CONNECT) 開好的 serialPort1
@@ -1391,9 +1799,15 @@ namespace ER41xxTestTool
             return ParseRegisterDump(raw);
         }
 
-        /// <summary>
-        /// 讀到出現 terminator 或逾時為止 (serialPort1 沒有現成的 read-until helper)。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  ReadUntil
+         * 讀到出現terminator或逾時為止 (serialPort1沒有現成的read-until helper)。
+         * Param :
+         *   terminator - 要等到的結束字串
+         *   timeoutMs - 逾時毫秒數
+         * Return:
+         *   目前為止讀到的所有內容 (可能不含terminator, 若逾時的話)
+         *-------------------------------------------------------------*/
         private string ReadUntil(string terminator, int timeoutMs)
         {
             StringBuilder sb = new StringBuilder();
@@ -1414,6 +1828,16 @@ namespace ER41xxTestTool
             return sb.ToString();
         }
 
+        /*-------------------------------------------------------------
+         *  ParseRegisterDump
+         * 解析ReadRegisterDump()讀回的原始文字, 逐行找"AAAA=DDDDDDDD"格式的位址/值配對
+         * (行首可能被"CMD> "之類的prompt黏住, 用IndexOf而非StartsWith), 順便從
+         * RDUMP_BEGIN行取出韌體回報的預期筆數跟實際解析出的筆數比對, 不符就記警告。
+         * Param :
+         *   raw - ReadRegisterDump()讀到的原始文字
+         * Return:
+         *   解析出的(位址字串,值)清單
+         *-------------------------------------------------------------*/
         private List<KeyValuePair<string, uint>> ParseRegisterDump(string raw)
         {
             List<KeyValuePair<string, uint>> list = new List<KeyValuePair<string, uint>>();
@@ -1463,6 +1887,16 @@ namespace ER41xxTestTool
             return list;
         }
 
+        /*-------------------------------------------------------------
+         *  ShowRegisterDump
+         * [物件控制] - 刷新regDumpView
+         * 韌體rdump回來的是完整位址表; 這裡只挑出RegTableItems這75筆, 跟預設值/畫面計算的
+         * 清單保持同一組register、同一個順序, 才好逐列對照, 沒讀到值的顯示"-"。
+         * Param :
+         *   regs - ReadRegisterDump()回傳的(位址字串,值)清單
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void ShowRegisterDump(List<KeyValuePair<string, uint>> regs)
         {
             // 韌體 rdump 回來的是完整位址表; 這裡只挑出 RegTableItems 這 75 筆, 跟預設值/
@@ -1494,6 +1928,14 @@ namespace ER41xxTestTool
             RenderRegisterRows(rows, "read from device (rdump)");
         }
 
+        /*-------------------------------------------------------------
+         *  IsHex
+         * 判斷字串是否每個字元都是合法十六進位字元(0-9/A-F/a-f)且非空字串。
+         * Param :
+         *   s - 要檢查的字串
+         * Return:
+         *   true - 全部字元都是十六進位字元且長度>0 / false - 含非法字元或空字串
+         *-------------------------------------------------------------*/
         private static bool IsHex(string s)
         {
             foreach (char c in s)
@@ -1505,7 +1947,14 @@ namespace ER41xxTestTool
             return s.Length > 0;
         }
 
-        /// <summary>32-bit 值轉成 MSB-first 的 4 個 byte, 例如 0x12345678 → "12 34 56 78"</summary>
+        /*-------------------------------------------------------------
+         *  FormatRegValueMsbFirst
+         * 32-bit值轉成MSB-first的4個byte字串, 例如0x12345678 → "12 34 56 78"。
+         * Param :
+         *   value - 要格式化的32-bit值
+         * Return:
+         *   "XX XX XX XX"格式的字串 (高位元組在前)
+         *-------------------------------------------------------------*/
         private static string FormatRegValueMsbFirst(uint value)
         {
             return ((value >> 24) & 0xFF).ToString("X2") + " " +
@@ -1514,7 +1963,14 @@ namespace ER41xxTestTool
                    (value & 0xFF).ToString("X2");
         }
 
-        /// <summary>32-bit 值轉成 MSB-first 的 4 個 byte, 例如 0x12345678 → "12 34 56 78"</summary>
+        /*-------------------------------------------------------------
+         *  FormatRegValueLsbFirst
+         * 32-bit值轉成LSB-first的4個byte字串, 例如0x12345678 → "78 56 34 12"。
+         * Param :
+         *   value - 要格式化的32-bit值
+         * Return:
+         *   "XX XX XX XX"格式的字串 (低位元組在前)
+         *-------------------------------------------------------------*/
         private static string FormatRegValueLsbFirst(uint value)
         {
             return ((value >> 0) & 0xFF).ToString("X2") + " " +
@@ -1525,12 +1981,32 @@ namespace ER41xxTestTool
 
         // =============== REG TABLE 展開 bit field / 編輯 ===============
 
-        /// <summary>width bit 的遮罩, width>=32 特別處理 (1u&lt;&lt;32 在 C# 會被當成 1u&lt;&lt;0)</summary>
+        /*-------------------------------------------------------------
+         *  FieldMask
+         * width bit的遮罩, width>=32特別處理(1u&lt;&lt;32在C#會被當成1u&lt;&lt;0)。
+         * Param :
+         *   width - bit寬度
+         * Return:
+         *   低width bit全為1的遮罩值
+         *-------------------------------------------------------------*/
         private static uint FieldMask(int width)
         {
             return width >= 32 ? 0xFFFFFFFFu : ((1u << width) - 1u);
         }
 
+        /*-------------------------------------------------------------
+         *  regDumpView_MouseClick
+         * [物件控制] - 刷新regDumpView / 開啟regEditBox編輯框
+         * 點到頂層register列: 只有點在REG_NAME欄位最前面的[+]/[-]展開圖示上才切換
+         * 展開/收合(ToggleExpand); 點在同一列的其他地方只當一般選取(反白), 交給
+         * ListView自己處理, 不做額外動作。點到已展開的可編輯bit field子列的VALUE欄:
+         * 開始編輯(BeginEditField)。GPIO_0/1_CFG_REG兩顆一律唯讀, 提醒改去PARAMETER分頁。
+         * Param :
+         *   sender - 未使用
+         *   e - MouseClick事件參數, 取其Location做HitTest
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void regDumpView_MouseClick(object sender, MouseEventArgs e)
         {
             ListViewHitTestInfo hit = regDumpView.HitTest(e.Location);
@@ -1540,7 +2016,14 @@ namespace ER41xxTestTool
             RegItemTag regTag = hit.Item.Tag as RegItemTag;
             if (regTag != null)
             {
-                ToggleExpand(regTag);
+                if (RegBitFields.ByRegName.ContainsKey(regTag.RegName))
+                {
+                    // 展開圖示是REG_NAME欄位最前面的"[+] "/"[-] "這4個字元, 只有點在這個範圍內才展開/收合
+                    Rectangle nameBounds = GetSubItemBounds(hit.Item, 0);
+                    int markerWidth = TextRenderer.MeasureText(ExpandMarkerCollapsed, regDumpView.Font).Width;
+                    if (e.Location.X >= nameBounds.Left && e.Location.X <= nameBounds.Left + markerWidth)
+                        ToggleExpand(regTag);
+                }
                 return;
             }
 
@@ -1560,10 +2043,17 @@ namespace ER41xxTestTool
             BeginEditField(hit.Item, fieldTag);
         }
 
-        /// <summary>
-        /// 展開/收合只是切換 tag.Expanded 再整份重畫 (RebuildAllItems) —— 不直接操作 ListViewItem,
-        /// 因為 Groups 底下 Insert 沒辦法正確控制組內順序, 見 RebuildAllItems 的說明。
-        /// </summary>
+        /*-------------------------------------------------------------
+         *  ToggleExpand
+         * [物件控制] - 刷新regDumpView
+         * 展開/收合只是切換tag.Expanded再整份重畫(RebuildAllItems)——不直接操作
+         * ListViewItem, 因為Groups底下Insert沒辦法正確控制組內順序, 見RebuildAllItems的
+         * 說明。切換前會先關掉可能開著的bit field編輯框。
+         * Param :
+         *   tag - 要展開/收合的register
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void ToggleExpand(RegItemTag tag)
         {
             EndEditField(true);
@@ -1573,7 +2063,15 @@ namespace ER41xxTestTool
             RebuildAllItems();
         }
 
-        /// <summary>Details view 的 SubItem.Bounds 在 .NET Framework 不可靠, 用欄寬手動算位置</summary>
+        /*-------------------------------------------------------------
+         *  GetSubItemBounds
+         * Details view的SubItem.Bounds在.NET Framework不可靠, 用欄寬手動算位置。
+         * Param :
+         *   item - 目標列
+         *   columnIndex - 要取得座標的欄位索引
+         * Return:
+         *   該欄位在regDumpView上的實際顯示範圍
+         *-------------------------------------------------------------*/
         private Rectangle GetSubItemBounds(ListViewItem item, int columnIndex)
         {
             Rectangle itemBounds = item.Bounds;
@@ -1583,6 +2081,17 @@ namespace ER41xxTestTool
             return new Rectangle(x, itemBounds.Top, regDumpView.Columns[columnIndex].Width, itemBounds.Height);
         }
 
+        /*-------------------------------------------------------------
+         *  BeginEditField
+         * [物件控制] - 建立regEditBox並疊在regDumpView的VALUE欄位置上
+         * 在指定bit field子列的VALUE欄位置上蓋一個TextBox overlay開始編輯, 先關掉前一個
+         * 可能還開著的編輯框。
+         * Param :
+         *   item - 要編輯的bit field子列
+         *   ft - 該子列的FieldItemTag (記到regEditBox.Tag供EndEditField/CommitFieldEdit使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void BeginEditField(ListViewItem item, FieldItemTag ft)
         {
             EndEditField(true);
@@ -1602,6 +2111,16 @@ namespace ER41xxTestTool
             regEditBox.SelectAll();
         }
 
+        /*-------------------------------------------------------------
+         *  regEditBox_KeyDown
+         * bit field編輯框內按Enter提交(commit)修改, 按Escape放棄修改, 兩者都吃掉按鍵
+         * 避免觸發其他預設行為。
+         * Param :
+         *   sender - 未使用
+         *   e - KeyDown事件參數, 取其KeyCode判斷Enter/Escape
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void regEditBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -1616,12 +2135,28 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  regEditBox_Leave
+         * bit field編輯框失焦(點別的地方)時等同按Enter, 提交(commit)目前輸入的值。
+         * Param :
+         *   sender, e - Leave事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void regEditBox_Leave(object sender, EventArgs e)
         {
             EndEditField(true);
         }
 
-        /// <summary>關掉目前開著的 bit field 編輯框; commit=true 才會套用內容</summary>
+        /*-------------------------------------------------------------
+         *  EndEditField
+         * [物件控制] - 移除regEditBox
+         * 關掉目前開著的bit field編輯框; commit=true才會套用內容(呼叫CommitFieldEdit)。
+         * Param :
+         *   commit - true=套用編輯框內容 / false=直接放棄
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void EndEditField(bool commit)
         {
             if (regEditBox == null)
@@ -1643,7 +2178,19 @@ namespace ER41xxTestTool
             box.Dispose();
         }
 
-        /// <summary>把子列輸入的新值寫回該 bit field, 並重算、更新上層 register 的 VALUE</summary>
+        /*-------------------------------------------------------------
+         *  CommitFieldEdit
+         * [物件控制] - 刷新regDumpView上該register列與其bit field子列的VALUE顯示
+         * 把子列輸入的新值(text)寫回該bit field, 並重算、更新上層register的VALUE。
+         * 輸入值超出該欄位寬度範圍會跳提示並放棄。若改的是SYNTH_CAL_CONFIG_2(DataRate),
+         * 手改可以跳過離散合法值清單的限制, 這裡只即時提醒, 真正封鎖在GENERATE那一步。
+         * Param :
+         *   fieldItem - 被編輯的bit field子列
+         *   ft - 該子列的FieldItemTag
+         *   text - 使用者輸入的新值文字 (十六進位, 可帶"0x"前綴)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
         private void CommitFieldEdit(ListViewItem fieldItem, FieldItemTag ft, string text)
         {
             text = text.Trim();
@@ -1688,6 +2235,14 @@ namespace ER41xxTestTool
             }
         }
 
+        /*-------------------------------------------------------------
+         *  FindRegisterItem
+         * 在regDumpView目前顯示的列裡, 依RegName找出對應的頂層register列。
+         * Param :
+         *   regName - 要找的register名稱
+         * Return:
+         *   對應的ListViewItem; 目前沒顯示(被過濾掉或還沒建立)則回傳null
+         *-------------------------------------------------------------*/
         private ListViewItem FindRegisterItem(string regName)
         {
             foreach (ListViewItem it in regDumpView.Items)

@@ -46,6 +46,9 @@ namespace ER41xxTestTool
         public AboutForm()
         {
             InitializeComponent();
+            // 蓋掉Designer.cs裡寫死的舊標題文字, 改用MainForm.ToolTitle這個唯一來源,
+            // 避免跟視窗標題/存檔檔頭各自維護版本號卻互相對不上。
+            richTextBox1.Text = MainForm.ToolTitle;
             richTextBox1.Text += "\n\nCopyright © " + DateTime.Now.Year + " ESMT (Elite Semiconductor Microelectronics Technology Inc.)\nAll rights reserved.";
         }
 

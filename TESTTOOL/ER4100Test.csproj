@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ER4100</RootNamespace>
-    <AssemblyName>ER41xx_TestTool</AssemblyName>
+    <AssemblyName>ER41xx EzToolkit</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -129,7 +129,7 @@
     <Compile Include="EzCodeGen\Syncword.cs" />
     <Compile Include="EzCodeGen\TxPayloadFormat.cs" />
     <Compile Include="EzCodeGen\TxPowerLv.cs" />
-    <Compile Include="EzCodeGen\WriteCapValue.cs" />
+    <Compile Include="EzCodeGen\WriteXoConfig.cs" />
     <Compile Include="EzCodeGen\channel_pll_table.cs" />
     <Compile Include="ER41xxReg\RegContents.cs" />
     <Compile Include="ER41xxReg\RegTableItems.cs" />
