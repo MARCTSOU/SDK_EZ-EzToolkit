@@ -1651,10 +1651,17 @@ namespace ER41xxTestTool
                 DialogResult result = dlg.ShowDialog(this);
                 if (result == DialogResult.OK)
                 {
+                    int conn_result = -1;
                     comPortToolStripComboBox.Text = dlg.SelectedPort;
                     //connectComToolStripMenuItem_Click(sender, e); //透過com port讀取er4100模組設定
-                    dvbConnectionProcess();
-                    RefreshRegisterListFromUi();
+                    conn_result = dvbConnectionProcess();
+
+                    if (conn_result > 0)
+                        RefreshRegisterListFromUi();
+                    else if (conn_result == -1)
+                        GenMsg.Show("Failed to open the COM port. Please check the connection and try again.", "Connect Failed");
+                    else if (conn_result == -2)
+                        GenMsg.Show("DVB or RF IC not found. Please check the connection and try again.", "Connect Failed");
                 }
                 else if (result == DialogResult.Abort)  // DISCONNECT
                 {
@@ -1705,9 +1712,12 @@ namespace ER41xxTestTool
          * Param :
          *   (無)
          * Return:
-         *   (無)
+         *   1  - 連線成功 (含已連線但讀不到IC類型、需使用者手動選PA CONFIG的情況)
+         *   -1 - COM port開不起來 (ConnectWithIRQ失敗)
+         *   -2 - COM port開了, 但讀不到ER4100 chip ID (DVB或RF IC不存在/沒接對)
+         *   0  - 這次呼叫其實是斷線 (呼叫前isDVBConnected已經是true)
          *-------------------------------------------------------------*/
-        private void dvbConnectionProcess()
+        private int dvbConnectionProcess()
         {
             bool res = false;
 
@@ -1719,8 +1729,10 @@ namespace ER41xxTestTool
                     //ConnectSerial3();
                 }
                 Thread.Sleep(100);
-                
-                if ((serialPort1.IsOpen) && (res))
+
+                if (!((serialPort1.IsOpen) && (res)))
+                    return -1;   // COM port開不起來
+
                 {
                     string stmp;
                     /* 開始處理DVB的前期作業 */
@@ -1744,13 +1756,13 @@ namespace ER41xxTestTool
                     Thread.Sleep(50);
                     stmp = serialPort1.ReadExisting();
                     if (stmp.IndexOf("9000000") >= 0)
-                        ShowInsLog("Chip ID :" + stmp + "\r");
+                        ShowInsLog("Chip ID = " + stmp + "\r");
                     else
                     {
                         isDVBConnected = false;
-                        ShowInsLog("ERR: Chip is No Exist : " + stmp + "\r");
+                        ShowInsLog("ERR: Chip is No Exist, Chip ID = " + stmp + "\r");
                         CloseComPortProcess();
-                        return;
+                        return -2;   // 讀不到chip ID, DVB或RF IC不存在
                     }
                     // connectComToolStripMenuItem.Text = "CLOSE";
                     isDVBConnected = true;
@@ -1766,7 +1778,7 @@ namespace ER41xxTestTool
                         paramPAConfigCombo.Enabled = true;
                         InitialFreqBandList(0);   // 已連線, 只是讀不到 IC 類型, 給真的 band 選項讓使用者手動選 (不是 "Don't care")
                         paramDvbBandCombo.Enabled = true;
-                        return;
+                        return 1;   // 已連線成功, 只是讀不到IC類型, 讓使用者手動選PA CONFIG
                     }
                     //public enum PA_TYPE{
                     //    PA_915433L = 0,
@@ -1799,7 +1811,7 @@ namespace ER41xxTestTool
                         paramPAConfigCombo.Enabled = true;
                         InitialFreqBandList(0);   // 已連線, 只是讀不到 IC 類型, 給真的 band 選項讓使用者手動選 (不是 "Don't care")
                         paramDvbBandCombo.Enabled = true;
-                        return;
+                        return 1;   // 已連線成功, 只是讀不到IC類型, 讓使用者手動選PA CONFIG
                     }
                     stmp = serialPort1.ReadExisting();
                     Thread.Sleep(50);
@@ -1859,12 +1871,14 @@ namespace ER41xxTestTool
                     PacketRxBtnStopProcess();
                     ShowInsLog("RX Reception Stop\r\n");
                 }
-               
+                return 1;   // 連線成功
+
             }
             else  // 原本已 CONNECT
             {
                 CloseComPortProcess();
                 ShowInsLog("COM Closed\r\n");
+                return 0;   // 這次呼叫是斷線, 不是連線, 呼叫端(comPortToolStripMenuItem_Click的Abort分支)目前不看這個回傳值
             }
         }
        
@@ -2459,6 +2473,18 @@ namespace ER41xxTestTool
                 "(2). Power LV: The range depends on PA Config - H-PA (23dBm) is 0~127, L-PA (10/14dBm) is 0~27. " +
                 "     e.g. with PA Config = 23dBm (H-PA), 127 is the theoretical value for full 23dBm output.";
             MessageBox.Show(this, msg, "Power Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void paramGpioHelpBtn_Click(object sender, EventArgs e)
+        {
+            string msg =
+                "(1). Default Mode: GPIO0's Default Mode is TCXO_EN, used to drive an external TCXO - it outputs HIGH by default.\r\n" +
+                "      GPIO1's Default Mode is SHD (the shutdown trigger pin) - driving it LOW triggers entering shutdown, driving it HIGH exits shutdown. " +
+                "This requires PCR Management to be set to \"Enable + Shutdown\" - SHD has no effect otherwise.\r\n\r\n" +
+                "(2). RX_RF_Mode / RX_BBP_Mode / NFC_Mode: Do NOT use these - they are for internal test purposes only.\r\n\r\n" +
+                "(3). Debug_Mode: Also an internal test-only mode (same category as the three above). " +
+                "It has no effect by default, so the pin outputs LOW in this state.";
+            MessageBox.Show(this, msg, "GPIO Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /*-------------------------------------------------------------

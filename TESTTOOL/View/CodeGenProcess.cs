@@ -443,6 +443,25 @@ namespace ER41xxTestTool
             UpdateGpio1GioSelEnabled();
         }
 
+        /// <summary>
+        /// PCRMU現在是三選一(Enable/Enable + Shutdown/Disable): 選到"Enable + Shutdown"時,
+        /// Shutdown功能由處於Default_Mode的GPIO1當實體觸發腳位(輸入0進入shutdown, 1離開),
+        /// 所以要鎖住GPIO1 Mode只能是Default_Mode(不能自由選), 同時才讓STATE CTRL分頁的
+        /// dvbTstStateShutdownRadioBtn可以選; 選其他兩個選項時解鎖GPIO1、鎖住Shutdown狀態選項。
+        /// </summary>
+        private void UpdateGpio1ModeLockFromShutdown()
+        {
+            bool shutdownEnabled = paramPcrShdEnableRadioBtn.Checked;
+            if (shutdownEnabled)
+                paramGpio1ModeCombo.SelectedItem = TRx_GPIO_Mode.Default_Mode;
+            paramGpio1ModeCombo.Enabled = !shutdownEnabled;
+            UpdateGpio1GioSelEnabled();
+
+            dvbTstStateShutdownRadioBtn.Enabled = shutdownEnabled;
+            if (!shutdownEnabled && dvbTstStateShutdownRadioBtn.Checked)
+                dvbTstStateIdleRadioBtn.Checked = true;   // Shutdown選項被鎖住時, 如果原本選在Shutdown就退回Idle
+        }
+
         // =============== FREQUENCY TABLE ===============
         public bool CheckFreqValue(double X)
         {
@@ -988,7 +1007,9 @@ namespace ER41xxTestTool
             int gpio1GioSel = paramGpio1GioSelCombo.SelectedIndex >= 0 ? paramGpio1GioSelCombo.SelectedIndex : 0;
             bool gpio1Inv = paramGpio1GIoInvCheck.Checked;
             int gpio1Pull = paramGpio1PullCtrlCombo.SelectedItem is TRx_GPIO_PullCtrl p1 ? (int)p1 : (int)TRx_GPIO_PullCtrl.No_Pull;
-            bool pcrmuEn = paramPcrmuEnableRadioBtn.Checked;
+            // PCRMU現在是三選一: Enable/Enable + Shutdown都算PCRMU啟用(0x0020不會被強制寫0xFFFFFFFF),
+            // 只有Disable才是真的停用。
+            bool pcrmuEn = paramPcrmuEnableRadioBtn.Checked || paramPcrShdEnableRadioBtn.Checked;
             bool msbEnable = paramFIFOBitOrderMSBRadioBtn.Checked;
             bool isGFSK = true;
             uint crystal_HZ = 0;
@@ -1207,7 +1228,7 @@ namespace ER41xxTestTool
                 WriteXoConfig.Set(sw, (uint)capValue, (uint)xtalGainValue);
                 GPIO_Def.SetGpio0(sw, gpio0Mode, gpio0GioSel, gpio0Inv, gpio0Pull);
                 GPIO_Def.SetGpio1(sw, gpio1Mode, gpio1GioSel, gpio1Inv, gpio1Pull);
-                PCRMU.Set(sw, pcrmuEn);
+                PCRMU.Set(sw, pcrmuEn, !paramPcrShdEnableRadioBtn.Checked);
                 EnableInt.Set(sw, intMode);
                 if (isTXEmpty || isRXFull)
                 {
@@ -1506,7 +1527,12 @@ namespace ER41xxTestTool
             if (MyIni.KeyExists("ENABLE", "PCRMU"))
             {
                 tmpRead = MyIni.Read("ENABLE", "PCRMU").ToUpper();
-                if (tmpRead.Equals("TRUE"))
+                // SHUTDOWN是後來加的第三選項標記; 舊版ini沒有這個key時預設false, 自動退回
+                // 原本ENABLE=true/false的Enable/Disable二選一行為, 不影響舊存檔。
+                bool shdSaved = MyIni.KeyExists("SHUTDOWN", "PCRMU") && MyIni.Read("SHUTDOWN", "PCRMU").ToUpper().Equals("TRUE");
+                if (tmpRead.Equals("TRUE") && shdSaved)
+                    paramPcrShdEnableRadioBtn.Checked = true;
+                else if (tmpRead.Equals("TRUE"))
                     paramPcrmuEnableRadioBtn.Checked = true;
                 else
                     paramPcrmuDisableRadioBtn.Checked = true;
@@ -1746,7 +1772,8 @@ namespace ER41xxTestTool
 
             MyIni.Write("VALUE", val, "TXPAYLOADFORMAT");
             File.AppendAllText(filePath, Environment.NewLine);
-            MyIni.Write("ENABLE", (paramPcrmuEnableRadioBtn.Checked ? "true" : "false"), "PCRMU");
+            MyIni.Write("ENABLE", ((paramPcrmuEnableRadioBtn.Checked || paramPcrShdEnableRadioBtn.Checked) ? "true" : "false"), "PCRMU");
+            MyIni.Write("SHUTDOWN", (paramPcrShdEnableRadioBtn.Checked ? "true" : "false"), "PCRMU");
             File.AppendAllText(filePath, Environment.NewLine);
             MyIni.Write("TXSYNCWORD", paramTxSyncText.Text, "SYNCWORD");
             MyIni.Write("TXINVERT", (paramTxSyncSoftInvertCheck.Checked ? "true" : "false"), "SYNCWORD");

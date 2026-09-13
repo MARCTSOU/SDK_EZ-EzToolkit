@@ -1186,10 +1186,17 @@ namespace ER41xxTestTool
             foreach (CheckBox c in checks)
                 if (c != null) c.CheckedChanged += onChange;
 
-            RadioButton[] radios = { paramPcrmuEnableRadioBtn, paramPcrmuDisableRadioBtn, paramFIFOBitOrderMSBRadioBtn, paramFIFOBitOrderLSBRadioBtn,
+            RadioButton[] radios = { paramPcrmuEnableRadioBtn, paramPcrmuDisableRadioBtn, paramPcrShdEnableRadioBtn, paramFIFOBitOrderMSBRadioBtn, paramFIFOBitOrderLSBRadioBtn,
                                      paramTxFifoModeTransparentRadioBtn, paramTxFifoModeTransPresyncRadioBtn, paramTxFifoMode802154RadioBtn };
             foreach (RadioButton r in radios)
                 if (r != null) r.CheckedChanged += onRadio;
+
+            // PCRMU三選一(Enable/Enable + Shutdown/Disable): 選到"Enable + Shutdown"才鎖住GPIO1
+            // Mode只能是Default_Mode(當Shutdown實體觸發腳位用)、同時解鎖STATE CTRL分頁的
+            // dvbTstStateShutdownRadioBtn; 選其他兩個選項時反過來解鎖GPIO1、鎖住Shutdown狀態選項。
+            // 只需要掛在paramPcrShdEnableRadioBtn自己身上: 不管是它被選中(true)還是被取消選中
+            // (切去另外兩個時變成false), 都會觸發它自己的CheckedChanged。
+            if (paramPcrShdEnableRadioBtn != null) paramPcrShdEnableRadioBtn.CheckedChanged += (s, e) => UpdateGpio1ModeLockFromShutdown();
 
             // INTERRUPT MODE 的勾選清單: ItemCheck 時狀態還沒套用, 要排到訊息迴圈後面再算
             if (intModeCheckedList != null)

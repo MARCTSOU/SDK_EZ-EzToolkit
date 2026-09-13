@@ -152,6 +152,7 @@ namespace ER41xxTestTool
             this.paramTxFifoModeTransparentRadioBtn = new System.Windows.Forms.RadioButton();
             this.paramTxFifoMode802154RadioBtn = new System.Windows.Forms.RadioButton();
             this.paramPcrmuGroup = new System.Windows.Forms.GroupBox();
+            this.paramPcrShdEnableRadioBtn = new System.Windows.Forms.RadioButton();
             this.paramPcrmuEnableRadioBtn = new System.Windows.Forms.RadioButton();
             this.paramPcrmuDisableRadioBtn = new System.Windows.Forms.RadioButton();
             this.paramDataFormatGroup = new System.Windows.Forms.GroupBox();
@@ -236,6 +237,7 @@ namespace ER41xxTestTool
             this.paramTxFifoModeNoticeLabel = new System.Windows.Forms.Label();
             this.pageIntMode = new System.Windows.Forms.TabPage();
             this.pageGpio = new System.Windows.Forms.TabPage();
+            this.paramGpioHelpBtn = new System.Windows.Forms.Button();
             this.paramGpio1Group = new System.Windows.Forms.GroupBox();
             this.paramGpio1GIoInvCheck = new System.Windows.Forms.CheckBox();
             this.paramGpio1GIoSelLabel = new System.Windows.Forms.Label();
@@ -244,6 +246,7 @@ namespace ER41xxTestTool
             this.paramGpio1PullCtrlCombo = new System.Windows.Forms.ComboBox();
             this.paramGpio1ModeCombo = new System.Windows.Forms.ComboBox();
             this.pagePcrmu = new System.Windows.Forms.TabPage();
+            this.paramPcrShdEnableHelpLabel = new System.Windows.Forms.Label();
             this.regTableGenBtn = new System.Windows.Forms.Button();
             this.regTableDefaultBtn = new System.Windows.Forms.Button();
             this.regTableTopicGroup = new System.Windows.Forms.GroupBox();
@@ -662,6 +665,7 @@ namespace ER41xxTestTool
             // 
             this.dvbTstPktTxDgmPayloadLabel.BackColor = System.Drawing.Color.Black;
             this.dvbTstPktTxDgmPayloadLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.dvbTstPktTxDgmPayloadLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
             this.dvbTstPktTxDgmPayloadLabel.ForeColor = System.Drawing.Color.Yellow;
             this.dvbTstPktTxDgmPayloadLabel.Location = new System.Drawing.Point(537, 36);
             this.dvbTstPktTxDgmPayloadLabel.Name = "dvbTstPktTxDgmPayloadLabel";
@@ -1357,6 +1361,7 @@ namespace ER41xxTestTool
             // dvbTstStateShutdownRadioBtn
             // 
             this.dvbTstStateShutdownRadioBtn.AutoSize = true;
+            this.dvbTstStateShutdownRadioBtn.Enabled = false;
             this.dvbTstStateShutdownRadioBtn.Location = new System.Drawing.Point(16, 108);
             this.dvbTstStateShutdownRadioBtn.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstStateShutdownRadioBtn.Name = "dvbTstStateShutdownRadioBtn";
@@ -1365,7 +1370,6 @@ namespace ER41xxTestTool
             this.dvbTstStateShutdownRadioBtn.TabStop = true;
             this.dvbTstStateShutdownRadioBtn.Text = "Shutdown";
             this.dvbTstStateShutdownRadioBtn.UseVisualStyleBackColor = true;
-            this.dvbTstStateShutdownRadioBtn.Visible = false;
             // 
             // dvbTstStateDeepSleepRadioBtn
             // 
@@ -1754,6 +1758,7 @@ namespace ER41xxTestTool
             // 
             // paramPcrmuGroup
             // 
+            this.paramPcrmuGroup.Controls.Add(this.paramPcrShdEnableRadioBtn);
             this.paramPcrmuGroup.Controls.Add(this.paramPcrmuEnableRadioBtn);
             this.paramPcrmuGroup.Controls.Add(this.paramPcrmuDisableRadioBtn);
             this.paramPcrmuGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold);
@@ -1762,10 +1767,22 @@ namespace ER41xxTestTool
             this.paramPcrmuGroup.Margin = new System.Windows.Forms.Padding(4);
             this.paramPcrmuGroup.Name = "paramPcrmuGroup";
             this.paramPcrmuGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.paramPcrmuGroup.Size = new System.Drawing.Size(208, 60);
+            this.paramPcrmuGroup.Size = new System.Drawing.Size(208, 104);
             this.paramPcrmuGroup.TabIndex = 5;
             this.paramPcrmuGroup.TabStop = false;
             this.paramPcrmuGroup.Text = "PCR Management";
+            // 
+            // paramPcrShdEnableRadioBtn
+            // 
+            this.paramPcrShdEnableRadioBtn.AutoSize = true;
+            this.paramPcrShdEnableRadioBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramPcrShdEnableRadioBtn.ForeColor = System.Drawing.Color.Black;
+            this.paramPcrShdEnableRadioBtn.Location = new System.Drawing.Point(8, 65);
+            this.paramPcrShdEnableRadioBtn.Name = "paramPcrShdEnableRadioBtn";
+            this.paramPcrShdEnableRadioBtn.Size = new System.Drawing.Size(156, 21);
+            this.paramPcrShdEnableRadioBtn.TabIndex = 2;
+            this.paramPcrShdEnableRadioBtn.Text = "Enable + Shutdown*";
+            this.paramPcrShdEnableRadioBtn.UseVisualStyleBackColor = true;
             // 
             // paramPcrmuEnableRadioBtn
             // 
@@ -1787,7 +1804,7 @@ namespace ER41xxTestTool
             this.paramPcrmuDisableRadioBtn.AutoSize = true;
             this.paramPcrmuDisableRadioBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
             this.paramPcrmuDisableRadioBtn.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.paramPcrmuDisableRadioBtn.Location = new System.Drawing.Point(110, 25);
+            this.paramPcrmuDisableRadioBtn.Location = new System.Drawing.Point(102, 25);
             this.paramPcrmuDisableRadioBtn.Margin = new System.Windows.Forms.Padding(4);
             this.paramPcrmuDisableRadioBtn.Name = "paramPcrmuDisableRadioBtn";
             this.paramPcrmuDisableRadioBtn.Size = new System.Drawing.Size(76, 21);
@@ -1801,7 +1818,7 @@ namespace ER41xxTestTool
             this.paramDataFormatGroup.Controls.Add(this.paramDataFormat32BitsRadioBtn);
             this.paramDataFormatGroup.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold);
             this.paramDataFormatGroup.ForeColor = System.Drawing.SystemColors.HotTrack;
-            this.paramDataFormatGroup.Location = new System.Drawing.Point(10, 80);
+            this.paramDataFormatGroup.Location = new System.Drawing.Point(635, 164);
             this.paramDataFormatGroup.Margin = new System.Windows.Forms.Padding(4);
             this.paramDataFormatGroup.Name = "paramDataFormatGroup";
             this.paramDataFormatGroup.Padding = new System.Windows.Forms.Padding(4);
@@ -2761,6 +2778,7 @@ namespace ER41xxTestTool
             // pageGpio
             // 
             this.pageGpio.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.pageGpio.Controls.Add(this.paramGpioHelpBtn);
             this.pageGpio.Controls.Add(this.paramGpio1Group);
             this.pageGpio.Controls.Add(this.paramGpio0Group);
             this.pageGpio.Location = new System.Drawing.Point(4, 28);
@@ -2770,6 +2788,18 @@ namespace ER41xxTestTool
             this.pageGpio.Size = new System.Drawing.Size(860, 232);
             this.pageGpio.TabIndex = 4;
             this.pageGpio.Text = "GPIO";
+            // 
+            // paramGpioHelpBtn
+            // 
+            this.paramGpioHelpBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.paramGpioHelpBtn.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.paramGpioHelpBtn.Location = new System.Drawing.Point(440, 8);
+            this.paramGpioHelpBtn.Name = "paramGpioHelpBtn";
+            this.paramGpioHelpBtn.Size = new System.Drawing.Size(28, 23);
+            this.paramGpioHelpBtn.TabIndex = 38;
+            this.paramGpioHelpBtn.Text = "?";
+            this.paramGpioHelpBtn.UseVisualStyleBackColor = true;
+            this.paramGpioHelpBtn.Click += new System.EventHandler(this.paramGpioHelpBtn_Click);
             // 
             // paramGpio1Group
             // 
@@ -2867,6 +2897,7 @@ namespace ER41xxTestTool
             // pagePcrmu
             // 
             this.pagePcrmu.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.pagePcrmu.Controls.Add(this.paramPcrShdEnableHelpLabel);
             this.pagePcrmu.Controls.Add(this.paramPcrmuGroup);
             this.pagePcrmu.Controls.Add(this.paramDataFormatGroup);
             this.pagePcrmu.Location = new System.Drawing.Point(4, 28);
@@ -2876,6 +2907,17 @@ namespace ER41xxTestTool
             this.pagePcrmu.Size = new System.Drawing.Size(860, 232);
             this.pagePcrmu.TabIndex = 5;
             this.pagePcrmu.Text = "PCR";
+            // 
+            // paramPcrShdEnableHelpLabel
+            // 
+            this.paramPcrShdEnableHelpLabel.BackColor = System.Drawing.Color.LightSteelBlue;
+            this.paramPcrShdEnableHelpLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.paramPcrShdEnableHelpLabel.ForeColor = System.Drawing.SystemColors.Highlight;
+            this.paramPcrShdEnableHelpLabel.Location = new System.Drawing.Point(7, 125);
+            this.paramPcrShdEnableHelpLabel.Name = "paramPcrShdEnableHelpLabel";
+            this.paramPcrShdEnableHelpLabel.Size = new System.Drawing.Size(396, 24);
+            this.paramPcrShdEnableHelpLabel.TabIndex = 3;
+            this.paramPcrShdEnableHelpLabel.Text = "*Shutdown is triggered via GPIO1 (must be in Default Mode)*";
             // 
             // regTableGenBtn
             // 
@@ -2944,7 +2986,7 @@ namespace ER41xxTestTool
             this.regTableDumpDvbRegBtn.Name = "regTableDumpDvbRegBtn";
             this.regTableDumpDvbRegBtn.Size = new System.Drawing.Size(96, 62);
             this.regTableDumpDvbRegBtn.TabIndex = 49;
-            this.regTableDumpDvbRegBtn.Text = "Dump All DVB Register";
+            this.regTableDumpDvbRegBtn.Text = "Dump\r\nAll\r\nDVB Register";
             this.regTableDumpDvbRegBtn.UseVisualStyleBackColor = false;
             this.regTableDumpDvbRegBtn.Click += new System.EventHandler(this.btnReadDVB_Click);
             // 
@@ -2955,7 +2997,7 @@ namespace ER41xxTestTool
             this.regTableWriteDvbRegBtn.Name = "regTableWriteDvbRegBtn";
             this.regTableWriteDvbRegBtn.Size = new System.Drawing.Size(96, 62);
             this.regTableWriteDvbRegBtn.TabIndex = 50;
-            this.regTableWriteDvbRegBtn.Text = "Write All DVB Register";
+            this.regTableWriteDvbRegBtn.Text = "Write\r\nAll\r\nDVB Register";
             this.regTableWriteDvbRegBtn.UseVisualStyleBackColor = false;
             this.regTableWriteDvbRegBtn.Click += new System.EventHandler(this.btnWriteDVB_Click);
             // 
@@ -3313,6 +3355,7 @@ namespace ER41xxTestTool
         private System.Windows.Forms.Button paramXtalHelpBtn;
         private System.Windows.Forms.Button paramFreqHelpBtn;
         private System.Windows.Forms.Button paramPwrHelpBtn;
+        private System.Windows.Forms.Button paramGpioHelpBtn;
         private System.Windows.Forms.ComboBox paramGpio0ModeCombo;
         private System.Windows.Forms.ComboBox paramGpio1ModeCombo;
         private System.Windows.Forms.Label paramGpio0ModeLabel;
@@ -3338,6 +3381,8 @@ namespace ER41xxTestTool
         private System.Windows.Forms.ComboBox paramXtalGainCombo;
         private System.Windows.Forms.Label paramXtalGainLabel;
         private System.Windows.Forms.Label dvbTstConnStateLabel;
+        private System.Windows.Forms.RadioButton paramPcrShdEnableRadioBtn;
+        private System.Windows.Forms.Label paramPcrShdEnableHelpLabel;
     }
 }
 
