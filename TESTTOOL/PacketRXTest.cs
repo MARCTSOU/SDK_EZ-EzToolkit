@@ -40,6 +40,7 @@ namespace ER41xxTestTool
         {
             paramDvbBandCombo.Enabled = true;
             paramPAConfigCombo.Enabled = true;
+
             paramBaseFreqText.Enabled = true;
             paramDataRateCombo.Enabled = true;
             paramDeviationText.Enabled = true;

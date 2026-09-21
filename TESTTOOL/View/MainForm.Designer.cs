@@ -71,10 +71,13 @@ namespace ER41xxTestTool
             this.dvbTstPktTxDgmPbLenLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxDgmPbLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxCntGroup = new System.Windows.Forms.GroupBox();
+            this.dvbTstPktTxCntIntvUnitLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxCntUnitLabel = new System.Windows.Forms.Label();
+            this.dvbTstPktTxCntIntvText = new System.Windows.Forms.TextBox();
             this.dvbTstPktTxCntText = new System.Windows.Forms.TextBox();
             this.dvbTstPktTxInfiniteCheck = new System.Windows.Forms.CheckBox();
             this.dvbTstPktTxContentGroup = new System.Windows.Forms.GroupBox();
+            this.dvbTstPktTxCrcCalcBtn = new System.Windows.Forms.Button();
             this.dvbTstPktTxRandomPlLenUnitLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxCrcPolyLabel = new System.Windows.Forms.Label();
             this.dvbTstPktTxRandomPlCheck = new System.Windows.Forms.CheckBox();
@@ -739,43 +742,66 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxCntGroup
             // 
+            this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxCntIntvUnitLabel);
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxCntUnitLabel);
+            this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxCntIntvText);
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxCntText);
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxInfiniteCheck);
-            this.dvbTstPktTxCntGroup.Location = new System.Drawing.Point(575, 221);
+            this.dvbTstPktTxCntGroup.Location = new System.Drawing.Point(545, 220);
             this.dvbTstPktTxCntGroup.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstPktTxCntGroup.Name = "dvbTstPktTxCntGroup";
             this.dvbTstPktTxCntGroup.Padding = new System.Windows.Forms.Padding(2);
-            this.dvbTstPktTxCntGroup.Size = new System.Drawing.Size(268, 61);
+            this.dvbTstPktTxCntGroup.Size = new System.Drawing.Size(298, 61);
             this.dvbTstPktTxCntGroup.TabIndex = 51;
             this.dvbTstPktTxCntGroup.TabStop = false;
             this.dvbTstPktTxCntGroup.Text = "Target Packet Count";
+            // 
+            // dvbTstPktTxCntIntvUnitLabel
+            // 
+            this.dvbTstPktTxCntIntvUnitLabel.AutoSize = true;
+            this.dvbTstPktTxCntIntvUnitLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.dvbTstPktTxCntIntvUnitLabel.Location = new System.Drawing.Point(205, 31);
+            this.dvbTstPktTxCntIntvUnitLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.dvbTstPktTxCntIntvUnitLabel.Name = "dvbTstPktTxCntIntvUnitLabel";
+            this.dvbTstPktTxCntIntvUnitLabel.Size = new System.Drawing.Size(74, 17);
+            this.dvbTstPktTxCntIntvUnitLabel.TabIndex = 14;
+            this.dvbTstPktTxCntIntvUnitLabel.Text = "ms per pkt";
             // 
             // dvbTstPktTxCntUnitLabel
             // 
             this.dvbTstPktTxCntUnitLabel.AutoSize = true;
             this.dvbTstPktTxCntUnitLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.dvbTstPktTxCntUnitLabel.Location = new System.Drawing.Point(95, 30);
+            this.dvbTstPktTxCntUnitLabel.Location = new System.Drawing.Point(70, 31);
             this.dvbTstPktTxCntUnitLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.dvbTstPktTxCntUnitLabel.Name = "dvbTstPktTxCntUnitLabel";
-            this.dvbTstPktTxCntUnitLabel.Size = new System.Drawing.Size(45, 17);
+            this.dvbTstPktTxCntUnitLabel.Size = new System.Drawing.Size(77, 17);
             this.dvbTstPktTxCntUnitLabel.TabIndex = 14;
-            this.dvbTstPktTxCntUnitLabel.Text = "Pkt(s)";
+            this.dvbTstPktTxCntUnitLabel.Text = "Pkt(s), and";
+            // 
+            // dvbTstPktTxCntIntvText
+            // 
+            this.dvbTstPktTxCntIntvText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.dvbTstPktTxCntIntvText.Location = new System.Drawing.Point(153, 28);
+            this.dvbTstPktTxCntIntvText.Margin = new System.Windows.Forms.Padding(4);
+            this.dvbTstPktTxCntIntvText.Name = "dvbTstPktTxCntIntvText";
+            this.dvbTstPktTxCntIntvText.Size = new System.Drawing.Size(47, 23);
+            this.dvbTstPktTxCntIntvText.TabIndex = 15;
+            this.dvbTstPktTxCntIntvText.Text = "50";
             // 
             // dvbTstPktTxCntText
             // 
             this.dvbTstPktTxCntText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.dvbTstPktTxCntText.Location = new System.Drawing.Point(21, 28);
+            this.dvbTstPktTxCntText.Location = new System.Drawing.Point(17, 28);
             this.dvbTstPktTxCntText.Margin = new System.Windows.Forms.Padding(4);
             this.dvbTstPktTxCntText.Name = "dvbTstPktTxCntText";
-            this.dvbTstPktTxCntText.Size = new System.Drawing.Size(63, 23);
+            this.dvbTstPktTxCntText.Size = new System.Drawing.Size(47, 23);
             this.dvbTstPktTxCntText.TabIndex = 15;
             this.dvbTstPktTxCntText.Text = "5";
             // 
             // dvbTstPktTxInfiniteCheck
             // 
             this.dvbTstPktTxInfiniteCheck.AutoSize = true;
-            this.dvbTstPktTxInfiniteCheck.Location = new System.Drawing.Point(148, 29);
+            this.dvbTstPktTxInfiniteCheck.Location = new System.Drawing.Point(147, 0);
             this.dvbTstPktTxInfiniteCheck.Margin = new System.Windows.Forms.Padding(4);
             this.dvbTstPktTxInfiniteCheck.Name = "dvbTstPktTxInfiniteCheck";
             this.dvbTstPktTxInfiniteCheck.Size = new System.Drawing.Size(71, 21);
@@ -786,20 +812,31 @@ namespace ER41xxTestTool
             // 
             // dvbTstPktTxContentGroup
             // 
+            this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxCrcCalcBtn);
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxRandomPlLenUnitLabel);
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxCrcPolyLabel);
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxRandomPlCheck);
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxRandomPlLenText);
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxCrcCombo);
             this.dvbTstPktTxContentGroup.Controls.Add(this.dvbTstPktTxPrependSeqCheck);
-            this.dvbTstPktTxContentGroup.Location = new System.Drawing.Point(575, 100);
+            this.dvbTstPktTxContentGroup.Location = new System.Drawing.Point(545, 99);
             this.dvbTstPktTxContentGroup.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstPktTxContentGroup.Name = "dvbTstPktTxContentGroup";
             this.dvbTstPktTxContentGroup.Padding = new System.Windows.Forms.Padding(2);
-            this.dvbTstPktTxContentGroup.Size = new System.Drawing.Size(268, 120);
+            this.dvbTstPktTxContentGroup.Size = new System.Drawing.Size(298, 120);
             this.dvbTstPktTxContentGroup.TabIndex = 52;
             this.dvbTstPktTxContentGroup.TabStop = false;
             this.dvbTstPktTxContentGroup.Text = "Packet Content";
+            // 
+            // dvbTstPktTxCrcCalcBtn
+            // 
+            this.dvbTstPktTxCrcCalcBtn.Location = new System.Drawing.Point(220, 16);
+            this.dvbTstPktTxCrcCalcBtn.Name = "dvbTstPktTxCrcCalcBtn";
+            this.dvbTstPktTxCrcCalcBtn.Size = new System.Drawing.Size(45, 31);
+            this.dvbTstPktTxCrcCalcBtn.TabIndex = 45;
+            this.dvbTstPktTxCrcCalcBtn.Text = "Calc";
+            this.dvbTstPktTxCrcCalcBtn.UseVisualStyleBackColor = true;
+            this.dvbTstPktTxCrcCalcBtn.Click += new System.EventHandler(this.dvbTstPktTxCrcCalcBtn_Click);
             // 
             // dvbTstPktTxRandomPlLenUnitLabel
             // 
@@ -925,7 +962,7 @@ namespace ER41xxTestTool
             this.dvbTstPktTxPayloadText.Multiline = true;
             this.dvbTstPktTxPayloadText.Name = "dvbTstPktTxPayloadText";
             this.dvbTstPktTxPayloadText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.dvbTstPktTxPayloadText.Size = new System.Drawing.Size(539, 151);
+            this.dvbTstPktTxPayloadText.Size = new System.Drawing.Size(521, 151);
             this.dvbTstPktTxPayloadText.TabIndex = 46;
             this.dvbTstPktTxPayloadText.TextChanged += new System.EventHandler(this.dvbTstPktTxPayloadText_TextChanged);
             // 
@@ -2087,7 +2124,9 @@ namespace ER41xxTestTool
             // 
             // logResultClearBtn
             // 
-            this.logResultClearBtn.BackColor = System.Drawing.SystemColors.Info;
+            this.logResultClearBtn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.logResultClearBtn.BackColor = System.Drawing.Color.LightGoldenrodYellow;
             this.logResultClearBtn.Location = new System.Drawing.Point(10, 715);
             this.logResultClearBtn.Margin = new System.Windows.Forms.Padding(2);
             this.logResultClearBtn.Name = "logResultClearBtn";
@@ -2099,7 +2138,10 @@ namespace ER41xxTestTool
             // 
             // logResultText
             // 
-            this.logResultText.BackColor = System.Drawing.SystemColors.Info;
+            this.logResultText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.logResultText.BackColor = System.Drawing.Color.LightGoldenrodYellow;
+            this.logResultText.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.logResultText.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
             this.logResultText.Location = new System.Drawing.Point(70, 715);
             this.logResultText.Margin = new System.Windows.Forms.Padding(4);
@@ -2921,6 +2963,7 @@ namespace ER41xxTestTool
             // 
             // regTableGenBtn
             // 
+            this.regTableGenBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.regTableGenBtn.BackColor = System.Drawing.Color.White;
             this.regTableGenBtn.Location = new System.Drawing.Point(1191, 745);
             this.regTableGenBtn.Margin = new System.Windows.Forms.Padding(4);
@@ -2933,6 +2976,7 @@ namespace ER41xxTestTool
             // 
             // regTableDefaultBtn
             // 
+            this.regTableDefaultBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.regTableDefaultBtn.BackColor = System.Drawing.Color.White;
             this.regTableDefaultBtn.Location = new System.Drawing.Point(1291, 745);
             this.regTableDefaultBtn.Margin = new System.Windows.Forms.Padding(4);
@@ -2945,6 +2989,9 @@ namespace ER41xxTestTool
             // 
             // regTableTopicGroup
             // 
+            this.regTableTopicGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.regTableTopicGroup.BackColor = System.Drawing.Color.Transparent;
             this.regTableTopicGroup.Font = new System.Drawing.Font("Calibri", 10.2F, System.Drawing.FontStyle.Bold);
             this.regTableTopicGroup.ForeColor = System.Drawing.Color.Navy;
@@ -2981,6 +3028,7 @@ namespace ER41xxTestTool
             // 
             // regTableDumpDvbRegBtn
             // 
+            this.regTableDumpDvbRegBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.regTableDumpDvbRegBtn.BackColor = System.Drawing.Color.White;
             this.regTableDumpDvbRegBtn.Location = new System.Drawing.Point(891, 745);
             this.regTableDumpDvbRegBtn.Name = "regTableDumpDvbRegBtn";
@@ -2988,10 +3036,11 @@ namespace ER41xxTestTool
             this.regTableDumpDvbRegBtn.TabIndex = 49;
             this.regTableDumpDvbRegBtn.Text = "Dump\r\nAll\r\nDVB Register";
             this.regTableDumpDvbRegBtn.UseVisualStyleBackColor = false;
-            this.regTableDumpDvbRegBtn.Click += new System.EventHandler(this.btnReadDVB_Click);
+            this.regTableDumpDvbRegBtn.Click += new System.EventHandler(this.regTableDumpDvbRegBtn_Click);
             // 
             // regTableWriteDvbRegBtn
             // 
+            this.regTableWriteDvbRegBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.regTableWriteDvbRegBtn.BackColor = System.Drawing.Color.White;
             this.regTableWriteDvbRegBtn.Location = new System.Drawing.Point(991, 745);
             this.regTableWriteDvbRegBtn.Name = "regTableWriteDvbRegBtn";
@@ -2999,10 +3048,11 @@ namespace ER41xxTestTool
             this.regTableWriteDvbRegBtn.TabIndex = 50;
             this.regTableWriteDvbRegBtn.Text = "Write\r\nAll\r\nDVB Register";
             this.regTableWriteDvbRegBtn.UseVisualStyleBackColor = false;
-            this.regTableWriteDvbRegBtn.Click += new System.EventHandler(this.btnWriteDVB_Click);
+            this.regTableWriteDvbRegBtn.Click += new System.EventHandler(this.regTableWriteDvbRegBtn_Click);
             // 
             // regTableIncInitArrayCheck
             // 
+            this.regTableIncInitArrayCheck.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.regTableIncInitArrayCheck.AutoSize = true;
             this.regTableIncInitArrayCheck.Checked = true;
             this.regTableIncInitArrayCheck.CheckState = System.Windows.Forms.CheckState.Checked;
@@ -3027,6 +3077,7 @@ namespace ER41xxTestTool
             // 
             // regTableWriteSelDvbRegBtn
             // 
+            this.regTableWriteSelDvbRegBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.regTableWriteSelDvbRegBtn.BackColor = System.Drawing.Color.White;
             this.regTableWriteSelDvbRegBtn.Location = new System.Drawing.Point(1091, 745);
             this.regTableWriteSelDvbRegBtn.Name = "regTableWriteSelDvbRegBtn";
@@ -3074,10 +3125,8 @@ namespace ER41xxTestTool
             this.Controls.Add(this.btnTxSet);
             this.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
-            this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "ER41xx RF Test Tool";
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -3383,6 +3432,9 @@ namespace ER41xxTestTool
         private System.Windows.Forms.Label dvbTstConnStateLabel;
         private System.Windows.Forms.RadioButton paramPcrShdEnableRadioBtn;
         private System.Windows.Forms.Label paramPcrShdEnableHelpLabel;
+        private System.Windows.Forms.Label dvbTstPktTxCntIntvUnitLabel;
+        private System.Windows.Forms.TextBox dvbTstPktTxCntIntvText;
+        private System.Windows.Forms.Button dvbTstPktTxCrcCalcBtn;
     }
 }
 

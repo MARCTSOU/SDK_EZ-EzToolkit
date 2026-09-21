@@ -12,6 +12,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Threading;
 using System.Timers;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Remoting.Messaging;
@@ -63,7 +64,7 @@ namespace ER41xxTestTool
         // 避免像之前那樣各自維護版本號跟日期、結果三邊互相對不上。日期不手動維護,
         // 直接取這次執行的exe/dll實際編譯連結(link)時間。
         public const string ToolName = "ER41xx EzToolkit";
-        public const string ToolVersionLabel = "V1.20L";
+        public const string ToolVersionLabel = "V2.0L";
 
         private static string BuildToolTitle()
         {
@@ -116,6 +117,10 @@ namespace ER41xxTestTool
         public int baudRateNumber = 57600;    //9600;//115200;
         //public bool comConnect = false;
         public bool isDVBConnected  = false;	//DVB連線旗標 - 與DVB的連線狀態綁定
+        public int isRomExist = 0;
+        public bool isDvbRomBandValid = false;
+        public bool isDvbRomPAValid = false;
+
         public bool isTableReadReg  = false;
         public bool isWaitingData   = false;
         public bool isGetBackData   = false;
@@ -143,7 +148,7 @@ namespace ER41xxTestTool
         //private bool meterGetPower = false;
 
         //private int ckTxTimes = 0;
-        public int isRomExist = 0;
+        
         public bool isReadAllRegister;
         public bool isReadRegister;
         public bool isRSSIAnalysis;
@@ -1657,7 +1662,11 @@ namespace ER41xxTestTool
                     conn_result = dvbConnectionProcess();
 
                     if (conn_result > 0)
+                    {
                         RefreshRegisterListFromUi();
+                        /* 先強制寫入Tool計算後的Register Value*/
+                        regTableWriteDvbRegBtn_Click(null, EventArgs.Empty);
+                    }
                     else if (conn_result == -1)
                         GenMsg.Show("Failed to open the COM port. Please check the connection and try again.", "Connect Failed");
                     else if (conn_result == -2)
@@ -1792,7 +1801,7 @@ namespace ER41xxTestTool
                        // pwrlvlLable.Text = "Level (0-27)";
                         paramPwrLvLabel.Text = "Power LV(0~27)";
                         InitialPAConfigList((int)PA_TYPE.PA_915433L);
-                        ShowInsLog("Low Power IC\r\n");
+                        ShowInsLog("Chip PA: Low Power\r\n");
                     }                       
                     else if (highlowICType == 1)
                     {
@@ -1802,7 +1811,7 @@ namespace ER41xxTestTool
                         paramPwrLvLabel.Text = "Power LV(0~127)";
                         InitialPAConfigList((int)PA_TYPE.PA_915433H);
                         paramPAConfigCombo.SelectedIndex = 1;
-                        ShowInsLog("High Power IC\r\n");
+                        ShowInsLog("Chip PA : High Power\r\n");
                     }                       
                     else {
                         // v1.19L: 讀不到 IC 設定時不斷線, 顯示訊息並讓 user 手動選 PA CONFIG
@@ -1835,12 +1844,14 @@ namespace ER41xxTestTool
                             InitialMaxPowerSelectList(5);
                             paramPAConfigCombo.SelectedIndex = maxPwrIdx;
                             paramPAConfigCombo.Enabled = false;
+                            isDvbRomPAValid = true;
                             //PAConfigCombo.Text = MaxPwrSelList[maxPwrIdx];
                         }
                         else
                         {
                             ShowInsLog("Cannot read PA CONFIG setting value (" + maxPwrIdx + "). Please select PA CONFIG manually.\r\n");
                             paramPAConfigCombo.Enabled = true;
+                            isDvbRomPAValid = false;
                         }
                         frequencyBand = ReadFreqBandFromEeprom();
                         if (frequencyBand == 2)
@@ -1848,31 +1859,36 @@ namespace ER41xxTestTool
                             paramDvbBandCombo.Text = RFBandSel[2];
                             paramBaseFreqText.Text = RFBandSel[2];
                             paramDvbBandCombo.Enabled = false;
+                            isDvbRomBandValid = true;
                         }
                         else if (frequencyBand == 4)
                         {
                             paramDvbBandCombo.Text = RFBandSel[4];
                             paramBaseFreqText.Text = RFBandSel[4];
                             paramDvbBandCombo.Enabled = false;
+                            isDvbRomBandValid = true;
                         }                            
                         else if (frequencyBand == 5)
                         {
                             paramDvbBandCombo.Text = RFBandSel[5];
                             paramBaseFreqText.Text = RFBandSel[5];
                             paramDvbBandCombo.Enabled = false;
+                            isDvbRomBandValid = true;
                         }
                         else
                         {
                             ShowInsLog("Read RF Band Fail: " + frequencyBand + "\r\n");
                             paramDvbBandCombo.Enabled = true;
+                            isDvbRomBandValid = false;
                         }
                     }
 
+                    /* 關閉RX */
                     PacketRxBtnStopProcess();
                     ShowInsLog("RX Reception Stop\r\n");
+
                 }
                 return 1;   // 連線成功
-
             }
             else  // 原本已 CONNECT
             {
@@ -1911,7 +1927,10 @@ namespace ER41xxTestTool
             }
             //connectComToolStripMenuItem.Text = "CONNECT";
             isDVBConnected = false;
-            
+            isRomExist = 0;
+            isDvbRomBandValid = false;
+            isDvbRomPAValid = false;
+
             refreshComToolStripMenuItem.Enabled = true;
             comPortToolStripComboBox.Enabled = true;
             SetDVBBandComboDisconnected();   // 斷線後 DVBBandCombo 跟 DVB 無關, 鎖住顯示 "Don't care"
@@ -2185,8 +2204,8 @@ namespace ER41xxTestTool
 
         /*-------------------------------------------------------------
          *  ComputeCrc16Ibm
-         * 標準CRC16-IBM(不做bit-reverse)。唯一呼叫處在ShowPktData()裡被註解掉,
-         * 目前沒有真正在用。
+         * 標準CRC16-IBM/ARC(對應F/W的crc16_ibm_ORG): Poly=0xA001(reflected), Init=0x0000。
+         * 供dvbTstPktTxCrcCalcBtn_Click(CRC16_IBM模式)使用。
          * Param :
          *   data - 要算CRC的資料
          * Return:
@@ -2213,6 +2232,35 @@ namespace ER41xxTestTool
             }
             return crc;
 
+        }
+        /*-------------------------------------------------------------
+         *  ComputeCrc16Kermit
+         * 標準CRC16/KERMIT(對應F/W的crc16CcitKermit): Poly=0x8408(reflected), Init=0x0000。
+         * 供dvbTstPktTxCrcCalcBtn_Click(CCITT模式)使用。
+         * Param :
+         *   data - 要算CRC的資料
+         * Return:
+         *   16-bit CRC值
+         *-------------------------------------------------------------*/
+        static ushort ComputeCrc16Kermit(byte[] data)
+        {
+            ushort crc = 0x0000;
+            foreach (byte b in data)
+            {
+                crc ^= b;
+                for (int i = 0; i < 8; i++)
+                {
+                    if ((crc & 0x0001) != 0)
+                    {
+                        crc = (ushort)((crc >> 1) ^ 0x8408);
+                    }
+                    else
+                    {
+                        crc >>= 1;
+                    }
+                }
+            }
+            return crc;
         }
         /*-------------------------------------------------------------
          *  ShowPktData
@@ -2245,10 +2293,56 @@ namespace ER41xxTestTool
             ushort crc = crc16_ibm(datas, (byte)len);
             //ushort crc = ComputeCrc16Ibm(datas);
             //txResult.Text += "CRC="+crc.ToString("X4") + "\r\n";
-            logResultText.Text += (crc & 0xFF).ToString("X2") + " " + (crc >> 8).ToString("X2")+"\r\n";            
+            logResultText.Text += (crc & 0xFF).ToString("X2") + " " + (crc >> 8).ToString("X2")+"\r\n";
         }
 
-        
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxCrcCalcBtn_Click
+         * Calc鈕: 跳出視窗顯示目前Payload(tmpArray)的CRC計算結果。依dvbTstPktTxCrcCombo
+         * 選擇的CRC模式計算(NO_CRC不計算)。dvbTstPktTxPrependSeqCheck有勾選時, Seq
+         * Number(2 bytes, byte[1]=High Byte/byte[2]=Low Byte, 即MSB-first)會補在Payload
+         * 前面一起算, 因為F/W端Seq Number是逐包遞增(從Set Payload時重置的0開始), 這裡沒
+         * 辦法預知實際會是哪個值, 所以列出seq=0~5共6組結果供對照。CRC結果顯示順序為
+         * LSB-first(低位元組在前), 跟實際收到的封包順序一致(已用實測封包驗證過)。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void dvbTstPktTxCrcCalcBtn_Click(object sender, EventArgs e)
+        {
+            int crcChoose = dvbTstPktTxCrcCombo.SelectedIndex;
+            if (crcChoose == 2)  // NO_CRC
+            {
+                MessageBox.Show(this, "NO_CRC is selected, nothing to calculate.", "CRC Calculation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            byte[] payload = tmpArray.ToArray();
+            StringBuilder sb = new StringBuilder();
+            if (dvbTstPktTxPrependSeqCheck.Checked)
+            {
+                sb.AppendLine("Prepend Seq Num is enabled. Seq Number is reset to 0 by F/W on every Set Payload and");
+                sb.AppendLine("increments per packet, so the exact value at TX time is unknown here.");
+                sb.AppendLine("Listing CRC for Seq = 0~5 (byte[1]=Seq High Byte, byte[2]=Seq Low Byte):\r\n");
+                for (int seq = 0; seq <= 5; seq++)
+                {
+                    byte[] data = new byte[payload.Length + 2];
+                    data[0] = (byte)((seq >> 8) & 0xFF);  // Seq High Byte
+                    data[1] = (byte)(seq & 0xFF);         // Seq Low Byte
+                    Array.Copy(payload, 0, data, 2, payload.Length);
+                    ushort crc = (crcChoose == 0) ? ComputeCrc16Kermit(data) : ComputeCrc16Ibm(data);  // 0=CCITT, 1=CRC16_IBM
+                    sb.AppendLine("Seq=" + seq + " : CRC = " + (crc & 0xFF).ToString("X2") + " " + (crc >> 8).ToString("X2"));
+                }
+            }
+            else
+            {
+                ushort crc = (crcChoose == 0) ? ComputeCrc16Kermit(payload) : ComputeCrc16Ibm(payload);  // 0=CCITT, 1=CRC16_IBM
+                sb.AppendLine("CRC = " + (crc & 0xFF).ToString("X2") + " " + (crc >> 8).ToString("X2"));
+            }
+            MessageBox.Show(this, sb.ToString(), "CRC Calculation Result", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
         /*-------------------------------------------------------------
          *  dvbTstPktRxSetPayloadBtn_Click
          * Set Payload鈕: 呼叫SetPayloadProcess()。
@@ -2371,8 +2465,9 @@ namespace ER41xxTestTool
                 //txResult.Text = hexOutput.ToString().Trim();
                 isEditing = false;
             }
-            
+
         }
+
         /*-------------------------------------------------------------
          *  ReverseBits
          * 把32-bit值的位元順序整個反轉(bit 0變bit 31, 依此類推)。
@@ -2445,7 +2540,8 @@ namespace ER41xxTestTool
             string msg =
                 "(1). Xtal: Must match the crystal actually fitted on the module. It determines which Data Rates are available.\r\n\r\n" +
                 "(2). Xtal Gain: Affects the crystal's startup time on wakeup / power-up. It also affects the current draw while NOT sleeping." +
-                "      e.g. approximately 1.8mA at Gain=4 vs 2.4mA at Gain=8.\r\n\r\n" +
+                "      e.g. approximately 1.8mA at Gain=4 vs 2.4mA at Gain=8.\r\n" +
+                "     Gain=4 is recommended.\r\n\r\n" +
                 "(3). Cap IO: Trims the crystal's internal load capacitance, used to fine-tune the actual Base Frequency offset.";
             MessageBox.Show(this, msg, "Xtal / Cap IO Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -2620,6 +2716,7 @@ namespace ER41xxTestTool
                 dvbTstPktTxRandomPlCheck.Enabled = false;
                 dvbTstPktTxRandomPlCheck.Update();
                 //dvbTstPktTxCntText.Enabled = false;
+                //dvbTstPktTxCntIntvText.Enabled = false;
                 dvbTstPktTxRandomPlLenText.Enabled = false;
                 dvbTstPktTxRandomPlLenText.Update();
                 dvbTstPktTxPayloadText.ReadOnly = true;
@@ -2656,6 +2753,7 @@ namespace ER41xxTestTool
             dvbTstPktTxPrependSeqCheck.Enabled = true;
             dvbTstPktTxRandomPlCheck.Enabled = true;
             dvbTstPktTxCntText.Enabled = true;
+            dvbTstPktTxCntIntvText.Enabled = true;
             dvbTstPktTxRandomPlLenText.Enabled = dvbTstPktTxRandomPlCheck.Checked;
             dvbTstPktTxCrcCombo.Enabled = true;
             dvbTstPktTxCrcCombo.Update();
@@ -2735,14 +2833,13 @@ namespace ER41xxTestTool
          * 這個方法本身在背景執行緒跑, UI操作都包在Invoke裡切回UI thread。
          * Param :
          *   num - 要送的封包數
+         *   ms_per_pkt - 封包之間的間隔時間(ms)
          * Return:
          *   (無)
          *-------------------------------------------------------------*/
-        public void PacketSend(int num)
+        public void PacketSend(int num, int ms_per_pkt)
         {
-            int delayTime = 100;
-            int drValue = 100000;
-            double drTextValue = 0.0;
+            int delayTime = ms_per_pkt;
             isSending = true;
             string cmd = "";
             cmd = "cfg 14 " + 1 + "\r";
@@ -2753,27 +2850,19 @@ namespace ER41xxTestTool
                 dvbTstPktTxStopBtn.Enabled = true;
                 dvbTstPktTxStartBtn.Enabled = false;
                 ShowInsLog("Packet Send: " + GetFifoLen() + " bytes\r\n");
-                drTextValue = double.Parse(paramDataRateCombo.Text);
             }));
-            
-            drValue = (int)(1000 * drTextValue);
-            if (drValue >= 100000)
-                delayTime = 100;
-            else
-            {
-                delayTime = (1024 * 1000) / drValue;
-                //ShowInsLog("DelayTime:" + delayTime + "; "+(delayTime * 4) +"\r\n");
-                delayTime = delayTime * 10;   // 10
-                if (delayTime<100)
-                    delayTime = 100;
-            }
-                       
+
+            Stopwatch sw = new Stopwatch(); //使用Thread.sleep(...)的精度太低，沒辦法拉到很低的間隔時間，比如最低只能40ms(應系統而異)
             for (int i = 0; i < num; i++)
             {
                 if (!isSending)  // 如果 STOP 按了，直接跳出
                     break;
                 serialPort1.WriteLine(cmd);
-                Thread.Sleep(delayTime);
+                //serialPort1.WriteLine("\r\n");
+                sw.Restart();
+                while (sw.ElapsedMilliseconds < delayTime)  // spin-wait取代Thread.Sleep, 避開系統計時器精度(~15.6ms)的限制
+                {
+                }
             }
             this.Invoke((MethodInvoker)(() =>
             {
@@ -2824,6 +2913,8 @@ namespace ER41xxTestTool
             int byteLength = 0;
             bool isEmpty = false;
             int num = 0;
+            int ms_per_pkt = 50;
+
             if (string.IsNullOrWhiteSpace(dvbTstPktTxCntText.Text))
             {
                 MessageBox.Show("Packet Num need 0<num<=200", "Error");
@@ -2840,6 +2931,28 @@ namespace ER41xxTestTool
                 if (num > 200 || num <= 0)
                 {
                     MessageBox.Show("Packet Num need 0<num<=200", "Warning");
+                    return;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(dvbTstPktTxCntIntvText.Text))
+            {
+                MessageBox.Show("30 <= ms_per_pkt <= 50000ms (30ms lower limit is due to DVB F/W processing time)", "Error");
+                return;
+            }
+            if (!int.TryParse(dvbTstPktTxCntIntvText.Text, out int value2))
+            {
+                MessageBox.Show("Only input numeric 0-9", "Error");
+                return;
+            }
+            else
+            {
+                ms_per_pkt = Convert.ToInt32(dvbTstPktTxCntIntvText.Text);
+                // 下限30ms: 低於這個值就算軟體端spin-wait再準, 實測封包間隔還是會卡在DVB
+                // 韌體自己的內部運算耗時(見PacketSend), 設更小的值沒有意義。
+                if (ms_per_pkt > 50000 || ms_per_pkt < 30)
+                {
+                    MessageBox.Show("30 <= ms_per_pkt <= 50000ms (30ms lower limit is due to DVB F/W processing time)", "Warning");
                     return;
                 }
             }
@@ -2868,6 +2981,7 @@ namespace ER41xxTestTool
                 //ShowInsLog("=================================\r\n");
                 return;
             }
+
             if (dvbTstPktTxRandomPlCheck.Checked)
                 byteLength = lenOfRandomTxt;
             else
@@ -2910,7 +3024,7 @@ namespace ER41xxTestTool
                     //Thread.Sleep(50);
                     //SetAllowBitError();     // 0xB104: RX syncword 允許的 bit error 數
                     //Thread.Sleep(50);
-                    SetPayloadProcess();
+                    SetPayloadProcess();    //讓DVB知道要傳輸的Packet內容
                     Thread.Sleep(50);
                     serialPort1.Write("rfg 31 1\r");  // enable IRQ
                     Thread.Sleep(50);
@@ -2935,7 +3049,7 @@ namespace ER41xxTestTool
                         if (num <= 200 && num > 0)
                         {
                             DisableSetting();
-                            Task.Run(() => PacketSend(num));
+                            Task.Run(() => PacketSend(num, ms_per_pkt));
                         }
                         else
                             ShowInsLog("num need to be 0<num<=200");
@@ -2966,9 +3080,13 @@ namespace ER41xxTestTool
             if (dvbTstPktTxInfiniteCheck.Checked)
             {
                 dvbTstPktTxCntText.Enabled = false;
+                dvbTstPktTxCntIntvText.Enabled = false;
             }
             else
+            {
                 dvbTstPktTxCntText.Enabled = true;
+                dvbTstPktTxCntIntvText.Enabled = true;
+            }
         }
 
         /*-------------------------------------------------------------
@@ -3014,8 +3132,8 @@ namespace ER41xxTestTool
             else
                 ShowInsLog("Payload length: 0<Len<=125\r\n");  */
         }
-        // dvbTstPktTxRandomPlCheck/dvbTstPktTxRandomPlLenText 兩個一起作用就好: 勾選當下直接產生一次隨機payload(不用再另外按按鈕確認),
-        // dvbTstPktTxRandomPlLenText 改變長度時(Leave事件, 見下面 dvbTstPktTxRandomPlLenText_Leave)也會直接重新產生。
+        // dvbTstPktTxRandomPlCheck/dvbTstPktTxRandomPlLenText 兩個一起作用: 勾選當下直接產生一次隨機payload(不用再另外按按鈕確認)。
+        // 改長度不會自動重新產生, 要套用新長度需重新勾選dvbTstPktTxRandomPlCheck。
         // dvbTstPktTxRandomPlLenText/dvbTstPktTxRandomPlLenUnitLabel 一律保持可見, 只依checkbox狀態切換Enabled, 不再Visible顯示/隱藏來回切換。
         /*-------------------------------------------------------------
          *  dvbTstPktTxRandomPlCheck_CheckedChanged
@@ -3041,7 +3159,7 @@ namespace ER41xxTestTool
                 dvbTstPktTxFilledLenText.Text = "0";
                 dvbTstPktTxFilledLenText.BackColor = Color.White;
                 dvbTstPktTxFilledLenText.Update();
-                dvbTstPktTxRandomPlLenText.Text = "5";
+                //dvbTstPktTxRandomPlLenText.Text = "5";
                 dvbTstPktTxFilledLenText.Visible = false;
                 dvbTstPktTxFilledLenDescLabel.Visible = false;
                 GenerateRandomPayload();
@@ -3061,7 +3179,9 @@ namespace ER41xxTestTool
 
         /*-------------------------------------------------------------
          *  dvbTstPktTxRandomPlLenText_Leave
-         * 離開長度輸入框時, 若Random Payload模式已勾選, 依新長度重新產生一次隨機payload。
+         * 離開長度輸入框不會自動重新產生payload——長度只是「下次產生時要用的長度」,
+         * 要套用新長度請重新勾選dvbTstPktTxRandomPlCheck(取消再勾選)觸發
+         * GenerateRandomPayload()。
          * Param :
          *   sender, e - Leave事件參數 (未使用)
          * Return:
@@ -3069,16 +3189,13 @@ namespace ER41xxTestTool
          *-------------------------------------------------------------*/
         private void dvbTstPktTxRandomPlLenText_Leave(object sender, EventArgs e)
         {
-            if (dvbTstPktTxRandomPlCheck.Checked)
-                GenerateRandomPayload();
         }
 
-        // 焦點還在 dvbTstPktTxRandomPlLenText 裡直接按 Enter 也重新產生一次, 不用先點別的地方讓焦點離開觸發 Leave。
-        // SuppressKeyPress 擋掉 Enter 在單行 TextBox 上預設的警示音。
         /*-------------------------------------------------------------
          *  dvbTstPktTxRandomPlLenText_KeyDown
-         * 在長度輸入框裡直接按Enter等同Leave的效果, 立即重新產生隨機payload(若已勾選),
-         * 並吃掉Enter避免單行TextBox預設的警示音。
+         * 在長度輸入框裡按Enter, 依新長度重新產生一次隨機payload(若已勾選
+         * dvbTstPktTxRandomPlCheck; GenerateRandomPayload()沒勾時自己不做事), 並吃掉
+         * Enter避免單行TextBox預設的警示音。離開輸入框(Leave)不會觸發, 只有按Enter才會。
          * Param :
          *   sender - 未使用
          *   e - KeyDown事件參數, 取其KeyCode判斷是否為Enter
@@ -3090,8 +3207,7 @@ namespace ER41xxTestTool
             if (e.KeyCode == Keys.Enter)
             {
                 e.SuppressKeyPress = true;
-                if (dvbTstPktTxRandomPlCheck.Checked)
-                    GenerateRandomPayload();
+                GenerateRandomPayload();
             }
         }
 
@@ -3582,6 +3698,14 @@ namespace ER41xxTestTool
             dvbTstPktRxCntLimitRadioBtn.Enabled = true;
             dvbTstPktRxCntNoLimitRadioBtn.Enabled = true;
             dvbTstPktRxCntText.Enabled = dvbTstPktRxCntLimitRadioBtn.Checked;
+
+            if (isDVBConnected && (isRomExist > 0))
+            {
+                if (isDvbRomBandValid)
+                    paramDvbBandCombo.Enabled = false;
+                if (isDvbRomPAValid)
+                    paramPAConfigCombo.Enabled = false;
+            }
         }
 
         /*-------------------------------------------------------------
@@ -3887,8 +4011,8 @@ namespace ER41xxTestTool
                 cmd = "pm 0\r";
                 serialPort1.Write(cmd);
                 Thread.Sleep(300);
-                cmd = "rx 0\r";
-                serialPort1.Write(cmd);
+                //cmd = "rx 0\r";
+                //serialPort1.Write(cmd);
                 ShowInsLog("Set idle mode OK\r\n");
             }
             else if (dvbTstStateDeepSleepRadioBtn.Checked) {
@@ -4254,14 +4378,17 @@ namespace ER41xxTestTool
         private void dvbTstPktFifoDgmHelpBtn_Click(object sender, EventArgs e)
         {
             string msg =
-                "1. Preamble (4 Bytes) and Syncword (4 Bytes) are generated by the MAC layer automatically - they are NOT part of the FIFO data you fill in.\r\n\r\n" +
-                "2. FIFO Data (Max 128 Bytes total) is what you actually write into the FIFO:\r\n" +
+                "(1). Preamble (4 Bytes) and Syncword (4 Bytes) are generated by the MAC layer automatically - they are NOT part of the FIFO data you fill in.\r\n\r\n" +
+                "(2). FIFO Data (Max 128 Bytes total) is what you actually write into the FIFO:\r\n" +
                 ">>Length      (1 Byte)\r\n" +
                 ">>Seq Number  (2 Bytes)  - optional, only present when \"Prepend Seq Num\" is enabled.\r\n" +
                 ">>Payload     (Max 125 Bytes)\r\n" +
                 ">>CRC         (2 Bytes)  - optional, depends on the selected CRC mode.\r\n\r\n" +
-                "3. Length = byte count of (Seq Number + Payload + CRC) combined. It does NOT include itself, Preamble, or Syncword.\r\n\r\n" +
-                "4. CRC is calculated over (Seq Number + Payload) only. It does NOT cover the Length byte, Preamble, or Syncword.";
+                "(3). Length = byte count of (Seq Number + Payload + CRC) combined. It does NOT include itself, Preamble, or Syncword.\r\n\r\n" +
+                "(4). CRC is calculated over (Seq Number + Payload) only. It does NOT cover the Length byte, Preamble, or Syncword.\r\n\r\n" +
+                "(5). CRC Polynomial (per CRC combo selection, computed in F/W):\r\n" +
+                ">>CCITT     : Model=CRC-16/KERMIT, Poly=0x1021 (reflected 0x8408), Init=0x0000, RefIn/RefOut=true, XorOut=0x0000\r\n" +
+                ">>CRC16_IBM : Model=CRC-16/ARC,     Poly=0x8005 (reflected 0xA001), Init=0x0000, RefIn/RefOut=true, XorOut=0x0000";
             MessageBox.Show(this, msg, "FIFO Data Format Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 

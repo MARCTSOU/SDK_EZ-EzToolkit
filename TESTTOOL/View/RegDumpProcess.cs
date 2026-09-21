@@ -1476,7 +1476,7 @@ namespace ER41xxTestTool
         }
 
         /*-------------------------------------------------------------
-         *  btnReadDVB_Click
+         *  regTableDumpDvbRegBtn_Click
          * [物件控制] - 刷新regDumpView
          * Read DVB鈕: 送"rdump"讀回實機值並顯示 (ReadRegisterDump + ShowRegisterDump)。
          * Param :
@@ -1484,7 +1484,7 @@ namespace ER41xxTestTool
          * Return:
          *   (無)
          *-------------------------------------------------------------*/
-        private void btnReadDVB_Click(object sender, EventArgs e)
+        private void regTableDumpDvbRegBtn_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {
@@ -1609,7 +1609,7 @@ namespace ER41xxTestTool
         }
 
         /*-------------------------------------------------------------
-         *  btnWriteDVB_Click
+         *  regTableWriteDvbRegBtn_Click
          * Write DVB鈕: 算出要寫的位址清單(BuildRegWriteOrder), 跳出確認對話框,
          * 使用者按Yes才真的執行寫入(PerformRegWrite)。
          * Param :
@@ -1617,7 +1617,7 @@ namespace ER41xxTestTool
          * Return:
          *   (無)
          *-------------------------------------------------------------*/
-        private void btnWriteDVB_Click(object sender, EventArgs e)
+        private void regTableWriteDvbRegBtn_Click(object sender, EventArgs e)
         {
             if (!serialPort1.IsOpen)
             {
@@ -1627,10 +1627,6 @@ namespace ER41xxTestTool
 
             List<ushort> writeOrder = BuildRegWriteOrder();
             if (writeOrder.Count == 0)
-                return;
-
-            if (MessageBox.Show("Write " + writeOrder.Count + " register values (in the same order as Generate) to the board. Continue?",
-                "REG WRITE", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
                 return;
 
             PerformRegWrite(writeOrder);
@@ -1668,8 +1664,8 @@ namespace ER41xxTestTool
         /*-------------------------------------------------------------
          *  regTableWriteSelDvbRegBtn_Click
          * "Wr Selected DVB Reg"鈕: 只把REG TABLE目前選取(反白)的register寫回開發板
-         * (BuildSelectedRegWriteOrder), 其餘流程跟btnWriteDVB_Click相同(先確認COM port
-         * 已連線、跳出確認對話框才真的寫入)。選取的列裡如果沒有任何一筆符合可寫入條件
+         * (BuildSelectedRegWriteOrder), 其餘流程跟regTableWriteDvbRegBtn_Click相同
+         * (先確認COM port已連線才真的寫入)。選取的列裡如果沒有任何一筆符合可寫入條件
          * (未被過濾掉、有值), 跳提示訊息並中止。
          * Param :
          *   sender, e - Click事件參數 (未使用)
@@ -1690,10 +1686,6 @@ namespace ER41xxTestTool
                 GenMsg.Show("No writable register is currently selected in REG TABLE.\r\nSelect one or more rows (Shift/Ctrl+Click) first.", "REG WRITE");
                 return;
             }
-
-            if (MessageBox.Show("Write " + writeOrder.Count + " selected register value(s) to the board. Continue?",
-                "REG WRITE", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                return;
 
             PerformRegWrite(writeOrder);
         }
