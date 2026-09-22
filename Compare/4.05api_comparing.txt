@@ -1,0 +1,108 @@
+# ER4100 C# EzCodeGen 與 Python 參考腳本(ER4100_API_V405_1217.py)算法比對
+
+比對日期: 2026-09-18
+比對對象: `ER4100_API_V405_1217.py`(同事平常用來計算/測試register的Python參考腳本, repo根目錄) vs
+`TESTTOOL/EzCodeGen/*.cs` + `TESTTOOL/View/CodeGenProcess.cs`(這支C# tool實際計算/產生register值的地方)
+
+> `TESTTOOL/ER41xxReg/RegCategories.cs` 只是位址->分類的對照表, 不是計算邏輯本身。
+
+---
+
+## ?? 1.【已修正】合成器頻段常數 0x1380 — 非389~510MHz頻段時寫入錯誤的頻段常數
+
+- **Python** `ER4100_API_V405_1217.py:1387-1406`(`TRx_SetChannel`)依實際頻率所在頻段, 寫入5組不同的頻段常數:
+  - 1556–2040 MHz → `0x0018a785`
+  - 778–1020 MHz(即常見的868/915MHz ISM band) → `0x0016a785`
+  - 389–510 MHz → `0x0014a785`
+  - 194–255 MHz → `0x0012a785`
+  - 97–127 MHz → `0x0010a785`
+
+- **C#(修正前)** `TESTTOOL/EzCodeGen/SetTx.cs` `TxCondition_1()`的`else`分支(非4種特例組合時)不分頻段, 一律固定輸出 `0x1380, 0x0014A785`(只對389-510MHz頻段是對的)。只要選用778-1020MHz(915/868MHz常用band)、1556-2040MHz、194-255MHz或97-127MHz, 且不落在那4種特例組合裡, 就會把0x1380寫成錯誤頻段的合成器常數。
+
+- **狀態: 已修正** — `SetTx.cs`的`TxCondition_1()`已改成依`Frequency_MHz`所在頻段選值, 邊界/常數對齊Python `TRx_SetChannel()`(同時也對齊`channel_pll_table.cs`裡RX/TX channel PLL計算已經在用的同一組5段頻段邊界)。頻率不在任何支援頻段內時, 沿用修正前的預設值`0x0014A785`(沒有更明確的規格可依循)。
+
+- 這是目前找到影響最大、信心最高的一項, 很可能是同事觀察到「暫存器數值對不上」最主要的來源, 尤其是在測試常見的868/915MHz band時。
+- 註: `0x13A0`(FREQSYNTH_TPMCAL_CONFIG_3)在Python整份腳本裡完全沒有出現, 該暫存器的值無法比對確認, 這次沒有動它。
+
+---
+
+## ?? 2. RX資料速率相關暫存器0xb200: H(調變指數)分段邊界與常數都對不齊(未修正, 待確認)
+
+- **Python** `ER4100_API_V405_1217.py:1216-1341`(`TRx_RX_SETUP`的`else`分支, dr < 1M時)依`mod_index`分成4段: `[0.5,1)`、`[1,2)`、`[2,4)`、`[?4)`, 每個資料速率(500K/250K/200K/125K/100K/50K/12.5K)各自有一組常數。
+- **C#** `TESTTOOL/EzCodeGen/RXDR100K.cs:23-28`用3段邊界`H<0.5`、`[0.5,4.5)`、`[4.5,6)`, 常數也不同。`RXDR50K.cs`同樣模式。
+- C#對每個資料速率都有獨立校正表(10K/20K/25K/40K/62.5K...等Python沒有分開列的速率, C#也都各自建檔), 顆粒度比Python現有腳本細很多。**懷疑這份Python參考腳本本身可能已經過時**, 需請同事確認腳本版本是否已跟上硬體最新校正表。
+- RXDR*.cs裡的FIR/RXLPF/RXCHFILT係數表本身(來自`FirTable.cs`)因為Python端引用的外部模組`ER4100_config_V405`不在這個repo裡, 完全無法比對。
+
+## ?? 3. 0x1580(Cap_I/Cap_O) — C#只有單一cap輸入, 同時灌進兩個欄位(未修正, 待確認)
+
+- **Python** `ER4100_API_V405_1217.py:1679-1688`(`TRx_XtalCap40M_Config`): `Cap_I`(bit8-14)與`Cap_O`(bit15-21)是兩個獨立參數, 範例`Cap_I=51, Cap_O=112`。
+- **C#** `TESTTOOL/EzCodeGen/WriteXoConfig.cs:27-28`: 只吃單一`cap`參數, 同時寫進CAP_I與CAP_O兩個欄位; UI(`paramCapIoText`)也只有一個輸入框。
+- 若實際硬體校正流程需要Cap_I≠Cap_O, C#產生的0x1580值必然跟Python算出的不同。這是UI架構限制, 不是單純算式錯誤, 需要跟同事確認校正流程是否真的需要獨立設定兩個電容值(若需要, 這裡要加UI欄位, 影響較大, 先列為待確認不列入本次修正)。
+- 另外C#是「整個word重算」(固定base `0x00E04088`再蓋掉bit4-21), Python是「讀目前暫存器值再改bit8-21」(GAIN_CTRL那4 bit不動); 只要晶片重置後0x1580的實際初始值跟C#假設的`0x00E04088`不同, 兩邊算出來的GAIN_CTRL欄位也可能不一致。
+
+## 次要/存疑項目(影響較小或信心不足, 未修正)
+
+- **0x13AC分頻值只取低16 bit**(規格文件`RegTableItems.cs:73`寫的是低20 bit), 目前支援的資料速率範圍內不會出錯(最低0.625K時算出約6400, 仍在16 bit內), 但邏輯跟自己文件不符, 且是「寫死高16 bit常數」而非讀回原值再改。見`SetTx.cs`(`TxRegister`)。
+- **960K/1M門檻**: C#刻意在2025/06/12把Python的`>=1M`改成`>=960K`(`FREQSET.cs:32-36`、`channel_pll_table.cs:60-64`), 只有資料速率落在960K~1M之間(目前UI下拉選單沒有卡在這區間的標準速率, 只有手動輸入自訂速率才會觸發)才有差異, 可能是刻意的硬體修正, 需跟同事確認何者才是對的。
+- **PCRMU Shutdown對0x4004的操作**: Python的`TRx_PCRMU_ShutDown_Enable/_Disable`會動`0x4004` bit20, C#的`PCRMU.cs`完全沒有對應動作。但`0x4004`同時也是Python `TRx_GPIO1_Config`在用的暫存器, C#這邊對應的是全新的bit-field模型(`GPIO_Def.cs`), 兩邊欄位定義差異太大, 信心不足, 列為待確認。
+
+## 已確認完全一致、沒有問題的部分
+
+- **TX Power Level**: `TESTTOOL/EzCodeGen/TxPowerLv.cs`全部13組PA設定函式(915/868/490/433 MHz, 10/14/16/20/23dBm各組合)跟Python`:641-911`逐一比對後完全一致, 包含功率位移公式`data = 0x1000000 | (Power<<25)`也相同。
+- **Preamble**(`Preamble.cs` vs Python`:429-433`)、**TX/RX Syncword**(`Syncword.cs` vs Python`:429-442,534-535`)、**FIFO Threshold**(`EnableInt.cs:20-27` vs Python`:375-379`)、**Payload Order/MSB**(`PayloadOrder.cs` vs Python`:341-343`)公式與常數皆一致。
+- **0x1984偏移暫存器(deviation)**: 一開始懷疑C#「寫入前devValue×2」跟Python「FreqDev=dr*mod_index(未乘2)」有2倍誤差, 代入Python範例參數(`dr=12500, mod_index=4`, Python`:2985`)實際算過, 對照C#的`H = 2*devValue/drValue`反推(`CodeGenProcess.cs:793, 1207-1209`), 兩邊在同一組H/mod_index定義下算出的0x1984最終值其實相同, 只是參數化方式不同(一個直接輸入偏移量、一個直接輸入調變指數), 數學等價, 不是bug。
+
+## 完全無法比對的類別
+
+- RXDR*系列的FIR/RXLPF/RXCHFILT係數表本體(Python端外部模組`ER4100_config_V405`不在repo內)
+- PA Setting對照表(`PaSetting.cs`, Python端同樣引用`ER4100_config_V405`)
+- Interrupt Mode 0xF004(Python走SPI command而非直接寫暫存器, bitmask組成邏輯不在同一支檔案)
+- GPIO設定(C#已改成完整bit-field模型, Python只是把呼叫端組好的整數塞進暫存器, 組裝邏輯不在同一支檔案)
+
+---
+
+## 待辦
+
+- [x] 修正0x1380頻段常數(`SetTx.cs`)
+- [ ] 跟同事確認Python參考腳本版本是否為最新, 尤其是0xb200(RXDR H分段)這部分
+- [ ] 確認實際校正流程是否需要獨立的Cap_I/Cap_O(0x1580)
+- [ ] 確認PCRMU Shutdown是否真的需要操作0x4004 bit20
+- [ ] 逐一核對下方「2026-09-21補充」裡30筆數值不同的register, 找出各自的演算法差異在哪
+
+---
+
+## 2026-09-21 補充: 868MHz實際輸出register值比對(C# vs Python)
+
+用實際跑出來的結果(`Compare/SPI_ER41xx_config_868_sort by addr.h` vs `Compare/er4100_868_from_py_u8array_sort by addr.txt`, 兩份都已依address排序)逐位址比對, 確認**0x1380已經修好、兩邊完全一致**。以下是仍然對不上的部分。
+
+### ?? 真正數值不同(30筆)
+
+| Addr | Reg Name | C# | Python | 備註 |
+|---|---|---|---|---|
+| 0x0020 | PMU_CTL_REG | 04 00 00 00 | 3F 00 00 00 | |
+| 0x0028 | PMU_TIM_REG | 00 00 00 00 | 03 3F 00 00 | |
+| 0x1204 | DCDC_CONFIG_1 | 18 00 00 00 | 18 00 04 00 | |
+| 0x1488 | PA1G_CONFIG_2 | 07 00 00 00 | 01 00 00 00 | |
+| 0x1580 | XO_CONFIG_1 | 48 A1 D0 00 | 48 2C D6 00 | 對應項目3, Cap_I/Cap_O疑點 |
+| 0x1984 | SYNTH_CAL_CONFIG_1 | A0 86 01 00 | 50 C3 00 00 | deviation |
+| 0x1A00 | PMU_CTL | FF FF FF FF | 00 00 00 00 | 落差最大, 全部bit相反 |
+| 0x1A08 | PMU_CONFIG_0 | FF FF FF FF | 00 00 00 00 | 落差最大, 全部bit相反 |
+| 0x1E60 | ANCTL_PA1G_REG0 | 0C 00 00 00 | 01 00 00 00 | |
+| 0x4004 | GPIO_1_CFG_REG | 00 00 16 00 | 00 00 06 00 | |
+| 0xB108 | BBP_RXLPF_1M_0 | E2 7F EF FD | DE F7 EE 7F | 對應項目2, FIR/RXLPF係數表 |
+| 0xB10C | BBP_RXLPF_1M_1 | 07 82 9C A4 | 20 68 BD F7 | 同上 |
+| 0xB110 | BBP_RXLPF_1M_2 | 96 01 00 00 | 9E 01 00 00 | 同上 |
+| 0xB19C | BBP_AGC18 | 04 5F 01 00 | 03 5F 01 00 | |
+| 0xB1A8 | BBP_AGC21 | 50 00 00 00 | 70 00 00 00 | |
+| 0xB200 | BBP_AGC43 | 17 00 24 00 | 17 00 0C 00 | 對應項目2, 0xb200 H分段 |
+| 0xB404~0xB42C | BBP_CH_FILT1~11(共9筆) | 見檔案 | 見檔案 | RX channel filter係數, 幾乎全部不同, 對應項目2 |
+
+(完整逐byte清單見比對當下的終端輸出, 或重新執行 `Compare/` 資料夾內兩份`_sort by addr`檔案的diff即可重現)
+
+### ?? 只有C#這份.h產生、Python這次沒寫(16筆)
+
+`INT_EN_REG`(0xF004)、TX Preamble/Syncword(`MAC_TX_CFG2/3/4`)、TX FIFO Mode(`MAC_TX_CFG`)、`FIFO_FEA_REG`、`GPIO_0_CFG_REG`、`BBP_CORR_CODE_BT_BLE`/`BBP_CORR_ERR_CNT`、`MODEM_CLK_REG`、`ASARADC_CONFIG_11`、`FREQSYNTH_TPMCAL_CONFIG_3`、`PA1G_CONFIG_0/1`、`ANCTL_CONFIG_7`/`_7_2`。**推測是Python那次執行沒呼叫到對應函式, 不一定是bug**, 需要同事確認那次capture的完整操作流程。
+
+### ? 只有Python出現、C#這份.h沒有(63筆)
+
+BIAS_CONFIG1、DCDC_CONFIG_0、BBP_AGC1~17/26~41/45/48~50等, 名字幾乎都對得上C# tool另一個獨立的「Initial Reg Array」預設值區塊(`Initial_Reg_Array.cs`), 只是那個區塊沒包含在這份`SPI_ER41xx_config_868.h`裡(要另外勾選才會輸出)。**大機率不是真的缺漏, 只是這次比較的檔案沒包含那個區塊**, 比對時務必連Initial Reg Array一起匯出才是公平比較。

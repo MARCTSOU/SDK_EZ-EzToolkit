@@ -448,18 +448,34 @@ namespace ER41xxTestTool
         /// Shutdown功能由處於Default_Mode的GPIO1當實體觸發腳位(輸入0進入shutdown, 1離開),
         /// 所以要鎖住GPIO1 Mode只能是Default_Mode(不能自由選), 同時才讓STATE CTRL分頁的
         /// dvbTstStateShutdownRadioBtn可以選; 選其他兩個選項時解鎖GPIO1、鎖住Shutdown狀態選項。
+        /// 選到"Disable"時, PCRMU整個沒作用, dvbTstStateSetBtn送的"pm 0/1/2"這幾個power
+        /// mode命令沒有意義, 所以連同dvbTstStateGroup(Idle/Deep Sleep/Shutdown三個選項)跟
+        /// dvbTstStateSetBtn一起鎖住; 選Enable或Enable+Shutdown時解鎖。
+        /// GPIO1是active-low觸發(輸入0進入shutdown), 選到"Enable + Shutdown"時, 若GPIO1開機
+        /// 時floating被誤判成低電位會誤觸發shutdown, 所以同時把Pull Control強制設成Pull_up
+        /// (拉高=離開shutdown, 安全預設), 避免floating時誤進shutdown。
         /// </summary>
         private void UpdateGpio1ModeLockFromShutdown()
         {
             bool shutdownEnabled = paramPcrShdEnableRadioBtn.Checked;
             if (shutdownEnabled)
+            {
                 paramGpio1ModeCombo.SelectedItem = TRx_GPIO_Mode.Default_Mode;
+                paramGpio1PullCtrlCombo.SelectedItem = TRx_GPIO_PullCtrl.Pull_up;
+            }
             paramGpio1ModeCombo.Enabled = !shutdownEnabled;
             UpdateGpio1GioSelEnabled();
 
             dvbTstStateShutdownRadioBtn.Enabled = shutdownEnabled;
             if (!shutdownEnabled && dvbTstStateShutdownRadioBtn.Checked)
                 dvbTstStateIdleRadioBtn.Checked = true;   // Shutdown選項被鎖住時, 如果原本選在Shutdown就退回Idle
+
+            bool pcrmuDisabled = paramPcrmuDisableRadioBtn.Checked;
+            dvbTstStateGroup.Enabled = !pcrmuDisabled;
+            dvbTstStateSetBtn.Enabled = !pcrmuDisabled;
+
+            RefreshRegisterListFromUi();   // Mode/Pull Control是程式改的, 不會觸發ComboBox自己的
+                                            // SelectionChangeCommitted, 這裡手動刷新REG TABLE
         }
 
         // =============== FREQUENCY TABLE ===============
@@ -1198,7 +1214,8 @@ namespace ER41xxTestTool
                 //     SetTx.TxRegister(sw, crystal_HZ, drValue, isGFSK);
                 // }
                 SetTx.TxRegister(sw, crystal_HZ, drValue, isGFSK);
-                SetTx.TxCondition_1(sw, drValue, freqDouble, H);   // 0x1380 最終生效值在此寫入
+                if (xtalValue == 38.4)
+                    SetTx.TxCondition_1(sw, drValue, freqDouble, H);   // 0x1380最終生效值在此寫入; BB_setting Excel的TOOL_CSR_GEN分頁這組頻段常數只標註"If xtal=38.4MHz", 40MHz維持Initial_Reg_Array的預設值(0x1380=0x0016a785)不覆寫
 
                 string modemClkReg;
                 RxGenerate(sw, dataRate_offset, H, out modemClkReg);    // Version_2

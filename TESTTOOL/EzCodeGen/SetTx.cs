@@ -13,7 +13,7 @@ namespace ER41xxTestTool
             uint tmp = 0;
             uint DR = (uint)dataRate;
             tmp = (uint)(crystal_HZ / (DR * 10));
-            tmp = tmp & 0x0000FFFF;
+            tmp = tmp & 0x000FFFFF;   // TPM_DMI_FS_PARM是bit[19:0]共20 bit(見暫存器規格表), 不是16 bit
             // if GFSK: 0x13ac = 0x3030_xxxx
             // else if FSK: 0x13ac=0x3020_xxxx
             if (isGFSK)

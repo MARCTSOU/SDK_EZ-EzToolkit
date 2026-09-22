@@ -14,13 +14,24 @@ namespace ER41xxTestTool
             int i = 0;
             int res = 0;
             modemClkReg = "0x0004, 0x00010102,";
+            CodeOutHelper.CodeOut(sw, "0xb304, 0x00000000,");
+            CodeOutHelper.CodeOut(sw, "0xb1b4, 0x0000ff10,");
+            if (H < 1.5)
+                CodeOutHelper.CodeOut(sw, "0x1604, 0x1fc22b7d,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1604, 0x1fc11b7d,");
+
+            if (H < 0.5)
+                CodeOutHelper.CodeOut(sw, "0xb200, 0x00100016,");
+            else
+                CodeOutHelper.CodeOut(sw, "0xb200, 0x00280016,");
 
             if ((H >= 0) && (H < 0.5))  //0<=H<0.5
             {
                 for (i = 0; i < FirTable.fir_h0p5_OSR8.Length; i++)
-                    CodeOutHelper.CodeOut(sw, FirTable.fir_h0p5_OSR8[i]);  // 0xb400~0xb42c                         
+                    CodeOutHelper.CodeOut(sw, FirTable.fir_h0p5_OSR8[i]);  // 0xb400~0xb42c
                 for (i = 0; i < FirTable.rxlpf_h0p5_OSR16.Length; i++)
-                    CodeOutHelper.CodeOut(sw, FirTable.rxlpf_h0p5_OSR16[i]);  // 0xb108~0xb110 
+                    CodeOutHelper.CodeOut(sw, FirTable.rxlpf_h0p5_OSR16[i]);  // 0xb108~0xb110
             }
             else if ((H >= 0.5) && (H < 0.75))  //0.5<=H<0.75
             {

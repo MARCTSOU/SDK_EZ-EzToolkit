@@ -2573,14 +2573,26 @@ namespace ER41xxTestTool
 
         private void paramGpioHelpBtn_Click(object sender, EventArgs e)
         {
+#if false   //with shd help
             string msg =
                 "(1). Default Mode: GPIO0's Default Mode is TCXO_EN, used to drive an external TCXO - it outputs HIGH by default.\r\n" +
                 "      GPIO1's Default Mode is SHD (the shutdown trigger pin) - driving it LOW triggers entering shutdown, driving it HIGH exits shutdown. " +
-                "This requires PCR Management to be set to \"Enable + Shutdown\" - SHD has no effect otherwise.\r\n\r\n" +
+                "This requires PCR Management to be set to \"Enable + Shutdown\" - SHD has no effect otherwise.\r\n" +
+                "      When \"Enable + Shutdown\" is selected, GPIO1's Pull Control is automatically forced to Pull_up - " +
+                "this keeps the pin HIGH (out of shutdown) if it floats at power-up, instead of floating LOW and triggering an unintended shutdown.\r\n\r\n" +
                 "(2). RX_RF_Mode / RX_BBP_Mode / NFC_Mode: Do NOT use these - they are for internal test purposes only.\r\n\r\n" +
                 "(3). Debug_Mode: Also an internal test-only mode (same category as the three above). " +
                 "It has no effect by default, so the pin outputs LOW in this state.";
             MessageBox.Show(this, msg, "GPIO Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+#else //don't show shd help
+            string msg =
+                "(1). Default Mode: GPIO0's Default Mode is TCXO_EN, used to drive an external TCXO - it outputs HIGH by default.\r\n" +
+                "      GPIO1's Default Mode is TBD .\r\n\r\n" +
+                "(2). RX_RF_Mode / RX_BBP_Mode / NFC_Mode: Do NOT use these - they are for internal test purposes only.\r\n\r\n" +
+                "(3). Debug_Mode: Also an internal test-only mode (same category as the three above). " +
+                "It has no effect by default, so the pin outputs LOW in this state.";
+            MessageBox.Show(this, msg, "GPIO Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+#endif
         }
 
         /*-------------------------------------------------------------
@@ -3070,6 +3082,8 @@ namespace ER41xxTestTool
          *  dvbTstPktTxInfiniteCheck_CheckedChanged
          * [物件控制] - 刷新dvbTstPktTxCntText
          * 勾選Infinite模式時停用封包數輸入框(Infinite不需要指定次數), 取消勾選則還原。
+         * dvbTstPktTxCntIntvText不受影響、一直保持可編輯: Infinite模式的間隔是韌體自己的
+         * delaytime("rfg 29 1"), 不會讀這個欄位的值, 鎖住它沒有意義。
          * Param :
          *   sender, e - CheckedChanged事件參數 (未使用)
          * Return:
@@ -3077,16 +3091,30 @@ namespace ER41xxTestTool
          *-------------------------------------------------------------*/
         private void dvbTstPktTxInfiniteCheck_CheckedChanged(object sender, EventArgs e)
         {
-            if (dvbTstPktTxInfiniteCheck.Checked)
-            {
-                dvbTstPktTxCntText.Enabled = false;
-                dvbTstPktTxCntIntvText.Enabled = false;
-            }
-            else
-            {
-                dvbTstPktTxCntText.Enabled = true;
-                dvbTstPktTxCntIntvText.Enabled = true;
-            }
+            dvbTstPktTxCntText.Enabled = !dvbTstPktTxInfiniteCheck.Checked;
+        }
+
+        /*-------------------------------------------------------------
+         *  dvbTstPktTxInfiniteHelpBtn_Click
+         * 跳出視窗說明Infinite模式的封包間隔是韌體自己依目前Data Rate算出來的, 跟
+         * dvbTstPktTxCntIntvText(ms per pkt)這個欄位無關, 解釋為什麼Infinite勾選時
+         * 那個欄位不會被鎖住。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void dvbTstPktTxInfiniteHelpBtn_Click(object sender, EventArgs e)
+        {
+            string msg =
+                "Infinite模式下, 封包之間的間隔時間是韌體自己依目前的Data Rate算出來的, 不是由AP端控制:\r\n\r\n" +
+                "if (data_rate <= 100000)\r\n" +
+                "    delay(us) = (1024 * 1000000 / data_rate) * 4;\r\n" +
+                "else\r\n" +
+                "    delay = 20ms;\r\n\r\n" +
+                "所以「ms per pkt」這個欄位(dvbTstPktTxCntIntvText)只有在不勾Infinite、由AP端逐包觸發送包時才會用到, " +
+                "跟Infinite模式無關, 這也是為什麼勾選Infinite時這個欄位不會被鎖住、還是可以編輯。";
+            MessageBox.Show(this, msg, "Infinite Interval", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /*-------------------------------------------------------------

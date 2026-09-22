@@ -76,6 +76,7 @@ namespace ER41xxTestTool
             this.dvbTstPktTxCntIntvText = new System.Windows.Forms.TextBox();
             this.dvbTstPktTxCntText = new System.Windows.Forms.TextBox();
             this.dvbTstPktTxInfiniteCheck = new System.Windows.Forms.CheckBox();
+            this.dvbTstPktTxInfiniteHelpBtn = new System.Windows.Forms.Button();
             this.dvbTstPktTxContentGroup = new System.Windows.Forms.GroupBox();
             this.dvbTstPktTxCrcCalcBtn = new System.Windows.Forms.Button();
             this.dvbTstPktTxRandomPlLenUnitLabel = new System.Windows.Forms.Label();
@@ -747,6 +748,7 @@ namespace ER41xxTestTool
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxCntIntvText);
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxCntText);
             this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxInfiniteCheck);
+            this.dvbTstPktTxCntGroup.Controls.Add(this.dvbTstPktTxInfiniteHelpBtn);
             this.dvbTstPktTxCntGroup.Location = new System.Drawing.Point(545, 220);
             this.dvbTstPktTxCntGroup.Margin = new System.Windows.Forms.Padding(2);
             this.dvbTstPktTxCntGroup.Name = "dvbTstPktTxCntGroup";
@@ -809,6 +811,16 @@ namespace ER41xxTestTool
             this.dvbTstPktTxInfiniteCheck.Text = "Infinite";
             this.dvbTstPktTxInfiniteCheck.UseVisualStyleBackColor = true;
             this.dvbTstPktTxInfiniteCheck.CheckedChanged += new System.EventHandler(this.dvbTstPktTxInfiniteCheck_CheckedChanged);
+            // 
+            // dvbTstPktTxInfiniteHelpBtn
+            // 
+            this.dvbTstPktTxInfiniteHelpBtn.Location = new System.Drawing.Point(269, 4);
+            this.dvbTstPktTxInfiniteHelpBtn.Name = "dvbTstPktTxInfiniteHelpBtn";
+            this.dvbTstPktTxInfiniteHelpBtn.Size = new System.Drawing.Size(29, 28);
+            this.dvbTstPktTxInfiniteHelpBtn.TabIndex = 21;
+            this.dvbTstPktTxInfiniteHelpBtn.Text = "?";
+            this.dvbTstPktTxInfiniteHelpBtn.UseVisualStyleBackColor = true;
+            this.dvbTstPktTxInfiniteHelpBtn.Click += new System.EventHandler(this.dvbTstPktTxInfiniteHelpBtn_Click);
             // 
             // dvbTstPktTxContentGroup
             // 
@@ -1407,6 +1419,7 @@ namespace ER41xxTestTool
             this.dvbTstStateShutdownRadioBtn.TabStop = true;
             this.dvbTstStateShutdownRadioBtn.Text = "Shutdown";
             this.dvbTstStateShutdownRadioBtn.UseVisualStyleBackColor = true;
+            this.dvbTstStateShutdownRadioBtn.Visible = false;
             // 
             // dvbTstStateDeepSleepRadioBtn
             // 
@@ -1820,6 +1833,7 @@ namespace ER41xxTestTool
             this.paramPcrShdEnableRadioBtn.TabIndex = 2;
             this.paramPcrShdEnableRadioBtn.Text = "Enable + Shutdown*";
             this.paramPcrShdEnableRadioBtn.UseVisualStyleBackColor = true;
+            this.paramPcrShdEnableRadioBtn.Visible = false;
             // 
             // paramPcrmuEnableRadioBtn
             // 
@@ -2960,6 +2974,7 @@ namespace ER41xxTestTool
             this.paramPcrShdEnableHelpLabel.Size = new System.Drawing.Size(396, 24);
             this.paramPcrShdEnableHelpLabel.TabIndex = 3;
             this.paramPcrShdEnableHelpLabel.Text = "*Shutdown is triggered via GPIO1 (must be in Default Mode)*";
+            this.paramPcrShdEnableHelpLabel.Visible = false;
             // 
             // regTableGenBtn
             // 
@@ -3349,6 +3364,7 @@ namespace ER41xxTestTool
         private System.Windows.Forms.Label dvbTstPktTxCntUnitLabel;
         private System.Windows.Forms.TextBox dvbTstPktTxCntText;
         private System.Windows.Forms.CheckBox dvbTstPktTxInfiniteCheck;
+        private System.Windows.Forms.Button dvbTstPktTxInfiniteHelpBtn;
         private System.Windows.Forms.GroupBox dvbTstPktTxContentGroup;
         private System.Windows.Forms.Label dvbTstPktTxRandomPlLenUnitLabel;
         private System.Windows.Forms.Label dvbTstPktTxCrcPolyLabel;

@@ -85,10 +85,12 @@ namespace ER41xxTestTool
         private const string ExpandMarkerExpanded = "[-] ";
         private const string FieldRowIndent = "   ";
 
-        // channel 0 PLL calibration (SYNTH_CAL_CONFIG_5/6/7/4): 只有 Xtal=38.4MHz 時 GenerateTxt()
-        // 才會呼叫 FREQSET.SetFrequency() 去算這4顆, 40MHz 時維持 Initial_Reg_Array 預設值不會被覆寫
-        // (見 CodeGenProcess.cs 的 "if (xtalValue == 38.4)" 判斷式), REG TABLE 上用灰字提示不用填。
-        private static readonly HashSet<ushort> Xtal384OnlySynthAddrs = new HashSet<ushort> { 0x1998, 0x199C, 0x19A0, 0x1994 };
+        // channel 0 PLL calibration (SYNTH_CAL_CONFIG_5/6/7/4)以及FREQSYNTH_CONFIG_1/
+        // FREQSYNTH_TPMCAL_CONFIG_3(0x1380/0x13A0): 只有 Xtal=38.4MHz 時 GenerateTxt() 才會呼叫
+        // FREQSET.SetFrequency()/SetTx.TxCondition_1() 去算這幾顆, 40MHz 時維持 Initial_Reg_Array
+        // 預設值不會被覆寫(見 CodeGenProcess.cs 的 "if (xtalValue == 38.4)" 判斷式), REG TABLE 上
+        // 用灰字提示不用填。
+        private static readonly HashSet<ushort> Xtal384OnlySynthAddrs = new HashSet<ushort> { 0x1998, 0x199C, 0x19A0, 0x1994, 0x1380, 0x13A0 };
 
         /*-------------------------------------------------------------
          *  IsRegisterGreyedOut
@@ -1193,10 +1195,13 @@ namespace ER41xxTestTool
 
             // PCRMU三選一(Enable/Enable + Shutdown/Disable): 選到"Enable + Shutdown"才鎖住GPIO1
             // Mode只能是Default_Mode(當Shutdown實體觸發腳位用)、同時解鎖STATE CTRL分頁的
-            // dvbTstStateShutdownRadioBtn; 選其他兩個選項時反過來解鎖GPIO1、鎖住Shutdown狀態選項。
-            // 只需要掛在paramPcrShdEnableRadioBtn自己身上: 不管是它被選中(true)還是被取消選中
-            // (切去另外兩個時變成false), 都會觸發它自己的CheckedChanged。
+            // dvbTstStateShutdownRadioBtn; 選"Disable"時PCRMU整個沒作用, 連同鎖住整個
+            // dvbTstStateGroup/dvbTstStateSetBtn(pm 0/1/2命令沒意義); 選其他選項時對應解鎖。
+            // 掛在paramPcrShdEnableRadioBtn跟paramPcrmuDisableRadioBtn兩者身上就涵蓋三選一的
+            // 全部切換組合: 不管是被選中(true)還是被取消選中(切去別的選項變成false), 都會
+            // 觸發自己的CheckedChanged, 兩個都掛就不會漏掉任何一種切換方向。
             if (paramPcrShdEnableRadioBtn != null) paramPcrShdEnableRadioBtn.CheckedChanged += (s, e) => UpdateGpio1ModeLockFromShutdown();
+            if (paramPcrmuDisableRadioBtn != null) paramPcrmuDisableRadioBtn.CheckedChanged += (s, e) => UpdateGpio1ModeLockFromShutdown();
 
             // INTERRUPT MODE 的勾選清單: ItemCheck 時狀態還沒套用, 要排到訊息迴圈後面再算
             if (intModeCheckedList != null)
