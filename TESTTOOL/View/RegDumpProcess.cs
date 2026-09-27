@@ -274,7 +274,7 @@ namespace ER41xxTestTool
             /* ----- 生成Register table Topic過瀘器 ------------------------*/
             btnCategoryFilter = new Button();
             btnCategoryFilter.Text = "Topic ▼";
-            btnCategoryFilter.Font = new Font("Microsoft Sans Serif", 8f);
+            btnCategoryFilter.Font = new Font("Segoe UI", 9f);
             btnCategoryFilter.ForeColor = Color.Black;
             btnCategoryFilter.Location = new Point(rowLeft, filterRowY);
             btnCategoryFilter.Size = new Size(topicBtnW, filterRowH);
@@ -283,7 +283,7 @@ namespace ER41xxTestTool
             //EnhanceButton(btnCategoryFilter);
 
             categoryFilterCheckedList = new CheckedListBox();
-            categoryFilterCheckedList.Font = new Font("Microsoft Sans Serif", 8f);
+            categoryFilterCheckedList.Font = new Font("Segoe UI", 9f);
             categoryFilterCheckedList.CheckOnClick = true;
             categoryFilterCheckedList.BorderStyle = BorderStyle.None;
             categoryFilterCheckedList.Width = 180;
@@ -305,7 +305,7 @@ namespace ER41xxTestTool
             /* ----- 生成Register table DependsOn(哪個畫面參數會影響這顆 reg) -----*/
             btnDependsOnFilter = new Button();
             btnDependsOnFilter.Text = "Depends On ▼";
-            btnDependsOnFilter.Font = new Font("Microsoft Sans Serif", 8f);
+            btnDependsOnFilter.Font = new Font("Segoe UI", 9f);
             btnDependsOnFilter.ForeColor = Color.Black;
             btnDependsOnFilter.Location = new Point(rowLeft + topicBtnW + gap, filterRowY);
             btnDependsOnFilter.Size = new Size(dependsOnBtnW, filterRowH);
@@ -314,7 +314,7 @@ namespace ER41xxTestTool
             //EnhanceButton(btnDependsOnFilter);
 
             dependsOnFilterCheckedList = new CheckedListBox();
-            dependsOnFilterCheckedList.Font = new Font("Microsoft Sans Serif", 8f);
+            dependsOnFilterCheckedList.Font = new Font("Segoe UI", 9f);
             dependsOnFilterCheckedList.CheckOnClick = true;
             dependsOnFilterCheckedList.BorderStyle = BorderStyle.None;
             dependsOnFilterCheckedList.Width = 180;
@@ -356,7 +356,7 @@ namespace ER41xxTestTool
             // Register的搜尋鈕 : 搜名字及位址, 另起一列放在 Topic/DependsOn 下方
             lblSearchHint = new Label();
             lblSearchHint.Text = "RegName or Addr";
-            lblSearchHint.Font = new Font("Microsoft Sans Serif", 8f);
+            lblSearchHint.Font = new Font("Segoe UI", 9f);
             lblSearchHint.ForeColor = Color.Black;
             lblSearchHint.AutoSize = false;
             lblSearchHint.TextAlign = ContentAlignment.MiddleLeft;
@@ -364,7 +364,7 @@ namespace ER41xxTestTool
             lblSearchHint.Size = new Size(searchLabelW, filterRowH);
 
             txtSearchName = new TextBox();
-            txtSearchName.Font = new Font("Microsoft Sans Serif", 8f);
+            txtSearchName.Font = new Font("Segoe UI", 9f);
             txtSearchName.Location = new Point(rowLeft + searchLabelW + gap, searchRowY + 3);
             txtSearchName.Size = new Size(searchTxtW, filterRowH);
             txtSearchName.KeyDown += TxtSearchName_KeyDown;
@@ -372,7 +372,7 @@ namespace ER41xxTestTool
 
             btnSearchName = new Button();
             btnSearchName.Text = "Search";
-            btnSearchName.Font = new Font("Microsoft Sans Serif", 8f);
+            btnSearchName.Font = new Font("Segoe UI", 9f);
             btnSearchName.ForeColor = Color.Black;
             btnSearchName.Location = new Point(rowRight - searchBtnW, searchRowY);
             btnSearchName.Size = new Size(searchBtnW, filterRowH);
@@ -1693,6 +1693,46 @@ namespace ER41xxTestTool
             }
 
             PerformRegWrite(writeOrder);
+        }
+
+        /*-------------------------------------------------------------
+         *  regTableWriteDvbInitRegBtn_Click
+         * "WR" (Init Reg)鈕: 把Initial_Reg_Array.Entries(73筆固定資料, 位址不在RegTableItems
+         * 範圍內, 不受Topic/DependsOn過濾影響)逐筆用韌體既有的"wr <addr> <value>"命令寫回開發板。
+         * 跟PerformRegWrite()不同, 資料來源是Initial_Reg_Array.Entries這份寫死的清單, 不查
+         * RegTableItems/regItemsByName現值, 也不記錄進lastWrittenRegSnapshot(那份快照只追蹤
+         * RegTableItems範圍內的register)。
+         * Param :
+         *   sender, e - Click事件參數 (未使用)
+         * Return:
+         *   (無)
+         *-------------------------------------------------------------*/
+        private void regTableWriteDvbInitRegBtn_Click(object sender, EventArgs e)
+        {
+            if (!serialPort1.IsOpen)
+            {
+                ShowInsLog("REG WRITE: COM port not open, please connect via the COM PORT menu\r\n");
+                return;
+            }
+
+            Cursor.Current = Cursors.WaitCursor;
+            try
+            {
+                int written = 0;
+                foreach (var entry in Initial_Reg_Array.Entries)
+                {
+                    string cmd = "wr 0x" + entry.Addr.ToString("X4") + " 0x" + entry.Value.ToString("X8") + "\r";
+                    serialPort1.Write(cmd);
+                    ShowInsLog("  wr INIT (0x" + entry.Addr.ToString("X4") + ") = 0x" + entry.Value.ToString("X8") + "\r\n");
+                    written++;
+                    Thread.Sleep(15);
+                }
+                ShowInsLog("REG WRITE: " + written + " init regs written\r\n");
+            }
+            finally
+            {
+                Cursor.Current = Cursors.Default;
+            }
         }
 
         /*-------------------------------------------------------------

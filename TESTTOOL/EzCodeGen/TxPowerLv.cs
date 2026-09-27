@@ -12,6 +12,7 @@ namespace ER41xxTestTool
 
     public static class TxPowerLv
     {
+        private static bool set_1_RfLdoSelRx = false;
         public static void TRx_DCDC_LCurrent(StreamWriter sw)
         {
             CodeOutHelper.CodeOut(sw, "0x1204, 0x00000018,");
@@ -176,7 +177,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x006006c5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00039200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000006,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            if(!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000009,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -192,7 +196,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x0060ffc5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00129200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000000,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000001,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -209,7 +216,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x00619fc5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x0013d200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000000,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000001,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -226,7 +236,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x006006c5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00029200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000006,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000009,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -243,7 +256,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x00600505,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00039200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000007,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x0000000c,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x0000000c,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x0000000d,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -260,7 +276,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x006006c5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x0002d200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000002,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000009,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -277,7 +296,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x0060ffc5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00129200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000000,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000001,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -293,7 +315,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x006006c5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00029200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000006,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000009,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -309,7 +334,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x00601fc5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00139200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000006,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000009,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -325,7 +353,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x00619fc5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x0013d200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000000,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000001,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -341,7 +372,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x008006c5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00029200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000006,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000008,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000009,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -358,7 +392,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x00601fc5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x00131200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000003,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x0000000c,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x0000000c,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x0000000d,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);
@@ -374,7 +411,10 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1480, 0x00619fc5,");
             CodeOutHelper.CodeOut(sw, "0x1484, 0x0013d200,");
             CodeOutHelper.CodeOut(sw, "0x1488, 0x00000000,");
-            CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            if (!set_1_RfLdoSelRx)
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000000,");
+            else
+                CodeOutHelper.CodeOut(sw, "0x1e60, 0x00000001,");
             uint u32Data = (0x1000000 | ((uint)pwrlvl << 25));
             string hexString = "0x" + u32Data.ToString("X8") + ",";
             CodeOutHelper.CodeOut(sw, "0x1e1c, " + hexString);

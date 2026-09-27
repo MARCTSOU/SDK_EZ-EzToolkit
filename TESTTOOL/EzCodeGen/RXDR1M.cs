@@ -18,7 +18,7 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0xb304, 0x00000010,");
             CodeOutHelper.CodeOut(sw, "0xb1b4, 0x0000ffb0,");
             CodeOutHelper.CodeOut(sw, "0x1604, 0x1fc01b7d,");
-            if ((H >= 0) && (H < 0.5))  //0<=H<0.5
+            if ((H > 0) && (H <= 0.5))  //0<H<=0.5
             {
                 CodeOutHelper.CodeOut(sw, "0xb200, 0x0010001a,");
                 for (i = 0; i < FirTable.fir_h0p5_OSR8.Length; i++)
@@ -26,7 +26,7 @@ namespace ER41xxTestTool
                 for (i = 0; i < FirTable.rxlpf_h0p5_OSR8.Length; i++)
                     CodeOutHelper.CodeOut(sw, FirTable.rxlpf_h0p5_OSR8[i]);  // 0xb108~0xb110 
             }
-            else if ((H >= 0.5) && (H < 0.75))  //0.5<=H<0.75
+            else if ((H > 0.5) && (H <= 0.75))  //0.5<H<=0.75
             {
                 CodeOutHelper.CodeOut(sw, "0xb200, 0x0028001a,");
                 for (i = 0; i < FirTable.fir_h0p75_OSR8.Length; i++)
@@ -34,7 +34,7 @@ namespace ER41xxTestTool
                 for (i = 0; i < FirTable.rxlpf_h0p75_OSR8.Length; i++)
                     CodeOutHelper.CodeOut(sw, FirTable.rxlpf_h0p75_OSR8[i]); // 0xb108~0xb110 
             }
-            else if ((H >= 0.75) && (H < 1)) //0.75<=H<1
+            else if ((H > 0.75) && (H <= 1)) //0.75<H<=1
             {
                 CodeOutHelper.CodeOut(sw, "0xb200, 0x0028001a,");
                 for (i = 0; i < FirTable.fir_h1_OSR8.Length; i++)
@@ -42,7 +42,7 @@ namespace ER41xxTestTool
                 for (i = 0; i < FirTable.rxlpf_h1_OSR8.Length; i++)
                     CodeOutHelper.CodeOut(sw, FirTable.rxlpf_h1_OSR8[i]);  // 0xb108~0xb110 
             }
-            else if ((H >= 1) && (H < 1.25)) // 1<=H<1.25
+            else if ((H > 1) && (H <= 1.25)) // 1<H<=1.25
             {
                 CodeOutHelper.CodeOut(sw, "0xb200, 0x0028001a,");
                 for (i = 0; i < FirTable.fir_h1p25_OSR8.Length; i++)
@@ -50,7 +50,7 @@ namespace ER41xxTestTool
                 for (i = 0; i < FirTable.rxlpf_h1p25_OSR8.Length; i++)
                     CodeOutHelper.CodeOut(sw, FirTable.rxlpf_h1p25_OSR8[i]);  // 0xb108~0xb110 
             }
-            else if ((H >= 1.25) && (H < 1.5)) // 1.25<=H<1.5
+            else if ((H > 1.25) && (H <= 1.5)) // 1.25<H<=1.5
             {
                 CodeOutHelper.CodeOut(sw, "0xb200, 0x0028001a,");
                 for (i = 0; i < FirTable.fir_h1p5_OSR8.Length; i++)
@@ -58,7 +58,7 @@ namespace ER41xxTestTool
                 for (i = 0; i < FirTable.rxlpf_h1p5_OSR8.Length; i++)
                     CodeOutHelper.CodeOut(sw, FirTable.rxlpf_h1p5_OSR8[i]);  // 0xb108~0xb110 
             }
-            else if ((H >= 1.5) && (H < 1.75)) // 1.5<=H<1.75
+            else if ((H > 1.5) && (H <= 1.75)) // 1.5<H<=1.75
             {
                 CodeOutHelper.CodeOut(sw, "0xb200, 0x0028001a,");
                 for (i = 0; i < FirTable.fir_h1p75_OSR8.Length; i++)
@@ -66,7 +66,7 @@ namespace ER41xxTestTool
                 for (i = 0; i < FirTable.rxlpf_h1p75_OSR8.Length; i++)
                     CodeOutHelper.CodeOut(sw, FirTable.rxlpf_h1p75_OSR8[i]);  // 0xb108~0xb110 
             }
-            else if ((H >= 1.75) && (H < 2)) // 1.75<=H<2
+            else if ((H > 1.75) && (H <= 2)) // 1.75<H<=2
             {
                 CodeOutHelper.CodeOut(sw, "0xb200, 0x0028001a,");
                 for (i = 0; i < FirTable.fir_h2_OSR8.Length; i++)

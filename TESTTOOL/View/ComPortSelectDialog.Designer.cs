@@ -38,6 +38,7 @@ namespace ER41xxTestTool
             this.dvbConnectButton = new System.Windows.Forms.Button();
             this.dvbDisconnectButton = new System.Windows.Forms.Button();
             this.dvbConnCancelButton = new System.Windows.Forms.Button();
+            this.dvbConnectCheck = new System.Windows.Forms.CheckBox();
             this.dvbPortDeviceInfoGroup.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,7 +48,7 @@ namespace ER41xxTestTool
             this.dvbPortLabel.Location = new System.Drawing.Point(15, 25);
             this.dvbPortLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.dvbPortLabel.Name = "dvbPortLabel";
-            this.dvbPortLabel.Size = new System.Drawing.Size(34, 17);
+            this.dvbPortLabel.Size = new System.Drawing.Size(35, 20);
             this.dvbPortLabel.TabIndex = 0;
             this.dvbPortLabel.Text = "Port";
             // 
@@ -57,7 +58,7 @@ namespace ER41xxTestTool
             this.dvbPortCombo.Location = new System.Drawing.Point(75, 20);
             this.dvbPortCombo.Margin = new System.Windows.Forms.Padding(4);
             this.dvbPortCombo.Name = "dvbPortCombo";
-            this.dvbPortCombo.Size = new System.Drawing.Size(189, 24);
+            this.dvbPortCombo.Size = new System.Drawing.Size(189, 28);
             this.dvbPortCombo.TabIndex = 1;
             this.dvbPortCombo.SelectedIndexChanged += new System.EventHandler(this.dvbPortCombo_SelectedIndexChanged);
             // 
@@ -79,7 +80,7 @@ namespace ER41xxTestTool
             this.dvbPortBaudLabel.Location = new System.Drawing.Point(75, 55);
             this.dvbPortBaudLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.dvbPortBaudLabel.Name = "dvbPortBaudLabel";
-            this.dvbPortBaudLabel.Size = new System.Drawing.Size(141, 17);
+            this.dvbPortBaudLabel.Size = new System.Drawing.Size(144, 20);
             this.dvbPortBaudLabel.TabIndex = 3;
             this.dvbPortBaudLabel.Text = "Baudrate: 57600 bps";
             // 
@@ -91,7 +92,7 @@ namespace ER41xxTestTool
             this.dvbPortDeviceInfoGroup.Margin = new System.Windows.Forms.Padding(4);
             this.dvbPortDeviceInfoGroup.Name = "dvbPortDeviceInfoGroup";
             this.dvbPortDeviceInfoGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.dvbPortDeviceInfoGroup.Size = new System.Drawing.Size(345, 94);
+            this.dvbPortDeviceInfoGroup.Size = new System.Drawing.Size(347, 94);
             this.dvbPortDeviceInfoGroup.TabIndex = 4;
             this.dvbPortDeviceInfoGroup.TabStop = false;
             this.dvbPortDeviceInfoGroup.Text = "Device Info";
@@ -102,7 +103,7 @@ namespace ER41xxTestTool
             this.dvbPortDeviceNameLabel.Location = new System.Drawing.Point(10, 29);
             this.dvbPortDeviceNameLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.dvbPortDeviceNameLabel.Name = "dvbPortDeviceNameLabel";
-            this.dvbPortDeviceNameLabel.Size = new System.Drawing.Size(167, 17);
+            this.dvbPortDeviceNameLabel.Size = new System.Drawing.Size(170, 20);
             this.dvbPortDeviceNameLabel.TabIndex = 0;
             this.dvbPortDeviceNameLabel.Text = "USB Serial Port (COM12)";
             // 
@@ -113,14 +114,14 @@ namespace ER41xxTestTool
             this.dvbPortVidPidLabel.Location = new System.Drawing.Point(10, 63);
             this.dvbPortVidPidLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.dvbPortVidPidLabel.Name = "dvbPortVidPidLabel";
-            this.dvbPortVidPidLabel.Size = new System.Drawing.Size(140, 17);
+            this.dvbPortVidPidLabel.Size = new System.Drawing.Size(142, 20);
             this.dvbPortVidPidLabel.TabIndex = 1;
             this.dvbPortVidPidLabel.Text = "VID: 0403  PID: 6001";
             // 
             // dvbConnectButton
             // 
             this.dvbConnectButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.dvbConnectButton.Location = new System.Drawing.Point(15, 182);
+            this.dvbConnectButton.Location = new System.Drawing.Point(15, 240);
             this.dvbConnectButton.Margin = new System.Windows.Forms.Padding(4);
             this.dvbConnectButton.Name = "dvbConnectButton";
             this.dvbConnectButton.Size = new System.Drawing.Size(100, 43);
@@ -131,7 +132,7 @@ namespace ER41xxTestTool
             // 
             // dvbDisconnectButton
             // 
-            this.dvbDisconnectButton.Location = new System.Drawing.Point(137, 182);
+            this.dvbDisconnectButton.Location = new System.Drawing.Point(137, 240);
             this.dvbDisconnectButton.Margin = new System.Windows.Forms.Padding(4);
             this.dvbDisconnectButton.Name = "dvbDisconnectButton";
             this.dvbDisconnectButton.Size = new System.Drawing.Size(100, 43);
@@ -143,7 +144,7 @@ namespace ER41xxTestTool
             // dvbConnCancelButton
             // 
             this.dvbConnCancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.dvbConnCancelButton.Location = new System.Drawing.Point(259, 182);
+            this.dvbConnCancelButton.Location = new System.Drawing.Point(259, 240);
             this.dvbConnCancelButton.Margin = new System.Windows.Forms.Padding(4);
             this.dvbConnCancelButton.Name = "dvbConnCancelButton";
             this.dvbConnCancelButton.Size = new System.Drawing.Size(100, 43);
@@ -151,13 +152,26 @@ namespace ER41xxTestTool
             this.dvbConnCancelButton.Text = "Cancel";
             this.dvbConnCancelButton.UseVisualStyleBackColor = true;
             // 
+            // dvbConnectCheck
+            // 
+            this.dvbConnectCheck.AutoSize = true;
+            this.dvbConnectCheck.Checked = true;
+            this.dvbConnectCheck.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.dvbConnectCheck.Location = new System.Drawing.Point(24, 205);
+            this.dvbConnectCheck.Name = "dvbConnectCheck";
+            this.dvbConnectCheck.Size = new System.Drawing.Size(276, 24);
+            this.dvbConnectCheck.TabIndex = 8;
+            this.dvbConnectCheck.Text = "Write config to DVB after connection";
+            this.dvbConnectCheck.UseVisualStyleBackColor = true;
+            // 
             // ComPortSelectDialog
             // 
             this.AcceptButton = this.dvbConnectButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.CancelButton = this.dvbConnCancelButton;
-            this.ClientSize = new System.Drawing.Size(375, 243);
+            this.ClientSize = new System.Drawing.Size(375, 296);
+            this.Controls.Add(this.dvbConnectCheck);
             this.Controls.Add(this.dvbPortLabel);
             this.Controls.Add(this.dvbPortCombo);
             this.Controls.Add(this.dvbPortRefreshButton);
@@ -166,7 +180,7 @@ namespace ER41xxTestTool
             this.Controls.Add(this.dvbConnectButton);
             this.Controls.Add(this.dvbDisconnectButton);
             this.Controls.Add(this.dvbConnCancelButton);
-            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
@@ -194,5 +208,6 @@ namespace ER41xxTestTool
         private System.Windows.Forms.Button dvbConnectButton;
         private System.Windows.Forms.Button dvbDisconnectButton;
         private System.Windows.Forms.Button dvbConnCancelButton;
+        private System.Windows.Forms.CheckBox dvbConnectCheck;
     }
 }

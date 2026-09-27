@@ -24,6 +24,7 @@ namespace ER41xxTestTool
     public partial class ComPortSelectDialog : Form
     {
         public string SelectedPort => dvbPortCombo.Text;
+        public bool WriteConfigAfterConnect => dvbConnectCheck.Checked;
         public string[] locPortNames; 
         string locCurrentPort; 
         string locBaudRateText; 

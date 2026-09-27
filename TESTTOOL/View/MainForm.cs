@@ -1658,14 +1658,17 @@ namespace ER41xxTestTool
                 {
                     int conn_result = -1;
                     comPortToolStripComboBox.Text = dlg.SelectedPort;
+                    bool writeConfigAfterConnect = dlg.WriteConfigAfterConnect;   // 在dlg被Dispose前讀出來
                     //connectComToolStripMenuItem_Click(sender, e); //透過com port讀取er4100模組設定
                     conn_result = dvbConnectionProcess();
 
                     if (conn_result > 0)
                     {
+                        /* 先更新Register Value*/
                         RefreshRegisterListFromUi();
-                        /* 先強制寫入Tool計算後的Register Value*/
-                        regTableWriteDvbRegBtn_Click(null, EventArgs.Empty);
+                        /* 再強制寫入Tool計算後的Register Value*/
+                        if (writeConfigAfterConnect)    
+                            regTableWriteDvbRegBtn_Click(null, EventArgs.Empty);
                     }
                     else if (conn_result == -1)
                         GenMsg.Show("Failed to open the COM port. Please check the connection and try again.", "Connect Failed");
@@ -3106,6 +3109,7 @@ namespace ER41xxTestTool
          *-------------------------------------------------------------*/
         private void dvbTstPktTxInfiniteHelpBtn_Click(object sender, EventArgs e)
         {
+#if false
             string msg =
                 "Infinite模式下, 封包之間的間隔時間是韌體自己依目前的Data Rate算出來的, 不是由AP端控制:\r\n\r\n" +
                 "if (data_rate <= 100000)\r\n" +
@@ -3115,6 +3119,17 @@ namespace ER41xxTestTool
                 "所以「ms per pkt」這個欄位(dvbTstPktTxCntIntvText)只有在不勾Infinite、由AP端逐包觸發送包時才會用到, " +
                 "跟Infinite模式無關, 這也是為什麼勾選Infinite時這個欄位不會被鎖住、還是可以編輯。";
             MessageBox.Show(this, msg, "Infinite Interval", MessageBoxButtons.OK, MessageBoxIcon.Information);
+#else
+            string msg =
+               "In Infinite mode, the interval between packets is calculated by the firmware itself based on the current Data Rate, not controlled by the AP side:\r\n\r\n" +
+                "if (data_rate <= 100000)\r\n" +
+                "    delay(us) = (1024 * 1000000 / data_rate) * 4;\r\n" +
+                "else\r\n" +
+                "    delay = 20ms;\r\n\r\n" +
+                "Therefore, the 'ms per pkt' field (dvbTstPktTxCntIntvText) is only used when Infinite is unchecked and packet sending is triggered frame-by-frame by the AP side. " +
+                "It has nothing to do with Infinite mode—that's why when Infinite is checked, this field is not locked and remains editable.";
+            MessageBox.Show(this, msg, "Infinite Interval", MessageBoxButtons.OK, MessageBoxIcon.Information);
+#endif
         }
 
         /*-------------------------------------------------------------
@@ -4300,6 +4315,15 @@ namespace ER41xxTestTool
         private void dvbTstPktRxClearLogBtn_Click(object sender, EventArgs e)
         {
             dvbTstPktRxLogText.Clear();
+            dvbTstPktRxOkCntText.Clear();
+            dvbTstPktRxErrCntText.Clear();
+            dvbTstPktRxRssiText.Clear();
+
+            averageRssi = 0;
+            totalRcv = 0;
+            totalRssi = 0;
+            rcvOK = 0;
+            rcvErr = 0;
         }
 
         private ContextMenuStrip genMenu;

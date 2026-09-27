@@ -271,9 +271,9 @@ namespace ER41xxTestTool
             // 1. 按鈕 (外觀看起來像 ComboBox); 固定寬度貼齊群組內緣, 避免 DPI 縮放時超出被切
             btnIntMode = new System.Windows.Forms.Button();
             btnIntMode.Text = "Select Int Event ▼";
-            btnIntMode.Font = new Font("Microsoft Sans Serif", 8f);
+            btnIntMode.Font = new Font("Segoe UI", 9f);
             btnIntMode.AutoSize = false;
-            btnIntMode.Location = new Point(8, 38);
+            btnIntMode.Location = new Point(8, 48);
             btnIntMode.BackColor = Color.White;
             btnIntMode.ForeColor = Color.Black;
             btnIntMode.Size = new Size(paramIntModeGroup.Width - 16, 26);
@@ -959,12 +959,26 @@ namespace ER41xxTestTool
             CodeOutHelper.CodeOut(sw, "0x1e04, 0x" + reg1E04.ToString("X").PadLeft(8, '0') + ",");
         }
 
-        public void RxExtent(StreamWriter sw, uint dataRate)
+        public void RxExtent(StreamWriter sw, uint dataRate, double dataRateOffset, double freqMHz)
         {
             uint i = 0;
-            //固定寫 0xb19c 及 0xb1a8
-            CodeOutHelper.CodeOut(sw, "0xb19c, 0x00015f04,");
-            CodeOutHelper.CodeOut(sw, "0xb1a8, 0x00000050,");
+            // 0xb19c/0xb1a8依資料速率分兩組(對照韌體TRx_RX_SETUP()): 1M/2Mbps是一組值,
+            // 其餘資料速率是另一組值, 不是固定值。之前這裡不分資料速率一律寫1M/2M那組值,
+            // 100K等其他速率會被錯誤覆寫成1M/2M用的值。
+            // 這裡要判斷的是「選的是不是1M/2M這個檔位」, 要用跟RxGenerate()同一份xtal正規化過
+            // 的dataRateOffset(38.4MHz時drValue本身是960000/1920000, 不會直接等於1000000/
+            // 2000000), 不能直接比對未正規化的drValue, 否則38.4MHz選1M/2M時會判斷錯誤。
+            RxRateBucket bucket = GetRxRateBucket(dataRateOffset);
+            if (bucket == RxRateBucket.R1M || bucket == RxRateBucket.R2M)
+            {
+                CodeOutHelper.CodeOut(sw, "0xb19c, 0x00015f04,");
+                CodeOutHelper.CodeOut(sw, "0xb1a8, 0x00000050,");
+            }
+            else
+            {
+                CodeOutHelper.CodeOut(sw, "0xb19c, 0x00015f03,");
+                CodeOutHelper.CodeOut(sw, "0xb1a8, 0x00000070,");
+            }
             // CSR中沒有
             if (dataRate > 1000000)
             {
@@ -978,6 +992,24 @@ namespace ER41xxTestTool
             }
             string hex = $"0x{i:X8},";
             CodeOutHelper.CodeOut(sw, "0x1188, " + hex);
+
+            // 0x1620(RX_CONFIG_5) bits[20:17]是頻段相關欄位, 對照fw api TRx_Config()
+            // 的頻段判斷(900~930MHz->9, 865~870MHz->13, 430~440MHz->11, 其餘->9)。
+            // Initial_Reg_Array固定寫死欄位=10(0x1620=0x441405e8), 不分頻段, 是個bug;
+            // 這裡用同一個base值把欄位換成正確頻段值後蓋掉。
+            uint rxConfig5Field;
+            if (freqMHz >= 900 && freqMHz <= 930)
+                rxConfig5Field = 9;
+            else if (freqMHz >= 865 && freqMHz <= 870)
+                rxConfig5Field = 13;
+            else if (freqMHz >= 430 && freqMHz <= 440)
+                rxConfig5Field = 11;
+            else
+                rxConfig5Field = 9;
+            const uint rxConfig5Base = 0x441405E8;
+            const uint rxConfig5FieldMask = 0x001E0000;
+            uint rxConfig5Value = (rxConfig5Base & ~rxConfig5FieldMask) | ((rxConfig5Field << 17) & rxConfig5FieldMask);
+            CodeOutHelper.CodeOut(sw, $"0x1620, 0x{rxConfig5Value:X8},");
         }
 
         /// <summary>
@@ -1219,7 +1251,7 @@ namespace ER41xxTestTool
 
                 string modemClkReg;
                 RxGenerate(sw, dataRate_offset, H, out modemClkReg);    // Version_2
-                RxExtent(sw, drValue);   // CSR_Tool 中沒有的
+                RxExtent(sw, drValue, dataRate_offset, freqDouble);   // CSR_Tool 中沒有的
 
                 // reg 0x1984 (SYNTH_CAL_OFFSET_IN) = 2 * Frequency Deviation(Hz);
                 // devValue 本身其餘地方 (H 計算、GLB_DEVIATION 註解) 代表的是物理 fdev(Hz), 只有寫進 register 時才乘 2。
@@ -1758,7 +1790,8 @@ namespace ER41xxTestTool
         {
             var MyIni = new IniFile3(filePath);
             MyIni.Clear();
-            File.AppendAllText(filePath, ToolTitle + "\r\n");
+            //File.AppendAllText(filePath, ToolTitle + "\r\n");
+            File.AppendAllText(filePath, "EZCODE");
             File.AppendAllText(filePath, Environment.NewLine);
             MyIni.Write("BR", baudRateNumber.ToString(), "BAUDRATE");
             File.AppendAllText(filePath, Environment.NewLine);
